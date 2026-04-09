@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+:root {
+  /* Historiens — sober, scholarly palette */
+  --color-ink: #1a1a1a;
+  --color-ink-secondary: #4a4a4a;
+  --color-ink-muted: #8a8a8a;
+  --color-surface: #ffffff;
+  --color-surface-raised: #fafafa;
+  --color-surface-sunken: #f5f4f2;
+  --color-border: #e5e3df;
+  --color-border-strong: #d0cdc6;
+  --color-accent: #3b5998;
+  --color-accent-hover: #2d4a7a;
+
+  --background: var(--color-surface);
+  --foreground: var(--color-ink);
+
+  --sidebar-width: 240px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Scrollbar styling for long research sessions */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-muted);
+}
