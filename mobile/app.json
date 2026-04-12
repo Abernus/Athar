@@ -1,0 +1,58 @@
+{
+  "expo": {
+    "name": "Historiens",
+    "slug": "historiens",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "scheme": "historiens",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.abernus.historiens"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.abernus.historiens"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Historiens a besoin d'accéder à votre caméra pour photographier des archives et enregistrer des témoignages."
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Historiens a besoin d'accéder à votre microphone pour enregistrer des témoignages oraux."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Historiens a besoin d'accéder à votre photothèque pour importer des photos d'archives.",
+          "savePhotosPermission": "Historiens a besoin d'enregistrer les photos dans votre photothèque."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
