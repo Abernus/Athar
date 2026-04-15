@@ -23,7 +23,6 @@ export default function RootLayout() {
         <Stack.Screen name="add/place" options={{ title: "Ajouter un lieu", presentation: "modal" }} />
         <Stack.Screen name="add/event" options={{ title: "Ajouter un événement", presentation: "modal" }} />
         <Stack.Screen name="entity/[type]/[id]" options={{ title: "" }} />
-        <Stack.Screen name="link" options={{ title: "Lier une preuve", presentation: "modal" }} />
       </Stack>
     </>
   );
