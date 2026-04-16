@@ -3,7 +3,7 @@ import { AppShell } from "@/components/layout";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Historiens — Recherche historique structurée",
+  title: "Athar — Recherche historique structurée",
   description:
     "Reconstituer, documenter et analyser des réseaux humains historiques à partir de sources, d'archives, de témoignages et d'hypothèses.",
 };

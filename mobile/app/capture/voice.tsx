@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Audio } from "expo-av";
 import { useRouter } from "expo-router";
-import { Colors, FontSize, Spacing, Radius } from "@/lib/theme";
+import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useResearchStore } from "@/stores/research-store";
 
@@ -40,7 +40,10 @@ export default function VoiceScreen() {
       Alert.alert("Permission refusée", "L'accès au microphone est nécessaire.");
       return;
     }
-    await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
+    await Audio.setAudioModeAsync({
+      allowsRecordingIOS: true,
+      playsInSilentModeIOS: true,
+    });
     const { recording } = await Audio.Recording.createAsync(
       Audio.RecordingOptionsPresets.HIGH_QUALITY
     );
@@ -86,7 +89,7 @@ export default function VoiceScreen() {
       tags: [],
       ...(uri ? { transcript: uri } : {}),
     });
-    Alert.alert("Témoignage enregistré", "L'entretien a été sauvegardé.", [
+    Alert.alert("Témoignage sauvegardé", "L'entretien a été enregistré.", [
       { text: "OK", onPress: () => router.back() },
     ]);
   }
@@ -99,86 +102,120 @@ export default function VoiceScreen() {
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-      {/* Recorder */}
+      {/* Recorder card */}
       <View style={styles.recorderCard}>
-        <Text style={styles.timer}>{formatSeconds(duration)}</Text>
+        {/* Waveform ring */}
+        <View
+          style={[
+            styles.ring,
+            state === "recording" && styles.ringActive,
+            state === "done" && styles.ringDone,
+          ]}
+        >
+          {state === "idle" && (
+            <Pressable style={styles.recBtn} onPress={startRecording}>
+              <Ionicons name="mic" size={32} color="white" />
+            </Pressable>
+          )}
+          {(state === "recording" || state === "paused") && (
+            <Text style={styles.timer}>{formatSeconds(duration)}</Text>
+          )}
+          {state === "done" && (
+            <Ionicons name="checkmark" size={36} color={Colors.success} />
+          )}
+        </View>
 
-        {state === "idle" && (
-          <Pressable style={styles.recBtn} onPress={startRecording}>
-            <Ionicons name="mic" size={36} color="white" />
-          </Pressable>
-        )}
-
+        {/* Controls */}
         {(state === "recording" || state === "paused") && (
           <View style={styles.controls}>
             <Pressable style={styles.ctrlBtn} onPress={togglePause}>
               <Ionicons
                 name={state === "recording" ? "pause" : "play"}
-                size={24}
+                size={22}
                 color={Colors.accent}
               />
             </Pressable>
             <Pressable style={styles.stopBtn} onPress={stopRecording}>
-              <Ionicons name="stop" size={24} color="white" />
+              <Ionicons name="stop" size={20} color="white" />
             </Pressable>
           </View>
         )}
 
         {state === "done" && (
-          <View style={styles.doneRow}>
-            <Ionicons name="checkmark-circle" size={32} color={Colors.success} />
-            <Text style={styles.doneText}>Enregistrement terminé</Text>
-            <Pressable onPress={reset}>
-              <Text style={styles.retakeText}>↩ Recommencer</Text>
+          <View style={styles.doneInfo}>
+            <Text style={styles.doneText}>
+              Durée : {formatSeconds(duration)}
+            </Text>
+            <Pressable style={styles.resetBtn} onPress={reset}>
+              <Ionicons name="refresh-outline" size={14} color={Colors.accent} />
+              <Text style={styles.resetText}>Recommencer</Text>
             </Pressable>
           </View>
         )}
 
         <Text style={styles.stateLabel}>
           {state === "idle" && "Appuyez pour démarrer"}
-          {state === "recording" && "Enregistrement en cours..."}
+          {state === "recording" && "Enregistrement..."}
           {state === "paused" && "En pause"}
-          {state === "done" && `Durée : ${formatSeconds(duration)}`}
+          {state === "done" && "Enregistrement terminé"}
         </Text>
       </View>
 
-      {/* Metadata */}
-      <Text style={styles.label}>Titre de l'entretien *</Text>
-      <TextInput
-        style={styles.input}
-        value={title}
-        onChangeText={setTitle}
-        placeholder="ex. Entretien avec Yamina, août 2024"
-        placeholderTextColor={Colors.inkMuted}
-      />
+      {/* Metadata form */}
+      <View style={styles.formCard}>
+        <Text style={styles.label}>Titre de l'entretien *</Text>
+        <TextInput
+          style={styles.input}
+          value={title}
+          onChangeText={setTitle}
+          placeholder="ex. Entretien avec Yamina"
+          placeholderTextColor={Colors.inkMuted}
+        />
 
-      <Text style={styles.label}>Nom du témoin *</Text>
-      <TextInput
-        style={styles.input}
-        value={speaker}
-        onChangeText={setSpeaker}
-        placeholder="Prénom et nom"
-        placeholderTextColor={Colors.inkMuted}
-      />
+        <Text style={styles.label}>Nom du témoin *</Text>
+        <TextInput
+          style={styles.input}
+          value={speaker}
+          onChangeText={setSpeaker}
+          placeholder="Prénom et nom"
+          placeholderTextColor={Colors.inkMuted}
+        />
 
-      <Text style={styles.label}>Résumé (optionnel)</Text>
-      <TextInput
-        style={[styles.input, styles.multiline]}
-        value={summary}
-        onChangeText={setSummary}
-        placeholder="Thèmes abordés, informations clés..."
-        placeholderTextColor={Colors.inkMuted}
-        multiline
-        numberOfLines={4}
-        textAlignVertical="top"
-      />
+        <Text style={styles.label}>Résumé</Text>
+        <TextInput
+          style={[styles.input, styles.multiline]}
+          value={summary}
+          onChangeText={setSummary}
+          placeholder="Thèmes abordés, informations clés..."
+          placeholderTextColor={Colors.inkMuted}
+          multiline
+          numberOfLines={4}
+          textAlignVertical="top"
+        />
+      </View>
 
       <Pressable
-        style={[styles.saveBtn, state !== "done" && styles.saveBtnDisabled]}
+        style={({ pressed }) => [
+          styles.saveBtn,
+          state !== "done" && styles.saveBtnDisabled,
+          pressed && state === "done" && { opacity: 0.85 },
+        ]}
         onPress={saveTestimony}
         disabled={state !== "done"}
       >
-        <Text style={styles.saveBtnText}>Sauvegarder le témoignage</Text>
+        <Ionicons
+          name="checkmark-circle-outline"
+          size={20}
+          color={state === "done" ? "white" : Colors.inkMuted}
+        />
+        <Text
+          style={[
+            styles.saveBtnText,
+            state !== "done" && { color: Colors.inkMuted },
+          ]}
+        >
+          Sauvegarder
+        </Text>
       </Pressable>
     </ScrollView>
   );
@@ -186,18 +223,40 @@ export default function VoiceScreen() {
 
 const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.surfaceSunken },
-  content: { padding: Spacing.lg, paddingBottom: Spacing.xxl },
+  content: { padding: Spacing.lg, paddingBottom: Spacing.xxxl },
+
   recorderCard: {
     backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    borderRadius: Radius.xl,
     padding: Spacing.xxl,
     alignItems: "center",
     gap: Spacing.lg,
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
+    ...Shadow.md,
   },
-  timer: { fontSize: 48, fontWeight: "200", color: Colors.ink, letterSpacing: 2 },
+  ring: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 3,
+    borderColor: Colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ringActive: {
+    borderColor: Colors.danger,
+    borderWidth: 4,
+  },
+  ringDone: {
+    borderColor: Colors.success,
+    backgroundColor: Colors.successLight,
+  },
+  timer: {
+    fontSize: FontSize.xxl,
+    fontWeight: "300",
+    color: Colors.ink,
+    letterSpacing: 2,
+  },
   recBtn: {
     width: 72,
     height: 72,
@@ -208,44 +267,72 @@ const styles = StyleSheet.create({
   },
   controls: { flexDirection: "row", gap: Spacing.lg, alignItems: "center" },
   ctrlBtn: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: Colors.accentLight,
     alignItems: "center",
     justifyContent: "center",
   },
   stopBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: Colors.danger,
     alignItems: "center",
     justifyContent: "center",
   },
-  doneRow: { alignItems: "center", gap: Spacing.sm },
-  doneText: { fontSize: FontSize.base, color: Colors.success, fontWeight: "500" },
-  retakeText: { fontSize: FontSize.sm, color: Colors.accent },
+  doneInfo: { alignItems: "center", gap: Spacing.sm },
+  doneText: {
+    fontSize: FontSize.base,
+    color: Colors.inkSecondary,
+    fontWeight: "500",
+  },
+  resetBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+  },
+  resetText: { fontSize: FontSize.sm, color: Colors.accent, fontWeight: "500" },
   stateLabel: { fontSize: FontSize.sm, color: Colors.inkMuted },
-  label: { fontSize: FontSize.sm, fontWeight: "500", color: Colors.inkSecondary, marginBottom: Spacing.xs, marginTop: Spacing.md },
-  input: {
+
+  formCard: {
     backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    ...Shadow.sm,
+  },
+  label: {
+    fontSize: FontSize.sm,
+    fontWeight: "600",
+    color: Colors.inkSecondary,
+    marginBottom: Spacing.xs,
+    marginTop: Spacing.lg,
+  },
+  input: {
+    backgroundColor: Colors.surfaceSunken,
     borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.sm + 2,
     fontSize: FontSize.base,
     color: Colors.ink,
   },
-  multiline: { minHeight: 90, paddingTop: Spacing.sm },
+  multiline: { minHeight: 90, paddingTop: Spacing.sm + 2 },
   saveBtn: {
+    flexDirection: "row",
+    gap: Spacing.sm,
     backgroundColor: Colors.accent,
-    borderRadius: Radius.md,
+    borderRadius: Radius.lg,
     padding: Spacing.lg,
     alignItems: "center",
+    justifyContent: "center",
     marginTop: Spacing.xl,
+    ...Shadow.md,
   },
-  saveBtnDisabled: { backgroundColor: Colors.borderStrong },
+  saveBtnDisabled: {
+    backgroundColor: Colors.border,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
   saveBtnText: { color: "white", fontSize: FontSize.base, fontWeight: "600" },
 });

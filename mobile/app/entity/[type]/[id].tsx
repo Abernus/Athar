@@ -1,7 +1,13 @@
-import { ScrollView, View, Text, Pressable, StyleSheet, Linking } from "react-native";
+import {
+  ScrollView,
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+} from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useEffect } from "react";
-import { Colors, FontSize, Spacing, Radius } from "@/lib/theme";
+import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
 import { Card } from "@/components/Card";
 import { EntityBadge } from "@/components/EntityBadge";
@@ -15,7 +21,8 @@ export default function EntityDetailScreen() {
   const { type, id } = useLocalSearchParams<{ type: string; id: string }>();
   const navigation = useNavigation();
   const router = useRouter();
-  const { getEntityById, getRelationshipsFor, getEntityDisplayName } = useResearchStore();
+  const { getEntityById, getRelationshipsFor, getEntityDisplayName } =
+    useResearchStore();
 
   const entityType = type as EntityType;
   const entity = getEntityById(entityType, id);
@@ -38,49 +45,58 @@ export default function EntityDetailScreen() {
       {/* Header card */}
       <Card>
         <View style={styles.entityHeader}>
-          <EntityBadge type={entity.entityType} size="md" />
+          <EntityBadge type={entity.entityType} size="lg" />
           <View style={styles.entityHeaderText}>
             <Text style={styles.entityName}>{getEntityName(entity)}</Text>
-            <Text style={styles.entityType}>{ENTITY_TYPE_LABELS[entity.entityType]}</Text>
+            <Text style={styles.entityType}>
+              {ENTITY_TYPE_LABELS[entity.entityType]}
+            </Text>
           </View>
         </View>
 
-        {/* Entity-specific fields */}
+        {/* Person fields */}
         {entity.entityType === "person" && (
           <View style={styles.fieldGrid}>
             {entity.birthDate && (
               <View style={styles.field}>
                 <Text style={styles.fieldLabel}>Naissance</Text>
-                <Text style={styles.fieldValue}>{formatHistoricalDate(entity.birthDate)}</Text>
+                <Text style={styles.fieldValue}>
+                  {formatHistoricalDate(entity.birthDate)}
+                </Text>
               </View>
             )}
             {entity.deathDate && (
               <View style={styles.field}>
                 <Text style={styles.fieldLabel}>Décès</Text>
-                <Text style={styles.fieldValue}>{formatHistoricalDate(entity.deathDate)}</Text>
+                <Text style={styles.fieldValue}>
+                  {formatHistoricalDate(entity.deathDate)}
+                </Text>
               </View>
             )}
             {entity.alternateNames.length > 0 && (
               <View style={styles.fieldFull}>
                 <Text style={styles.fieldLabel}>Aussi connu(e) comme</Text>
-                <Text style={styles.fieldValue}>{entity.alternateNames.join(", ")}</Text>
+                <Text style={styles.fieldValue}>
+                  {entity.alternateNames.join(", ")}
+                </Text>
               </View>
             )}
           </View>
         )}
 
-        {entity.entityType === "event" && (
+        {/* Event fields */}
+        {entity.entityType === "event" && entity.dateStart && (
           <View style={styles.fieldGrid}>
-            {entity.dateStart && (
-              <View style={styles.field}>
-                <Text style={styles.fieldLabel}>Date</Text>
-                <Text style={styles.fieldValue}>{formatHistoricalDate(entity.dateStart)}</Text>
-              </View>
-            )}
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Date</Text>
+              <Text style={styles.fieldValue}>
+                {formatHistoricalDate(entity.dateStart)}
+              </Text>
+            </View>
           </View>
         )}
 
-        {/* Summary */}
+        {/* Summary / Description */}
         {"summary" in entity && entity.summary ? (
           <Text style={styles.summary}>{entity.summary}</Text>
         ) : null}
@@ -103,38 +119,58 @@ export default function EntityDetailScreen() {
       {/* Relations */}
       {relationships.length > 0 && (
         <>
-          <Text style={styles.sectionTitle}>RELATIONS</Text>
-          <Card style={styles.relCard}>
+          <View style={styles.sectionRow}>
+            <View style={styles.sectionBar} />
+            <Text style={styles.sectionTitle}>Relations</Text>
+          </View>
+          <View style={styles.relCard}>
             {relationships.map((rel, i) => {
-              const isSource = rel.sourceEntityType === entityType && rel.sourceEntityId === id;
-              const otherType = isSource ? rel.targetEntityType : rel.sourceEntityType;
-              const otherId = isSource ? rel.targetEntityId : rel.sourceEntityId;
+              const isSource =
+                rel.sourceEntityType === entityType &&
+                rel.sourceEntityId === id;
+              const otherType = isSource
+                ? rel.targetEntityType
+                : rel.sourceEntityType;
+              const otherId = isSource
+                ? rel.targetEntityId
+                : rel.sourceEntityId;
 
               return (
                 <Pressable
                   key={rel.id}
-                  style={[styles.relRow, i < relationships.length - 1 && styles.relBorder]}
-                  onPress={() => router.push(`/entity/${otherType}/${otherId}` as never)}
+                  style={[
+                    styles.relRow,
+                    i < relationships.length - 1 && styles.relBorder,
+                  ]}
+                  onPress={() =>
+                    router.push(`/entity/${otherType}/${otherId}` as never)
+                  }
                 >
                   <EntityBadge type={otherType} />
                   <View style={styles.relText}>
-                    <Text style={styles.relName}>{getEntityDisplayName(otherType, otherId)}</Text>
+                    <Text style={styles.relName}>
+                      {getEntityDisplayName(otherType, otherId)}
+                    </Text>
                     <Text style={styles.relType}>
-                      {rel.label || RELATIONSHIP_TYPE_LABELS[rel.relationshipType]}
+                      {rel.label ||
+                        RELATIONSHIP_TYPE_LABELS[rel.relationshipType]}
                     </Text>
                   </View>
                   <ConfidencePill level={rel.confidenceLevel} />
                 </Pressable>
               );
             })}
-          </Card>
+          </View>
         </>
       )}
 
       {/* Notes */}
       {entity.notes ? (
         <>
-          <Text style={styles.sectionTitle}>NOTES</Text>
+          <View style={styles.sectionRow}>
+            <View style={styles.sectionBar} />
+            <Text style={styles.sectionTitle}>Notes</Text>
+          </View>
           <Card>
             <Text style={styles.notes}>{entity.notes}</Text>
           </Card>
@@ -146,28 +182,130 @@ export default function EntityDetailScreen() {
 
 const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.surfaceSunken },
-  content: { padding: Spacing.lg, paddingBottom: Spacing.xxl, gap: Spacing.sm },
+  content: {
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxxl,
+    gap: Spacing.sm,
+  },
+
   notFound: { flex: 1, alignItems: "center", justifyContent: "center" },
   notFoundText: { fontSize: FontSize.base, color: Colors.inkMuted },
-  entityHeader: { flexDirection: "row", alignItems: "center", gap: Spacing.md, marginBottom: Spacing.md },
+
+  entityHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
   entityHeaderText: { flex: 1 },
-  entityName: { fontSize: FontSize.lg, fontWeight: "600", color: Colors.ink },
-  entityType: { fontSize: FontSize.xs, color: Colors.inkMuted, marginTop: 2, textTransform: "uppercase", letterSpacing: 0.5 },
-  fieldGrid: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.md, marginBottom: Spacing.md },
+  entityName: {
+    fontSize: FontSize.xl,
+    fontWeight: "700",
+    color: Colors.ink,
+  },
+  entityType: {
+    fontSize: FontSize.xs,
+    color: Colors.inkMuted,
+    marginTop: 3,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+
+  fieldGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
   field: { minWidth: "40%" },
   fieldFull: { width: "100%" },
-  fieldLabel: { fontSize: FontSize.xs, color: Colors.inkMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 },
-  fieldValue: { fontSize: FontSize.sm, color: Colors.ink, fontWeight: "500" },
-  summary: { fontSize: FontSize.sm, color: Colors.inkSecondary, lineHeight: 20, marginTop: Spacing.sm },
-  tags: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.xs, marginTop: Spacing.md },
-  tag: { backgroundColor: Colors.surfaceSunken, borderRadius: Radius.full, paddingHorizontal: Spacing.sm, paddingVertical: 3, borderWidth: 1, borderColor: Colors.border },
-  tagText: { fontSize: FontSize.xs, color: Colors.inkSecondary },
-  sectionTitle: { fontSize: FontSize.xs, fontWeight: "600", color: Colors.inkMuted, letterSpacing: 0.8, marginTop: Spacing.sm },
-  relCard: { padding: 0, overflow: "hidden" },
-  relRow: { flexDirection: "row", alignItems: "center", gap: Spacing.md, padding: Spacing.md },
-  relBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
+  fieldLabel: {
+    fontSize: FontSize.xs,
+    color: Colors.inkMuted,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  fieldValue: {
+    fontSize: FontSize.sm,
+    color: Colors.ink,
+    fontWeight: "500",
+  },
+
+  summary: {
+    fontSize: FontSize.sm,
+    color: Colors.inkSecondary,
+    lineHeight: 21,
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+
+  tags: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.xs,
+    marginTop: Spacing.lg,
+  },
+  tag: {
+    backgroundColor: Colors.accentLight,
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.sm + 2,
+    paddingVertical: 4,
+  },
+  tagText: {
+    fontSize: FontSize.xs,
+    color: Colors.accent,
+    fontWeight: "500",
+  },
+
+  sectionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.xs,
+  },
+  sectionBar: {
+    width: 3,
+    height: 14,
+    borderRadius: 2,
+    backgroundColor: Colors.accent,
+  },
+  sectionTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: "600",
+    color: Colors.inkSecondary,
+    letterSpacing: 0.3,
+  },
+
+  relCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    overflow: "hidden",
+    ...Shadow.sm,
+  },
+  relRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    padding: Spacing.lg,
+  },
+  relBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
   relText: { flex: 1 },
-  relName: { fontSize: FontSize.sm, color: Colors.ink, fontWeight: "500" },
+  relName: { fontSize: FontSize.base, color: Colors.ink, fontWeight: "500" },
   relType: { fontSize: FontSize.xs, color: Colors.inkMuted, marginTop: 2 },
-  notes: { fontSize: FontSize.sm, color: Colors.inkSecondary, lineHeight: 20 },
+
+  notes: {
+    fontSize: FontSize.sm,
+    color: Colors.inkSecondary,
+    lineHeight: 21,
+  },
 });

@@ -1,5 +1,6 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
-import { Colors, FontSize, Spacing, Radius } from "@/lib/theme";
+import { Ionicons } from "@expo/vector-icons";
+import { Colors, FontSize, Spacing } from "@/lib/theme";
 import { EntityBadge } from "./EntityBadge";
 import { getEntityName } from "@/types";
 import type { AnyEntity } from "@/types";
@@ -13,7 +14,12 @@ interface Props {
 function getSubtitle(entity: AnyEntity): string {
   switch (entity.entityType) {
     case "person":
-      return [formatHistoricalDate(entity.birthDate), entity.birthDate && entity.deathDate ? formatHistoricalDate(entity.deathDate) : null]
+      return [
+        formatHistoricalDate(entity.birthDate),
+        entity.birthDate && entity.deathDate
+          ? formatHistoricalDate(entity.deathDate)
+          : null,
+      ]
         .filter(Boolean)
         .join(" — ");
     case "group":
@@ -33,9 +39,14 @@ export function EntityRow({ entity, onPress }: Props) {
     >
       <EntityBadge type={entity.entityType} size="md" />
       <View style={styles.content}>
-        <Text style={styles.name} numberOfLines={1}>{getEntityName(entity)}</Text>
-        <Text style={styles.sub} numberOfLines={1}>{getSubtitle(entity)}</Text>
+        <Text style={styles.name} numberOfLines={1}>
+          {getEntityName(entity)}
+        </Text>
+        <Text style={styles.sub} numberOfLines={1}>
+          {getSubtitle(entity)}
+        </Text>
       </View>
+      <Ionicons name="chevron-forward" size={16} color={Colors.borderStrong} />
     </Pressable>
   );
 }
@@ -47,11 +58,9 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   pressed: { backgroundColor: Colors.surfaceSunken },
   content: { flex: 1 },
   name: { fontSize: FontSize.base, color: Colors.ink, fontWeight: "500" },
-  sub: { fontSize: FontSize.xs, color: Colors.inkMuted, marginTop: 2 },
+  sub: { fontSize: FontSize.sm, color: Colors.inkMuted, marginTop: 2 },
 });

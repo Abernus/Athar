@@ -1,5 +1,5 @@
 // ============================================================
-// Historiens — Constants, labels, and display maps
+// Athar — Constants, labels, and display maps
 // ============================================================
 
 import type {

@@ -12,10 +12,11 @@ export default function TabsLayout() {
           backgroundColor: Colors.surface,
           borderTopColor: Colors.border,
           borderTopWidth: 1,
+          paddingTop: 4,
         },
         tabBarLabelStyle: { fontSize: FontSize.xs, fontWeight: "500" },
         headerStyle: { backgroundColor: Colors.surface },
-        headerTitleStyle: { color: Colors.ink, fontWeight: "600", fontSize: 16 },
+        headerTitleStyle: { color: Colors.ink, fontWeight: "600", fontSize: 17 },
         headerShadowVisible: false,
       }}
     >
@@ -23,6 +24,7 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: "Accueil",
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),
@@ -33,23 +35,23 @@ export default function TabsLayout() {
         options={{
           title: "Capturer",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="camera-outline" size={size} color={color} />
+            <Ionicons name="add-circle-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="browse"
         options={{
-          title: "Parcourir",
+          title: "Explorer",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="list-outline" size={size} color={color} />
+            <Ionicons name="compass-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
-          title: "Recherche",
+          title: "Chercher",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="search-outline" size={size} color={color} />
           ),

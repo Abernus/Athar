@@ -72,7 +72,7 @@ export function Sidebar() {
       <div className="px-4 py-4 border-b border-[var(--color-border)]">
         <Link href="/" className="flex items-center gap-2">
           <span className="text-base font-semibold tracking-tight text-[var(--color-ink)]">
-            Historiens
+            Athar
           </span>
         </Link>
       </div>

@@ -7,7 +7,10 @@ interface Props {
   level: ConfidenceLevel;
 }
 
-const PILL_COLORS: Record<ConfidenceLevel, { bg: string; text: string; border: string }> = {
+const PILL_COLORS: Record<
+  ConfidenceLevel,
+  { bg: string; text: string; border: string }
+> = {
   confirmed: Colors.confirmed,
   probable: Colors.probable,
   uncertain: Colors.uncertain,
@@ -19,7 +22,9 @@ export function ConfidencePill({ level }: Props) {
   const c = PILL_COLORS[level];
   return (
     <View style={[styles.pill, { backgroundColor: c.bg, borderColor: c.border }]}>
-      <Text style={[styles.label, { color: c.text }]}>{CONFIDENCE_LABELS[level]}</Text>
+      <Text style={[styles.label, { color: c.text }]}>
+        {CONFIDENCE_LABELS[level]}
+      </Text>
     </View>
   );
 }
@@ -28,11 +33,11 @@ const styles = StyleSheet.create({
   pill: {
     borderWidth: 1,
     borderRadius: Radius.full,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
+    paddingHorizontal: Spacing.sm + 2,
+    paddingVertical: 3,
   },
   label: {
     fontSize: FontSize.xs,
-    fontWeight: "500",
+    fontWeight: "600",
   },
 });

@@ -12,7 +12,7 @@ export default function MethodologyPage() {
     <div>
       <PageHeader
         title="Méthodologie & Guide de lecture"
-        description="Comment interpréter les statuts, niveaux de confiance et types de sources dans Historiens."
+        description="Comment interpréter les statuts, niveaux de confiance et types de sources dans Athar."
       />
 
       <div className="space-y-8">

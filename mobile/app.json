@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "Historiens",
-    "slug": "historiens",
+    "name": "Athar",
+    "slug": "athar",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "scheme": "historiens",
+    "scheme": "athar",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.abernus.historiens"
+      "bundleIdentifier": "com.abernus.athar"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +23,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.abernus.historiens"
+      "package": "com.abernus.athar"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -34,20 +34,20 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Historiens a besoin d'accéder à votre caméra pour photographier des archives et enregistrer des témoignages."
+          "cameraPermission": "Athar a besoin d'accéder à votre caméra pour photographier des archives et enregistrer des témoignages."
         }
       ],
       [
         "expo-av",
         {
-          "microphonePermission": "Historiens a besoin d'accéder à votre microphone pour enregistrer des témoignages oraux."
+          "microphonePermission": "Athar a besoin d'accéder à votre microphone pour enregistrer des témoignages oraux."
         }
       ],
       [
         "expo-media-library",
         {
-          "photosPermission": "Historiens a besoin d'accéder à votre photothèque pour importer des photos d'archives.",
-          "savePhotosPermission": "Historiens a besoin d'enregistrer les photos dans votre photothèque."
+          "photosPermission": "Athar a besoin d'accéder à votre photothèque pour importer des photos d'archives.",
+          "savePhotosPermission": "Athar a besoin d'enregistrer les photos dans votre photothèque."
         }
       ]
     ],

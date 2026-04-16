@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet, FlatList } from "react-native";
 import { useRouter } from "expo-router";
-import { Colors, FontSize, Spacing, Radius } from "@/lib/theme";
+import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
 import { EntityRow } from "@/components/EntityRow";
-import { ENTITY_TYPE_LABELS_PLURAL } from "@/lib/constants";
 import type { EntityType } from "@/types";
 
 const TABS: { key: EntityType | "all"; label: string }[] = [
@@ -21,7 +20,6 @@ export default function BrowseScreen() {
   const [activeTab, setActiveTab] = useState<EntityType | "all">("all");
 
   const allEntities = [...persons, ...groups, ...places, ...events];
-
   const filtered =
     activeTab === "all"
       ? allEntities
@@ -36,23 +34,26 @@ export default function BrowseScreen() {
         style={styles.tabBar}
         contentContainerStyle={styles.tabContent}
       >
-        {TABS.map((tab) => (
-          <Pressable
-            key={tab.key}
-            style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-            onPress={() => setActiveTab(tab.key)}
-          >
-            <Text
-              style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.key;
+          return (
+            <Pressable
+              key={tab.key}
+              style={[styles.tab, isActive && styles.tabActive]}
+              onPress={() => setActiveTab(tab.key)}
             >
-              {tab.label}
-            </Text>
-          </Pressable>
-        ))}
+              <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+                {tab.label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </ScrollView>
 
       {/* Count */}
-      <Text style={styles.count}>{filtered.length} élément{filtered.length !== 1 ? "s" : ""}</Text>
+      <Text style={styles.count}>
+        {filtered.length} élément{filtered.length !== 1 ? "s" : ""}
+      </Text>
 
       {/* List */}
       <FlatList
@@ -61,9 +62,12 @@ export default function BrowseScreen() {
         renderItem={({ item }) => (
           <EntityRow
             entity={item}
-            onPress={() => router.push(`/entity/${item.entityType}/${item.id}` as never)}
+            onPress={() =>
+              router.push(`/entity/${item.entityType}/${item.id}` as never)
+            }
           />
         )}
+        ItemSeparatorComponent={() => <View style={styles.divider} />}
         style={styles.list}
         contentContainerStyle={styles.listContent}
       />
@@ -79,16 +83,26 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border,
     flexGrow: 0,
   },
-  tabContent: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, gap: Spacing.sm },
+  tabContent: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    gap: Spacing.sm,
+  },
   tab: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs + 2,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
     borderRadius: Radius.full,
     backgroundColor: Colors.surfaceSunken,
   },
-  tabActive: { backgroundColor: Colors.accentLight },
-  tabLabel: { fontSize: FontSize.sm, color: Colors.inkSecondary, fontWeight: "500" },
-  tabLabelActive: { color: Colors.accent },
+  tabActive: {
+    backgroundColor: Colors.accentLight,
+  },
+  tabLabel: {
+    fontSize: FontSize.sm,
+    color: Colors.inkMuted,
+    fontWeight: "500",
+  },
+  tabLabelActive: { color: Colors.accent, fontWeight: "600" },
   count: {
     fontSize: FontSize.xs,
     color: Colors.inkMuted,
@@ -96,5 +110,16 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   list: { flex: 1 },
-  listContent: { backgroundColor: Colors.surface },
+  listContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    marginHorizontal: Spacing.lg,
+    overflow: "hidden",
+    ...Shadow.sm,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginHorizontal: Spacing.lg,
+  },
 });

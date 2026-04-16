@@ -1,5 +1,5 @@
 // ============================================================
-// Historiens — Core Types
+// Athar (أثر) — Core Types
 // All fundamental types for the historical research platform.
 // ============================================================
 

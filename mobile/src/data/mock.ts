@@ -1,5 +1,5 @@
 // ============================================================
-// Historiens — Mock data for development
+// Athar (أثر) — Mock data for development
 // A small corpus around Algerian migration to France (1900s–1960s)
 // ============================================================
 

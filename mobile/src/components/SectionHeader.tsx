@@ -1,17 +1,33 @@
-import { Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { Colors, FontSize, Spacing } from "@/lib/theme";
 
 export function SectionHeader({ title }: { title: string }) {
-  return <Text style={styles.text}>{title.toUpperCase()}</Text>;
+  return (
+    <View style={styles.container}>
+      <View style={styles.bar} />
+      <Text style={styles.text}>{title}</Text>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+    marginTop: Spacing.xl,
+  },
+  bar: {
+    width: 3,
+    height: 14,
+    borderRadius: 2,
+    backgroundColor: Colors.accent,
+  },
   text: {
-    fontSize: FontSize.xs,
+    fontSize: FontSize.sm,
     fontWeight: "600",
-    color: Colors.inkMuted,
-    letterSpacing: 0.8,
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.lg,
+    color: Colors.inkSecondary,
+    letterSpacing: 0.3,
   },
 });
