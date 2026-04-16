@@ -17,18 +17,18 @@ import { SectionHeader } from "@/components/SectionHeader";
 
 const QUICK_ACTIONS = [
   {
+    label: "Réseau",
+    sub: "Graphe",
+    icon: "git-network-outline" as const,
+    route: "/network",
+    color: { bg: "#FCE7F3", icon: "#DB2777" },
+  },
+  {
     label: "Photo",
     sub: "Archive",
     icon: "camera-outline" as const,
     route: "/capture/photo",
     color: Colors.person,
-  },
-  {
-    label: "Audio",
-    sub: "Témoignage",
-    icon: "mic-outline" as const,
-    route: "/capture/voice",
-    color: Colors.group,
   },
   {
     label: "Personne",

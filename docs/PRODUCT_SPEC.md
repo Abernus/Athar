@@ -228,29 +228,29 @@ Sérieux, lisible, sobre, méthodique, élégant mais non sentimental.
 
 ## 13. Roadmap
 
-### V1 — Socle différenciant
+### V1 — Socle différenciant ✅
 - [x] Entités : personnes, groupes, lieux, événements
 - [x] Relations entre entités
 - [x] Niveaux de confiance
-- [x] Capture terrain (photo, audio)
+- [x] Capture terrain (photo, audio, liaison entités)
 - [x] Recherche
-- [x] Supabase backend
-- [ ] **Dossiers de recherche**
-- [ ] **Sources (gestion complète + UI)**
-- [ ] **Extraits & annotations**
-- [ ] **Hypothèses (UI)**
-- [ ] **Chronologie critique**
-- [ ] **Cartographie historique**
-- [ ] **Carnet de recherche**
-- [ ] **Exports Markdown / PDF**
+- [x] Supabase backend (schéma `athar`)
+- [x] Dossiers de recherche
+- [x] Sources (gestion complète + UI)
+- [x] Extraits & annotations
+- [x] Hypothèses (UI)
+- [x] Chronologie critique (frise interactive)
+- [x] Cartographie historique (explorateur de lieux)
+- [x] Carnet de recherche (notes)
+- [x] Exports PDF / HTML
 
-### V2 — Renforcement métier
-- [ ] Graphe relationnel interactif
-- [ ] Contradictions structurées
-- [ ] Variantes de noms / identités incertaines
+### V2 — Renforcement métier (en cours)
+- [x] Graphe relationnel interactif
+- [x] Contradictions structurées
+- [x] Variantes de noms / identités incertaines (aliases)
+- [x] Bibliographie
 - [ ] Corpus + OCR + indexation plein texte
 - [ ] Histoire orale enrichie
-- [ ] Bibliographie
 - [ ] Collaboration multi-utilisateur
 
 ### V3 — Niveau expert / labo

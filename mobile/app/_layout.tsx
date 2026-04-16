@@ -68,8 +68,20 @@ export default function RootLayout() {
           options={{ title: "Nouvelle note", presentation: "modal" }}
         />
         <Stack.Screen
+          name="add/contradiction"
+          options={{ title: "Contradiction", presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="add/bibliography"
+          options={{ title: "Bibliographie", presentation: "modal" }}
+        />
+        <Stack.Screen
           name="add/relationship"
           options={{ title: "Nouvelle relation", presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="network"
+          options={{ title: "Réseau" }}
         />
         <Stack.Screen name="entity/[type]/[id]" options={{ title: "" }} />
         <Stack.Screen

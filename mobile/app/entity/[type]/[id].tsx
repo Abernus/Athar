@@ -179,16 +179,27 @@ export default function EntityDetailScreen() {
         </>
       ) : null}
 
-      {/* Add relation */}
-      <Pressable
-        style={styles.addRelBtn}
-        onPress={() =>
-          router.push(`/add/relationship?fromType=${entityType}&fromId=${id}` as never)
-        }
-      >
-        <Ionicons name="git-network-outline" size={18} color={Colors.accent} />
-        <Text style={styles.addRelBtnText}>Ajouter une relation</Text>
-      </Pressable>
+      {/* Action buttons */}
+      <View style={styles.actionRow}>
+        <Pressable
+          style={styles.addRelBtn}
+          onPress={() =>
+            router.push(`/add/relationship?fromType=${entityType}&fromId=${id}` as never)
+          }
+        >
+          <Ionicons name="add-circle-outline" size={16} color={Colors.accent} />
+          <Text style={styles.addRelBtnText}>Relation</Text>
+        </Pressable>
+        <Pressable
+          style={styles.addRelBtn}
+          onPress={() =>
+            router.push(`/network?focusId=${id}` as never)
+          }
+        >
+          <Ionicons name="git-network-outline" size={16} color={Colors.accent} />
+          <Text style={styles.addRelBtnText}>Réseau</Text>
+        </Pressable>
+      </View>
 
       {/* Delete */}
       <Pressable
@@ -347,13 +358,18 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
 
+  actionRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    marginTop: Spacing.lg,
+  },
   addRelBtn: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: Spacing.sm,
-    marginTop: Spacing.lg,
-    padding: Spacing.lg,
+    padding: Spacing.md,
     borderRadius: Radius.lg,
     backgroundColor: Colors.accentLight,
   },

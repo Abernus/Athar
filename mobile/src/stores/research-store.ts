@@ -15,6 +15,9 @@ import type {
   ResearchProject,
   SourceExcerpt,
   ResearchNote,
+  Contradiction,
+  EntityAlias,
+  BibliographyEntry,
 } from "@/types";
 import { getEntityName } from "@/types";
 
@@ -224,6 +227,60 @@ function rowToHypothesis(r: any): Hypothesis {
   };
 }
 
+function rowToContradiction(r: any): Contradiction {
+  return {
+    id: r.id,
+    projectId: r.project_id,
+    title: r.title,
+    description: r.description ?? "",
+    status: r.status ?? "open",
+    resolutionNote: r.resolution_note ?? "",
+    sourceAType: r.source_a_type,
+    sourceAId: r.source_a_id,
+    sourceBType: r.source_b_type,
+    sourceBId: r.source_b_id,
+    tags: r.tags ?? [],
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+function rowToAlias(r: any): EntityAlias {
+  return {
+    id: r.id,
+    entityType: r.entity_type,
+    entityId: r.entity_id,
+    alias: r.alias,
+    language: r.language ?? "",
+    script: r.script ?? "",
+    transcriptionSystem: r.transcription_system ?? "",
+    notes: r.notes ?? "",
+    createdAt: r.created_at,
+  };
+}
+
+function rowToBibEntry(r: any): BibliographyEntry {
+  return {
+    id: r.id,
+    projectId: r.project_id,
+    entryType: r.entry_type ?? "book",
+    title: r.title,
+    authors: r.authors ?? "",
+    year: r.year ?? "",
+    publisher: r.publisher ?? "",
+    journal: r.journal ?? "",
+    volume: r.volume ?? "",
+    pages: r.pages ?? "",
+    url: r.url ?? "",
+    isbn: r.isbn ?? "",
+    abstract: r.abstract ?? "",
+    notes: r.notes ?? "",
+    tags: r.tags ?? [],
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
 // --- Store ---
 
 interface ResearchState {
@@ -240,6 +297,9 @@ interface ResearchState {
   projects: ResearchProject[];
   excerpts: SourceExcerpt[];
   researchNotes: ResearchNote[];
+  contradictions: Contradiction[];
+  entityAliases: EntityAlias[];
+  bibliography: BibliographyEntry[];
 
   // Loading
   loading: boolean;
@@ -275,6 +335,10 @@ interface ResearchState {
   deleteProject: (id: string) => Promise<boolean>;
   deleteSource: (id: string) => Promise<boolean>;
   deleteHypothesis: (id: string) => Promise<boolean>;
+  addContradiction: (data: Omit<Contradiction, "id" | "createdAt" | "updatedAt">) => Promise<Contradiction | null>;
+  addEntityAlias: (data: Omit<EntityAlias, "id" | "createdAt">) => Promise<EntityAlias | null>;
+  addBibEntry: (data: Omit<BibliographyEntry, "id" | "createdAt" | "updatedAt">) => Promise<BibliographyEntry | null>;
+  getAliasesFor: (entityType: EntityType, entityId: string) => EntityAlias[];
 
   // Search
   searchAll: (query: string) => AnyEntity[];
@@ -293,12 +357,15 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
   projects: [],
   excerpts: [],
   researchNotes: [],
+  contradictions: [],
+  entityAliases: [],
+  bibliography: [],
   loading: false,
   initialized: false,
 
   fetchAll: async () => {
     set({ loading: true });
-    const [persons, groups, places, events, relationships, archiveItems, oralTestimonies, projects, sources, excerpts, researchNotes, hypotheses] =
+    const [persons, groups, places, events, relationships, archiveItems, oralTestimonies, projects, sources, excerpts, researchNotes, hypotheses, contradictions, entityAliases, bibliography] =
       await Promise.all([
         supabase.from("persons").select("*").order("created_at", { ascending: false }),
         supabase.from("groups").select("*").order("created_at", { ascending: false }),
@@ -312,6 +379,9 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
         supabase.from("source_excerpts").select("*").order("created_at", { ascending: false }),
         supabase.from("research_notes").select("*").order("created_at", { ascending: false }),
         supabase.from("hypotheses").select("*").order("created_at", { ascending: false }),
+        supabase.from("contradictions").select("*").order("created_at", { ascending: false }),
+        supabase.from("entity_aliases").select("*").order("created_at", { ascending: false }),
+        supabase.from("bibliography_entries").select("*").order("created_at", { ascending: false }),
       ]);
     set({
       persons: (persons.data ?? []).map(rowToPerson),
@@ -326,6 +396,9 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
       excerpts: (excerpts.data ?? []).map(rowToExcerpt),
       researchNotes: (researchNotes.data ?? []).map(rowToNote),
       hypotheses: (hypotheses.data ?? []).map(rowToHypothesis),
+      contradictions: (contradictions.data ?? []).map(rowToContradiction),
+      entityAliases: (entityAliases.data ?? []).map(rowToAlias),
+      bibliography: (bibliography.data ?? []).map(rowToBibEntry),
       loading: false,
       initialized: true,
     });
@@ -644,6 +717,79 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
     set((s) => ({ hypotheses: s.hypotheses.filter((h) => h.id !== id) }));
     return true;
   },
+
+  addContradiction: async (data) => {
+    const { data: rows, error } = await supabase
+      .from("contradictions")
+      .insert({
+        project_id: data.projectId ?? null,
+        title: data.title,
+        description: data.description,
+        status: data.status,
+        resolution_note: data.resolutionNote,
+        source_a_type: data.sourceAType ?? null,
+        source_a_id: data.sourceAId ?? null,
+        source_b_type: data.sourceBType ?? null,
+        source_b_id: data.sourceBId ?? null,
+        tags: data.tags,
+      })
+      .select()
+      .single();
+    if (error || !rows) { console.error("addContradiction:", error); return null; }
+    const c = rowToContradiction(rows);
+    set((s) => ({ contradictions: [c, ...s.contradictions] }));
+    return c;
+  },
+
+  addEntityAlias: async (data) => {
+    const { data: rows, error } = await supabase
+      .from("entity_aliases")
+      .insert({
+        entity_type: data.entityType,
+        entity_id: data.entityId,
+        alias: data.alias,
+        language: data.language,
+        script: data.script,
+        transcription_system: data.transcriptionSystem,
+        notes: data.notes,
+      })
+      .select()
+      .single();
+    if (error || !rows) { console.error("addEntityAlias:", error); return null; }
+    const a = rowToAlias(rows);
+    set((s) => ({ entityAliases: [a, ...s.entityAliases] }));
+    return a;
+  },
+
+  addBibEntry: async (data) => {
+    const { data: rows, error } = await supabase
+      .from("bibliography_entries")
+      .insert({
+        project_id: data.projectId ?? null,
+        entry_type: data.entryType,
+        title: data.title,
+        authors: data.authors,
+        year: data.year,
+        publisher: data.publisher,
+        journal: data.journal,
+        volume: data.volume,
+        pages: data.pages,
+        url: data.url,
+        isbn: data.isbn,
+        abstract: data.abstract,
+        notes: data.notes,
+        tags: data.tags,
+      })
+      .select()
+      .single();
+    if (error || !rows) { console.error("addBibEntry:", error); return null; }
+    const b = rowToBibEntry(rows);
+    set((s) => ({ bibliography: [b, ...s.bibliography] }));
+    return b;
+  },
+
+  getAliasesFor: (entityType, entityId) =>
+    get().entityAliases.filter((a) => a.entityType === entityType && a.entityId === entityId),
 
   deleteEntity: async (type, id) => {
     const table = { person: "persons", group: "groups", place: "places", event: "events" }[type];

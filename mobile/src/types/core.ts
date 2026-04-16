@@ -384,6 +384,64 @@ export interface ResearchNote {
   updatedAt: string;
 }
 
+// --- Contradiction ---
+
+export type ContradictionStatus = "open" | "resolved" | "acknowledged";
+
+export interface Contradiction {
+  id: string;
+  projectId?: string;
+  title: string;
+  description: string;
+  status: ContradictionStatus;
+  resolutionNote: string;
+  sourceAType?: string;
+  sourceAId?: string;
+  sourceBType?: string;
+  sourceBId?: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// --- Entity Alias ---
+
+export interface EntityAlias {
+  id: string;
+  entityType: EntityType;
+  entityId: string;
+  alias: string;
+  language: string;
+  script: string;
+  transcriptionSystem: string;
+  notes: string;
+  createdAt: string;
+}
+
+// --- Bibliography Entry ---
+
+export type BibEntryType = "book" | "article" | "thesis" | "chapter" | "report" | "website" | "archive_guide";
+
+export interface BibliographyEntry {
+  id: string;
+  projectId?: string;
+  entryType: BibEntryType;
+  title: string;
+  authors: string;
+  year: string;
+  publisher: string;
+  journal: string;
+  volume: string;
+  pages: string;
+  url: string;
+  isbn: string;
+  abstract: string;
+  notes: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 // --- Union type for any entity ---
 
 export type AnyEntity = Person | Group | Place | HistoricalEvent;
