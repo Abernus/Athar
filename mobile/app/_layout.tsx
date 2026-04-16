@@ -60,6 +60,14 @@ export default function RootLayout() {
         <Stack.Screen name="project/[id]" options={{ title: "" }} />
         <Stack.Screen name="source/[id]" options={{ title: "" }} />
         <Stack.Screen
+          name="add/hypothesis"
+          options={{ title: "Nouvelle hypothèse", presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="add/note"
+          options={{ title: "Nouvelle note", presentation: "modal" }}
+        />
+        <Stack.Screen
           name="add/relationship"
           options={{ title: "Nouvelle relation", presentation: "modal" }}
         />

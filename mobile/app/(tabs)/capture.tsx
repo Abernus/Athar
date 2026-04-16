@@ -54,6 +54,27 @@ const ADD_OPTIONS = [
   },
 ];
 
+const RESEARCH_OPTIONS = [
+  {
+    icon: "bulb-outline" as const,
+    label: "Hypothèse",
+    route: "/add/hypothesis",
+    color: { bg: "#FFEDD5", icon: "#EA580C" },
+  },
+  {
+    icon: "create-outline" as const,
+    label: "Note",
+    route: "/add/note",
+    color: { bg: "#E0E7FF", icon: "#4F46E5" },
+  },
+  {
+    icon: "git-network-outline" as const,
+    label: "Relation",
+    route: "/add/relationship",
+    color: { bg: "#FCE7F3", icon: "#DB2777" },
+  },
+];
+
 export default function CaptureTab() {
   const router = useRouter();
 
@@ -87,6 +108,29 @@ export default function CaptureTab() {
       {/* Add options */}
       <View style={styles.addRow}>
         {ADD_OPTIONS.map((opt) => (
+          <Pressable
+            key={opt.route}
+            style={({ pressed }) => [styles.addBtn, pressed && styles.addPressed]}
+            onPress={() => router.push(opt.route as never)}
+          >
+            <View style={[styles.addIconWrap, { backgroundColor: opt.color.bg }]}>
+              <Ionicons name={opt.icon} size={20} color={opt.color.icon} />
+            </View>
+            <Text style={styles.addLabel}>{opt.label}</Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* Research divider */}
+      <View style={styles.dividerRow}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.dividerText}>Recherche</Text>
+        <View style={styles.dividerLine} />
+      </View>
+
+      {/* Research options */}
+      <View style={styles.addRow}>
+        {RESEARCH_OPTIONS.map((opt) => (
           <Pressable
             key={opt.route}
             style={({ pressed }) => [styles.addBtn, pressed && styles.addPressed]}
@@ -154,9 +198,10 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  addRow: { flexDirection: "row", gap: Spacing.sm },
+  addRow: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm },
   addBtn: {
-    flex: 1,
+    flexBasis: "47%",
+    flexGrow: 1,
     backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
     padding: Spacing.lg,

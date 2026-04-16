@@ -15,6 +15,8 @@ import { useRouter } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useResearchStore } from "@/stores/research-store";
+import { EntityPicker } from "@/components/EntityPicker";
+import type { EntityType } from "@/types";
 
 type Step = "shoot" | "review";
 
@@ -27,6 +29,8 @@ export default function PhotoCaptureScreen() {
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [facing, setFacing] = useState<CameraType>("back");
+  const [linkedEntities, setLinkedEntities] = useState<{ entityType: EntityType; entityId: string }[]>([]);
+  const [showPicker, setShowPicker] = useState(false);
   const { addArchiveItem } = useResearchStore();
 
   async function takePicture() {
@@ -59,7 +63,7 @@ export default function PhotoCaptureScreen() {
       archiveType: "photo",
       description: notes.trim(),
       fileRef: photoUri,
-      linkedEntityIds: [],
+      linkedEntityIds: linkedEntities,
       tags: [],
       notes: "",
     });
@@ -156,6 +160,35 @@ export default function PhotoCaptureScreen() {
           textAlignVertical="top"
         />
       </View>
+
+      {/* Entity linking */}
+      <Pressable
+        style={styles.linkToggle}
+        onPress={() => setShowPicker(!showPicker)}
+      >
+        <Ionicons name="link-outline" size={18} color={Colors.accent} />
+        <Text style={styles.linkToggleText}>
+          Lier à des entités ({linkedEntities.length})
+        </Text>
+        <Ionicons name={showPicker ? "chevron-up" : "chevron-down"} size={16} color={Colors.inkMuted} />
+      </Pressable>
+
+      {showPicker && (
+        <View style={styles.pickerCard}>
+          <EntityPicker
+            selectedType="person"
+            selectedId={null}
+            onSelect={(type, id) => {
+              const exists = linkedEntities.some((e) => e.entityType === type && e.entityId === id);
+              if (exists) {
+                setLinkedEntities(linkedEntities.filter((e) => !(e.entityType === type && e.entityId === id)));
+              } else {
+                setLinkedEntities([...linkedEntities, { entityType: type, entityId: id }]);
+              }
+            }}
+          />
+        </View>
+      )}
 
       <Pressable
         style={({ pressed }) => [styles.saveBtn, pressed && { opacity: 0.85 }]}
@@ -281,6 +314,23 @@ const styles = StyleSheet.create({
     color: Colors.ink,
   },
   multiline: { minHeight: 90, paddingTop: Spacing.sm + 2 },
+  linkToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    padding: Spacing.lg,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    marginTop: Spacing.sm,
+    ...Shadow.sm,
+  },
+  linkToggleText: { flex: 1, fontSize: FontSize.sm, color: Colors.accent, fontWeight: "600" },
+  pickerCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    ...Shadow.sm,
+  },
   saveBtn: {
     flexDirection: "row",
     gap: Spacing.sm,

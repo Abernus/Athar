@@ -209,6 +209,21 @@ function rowToNote(r: any): ResearchNote {
   };
 }
 
+function rowToHypothesis(r: any): Hypothesis {
+  return {
+    id: r.id,
+    title: r.title,
+    description: r.description ?? "",
+    status: r.status ?? "draft",
+    confidenceLevel: r.confidence_level ?? "uncertain",
+    authorId: r.author_id,
+    notes: r.notes ?? "",
+    tags: r.tags ?? [],
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
 // --- Store ---
 
 interface ResearchState {
@@ -255,9 +270,11 @@ interface ResearchState {
   addSource: (data: Omit<Source, "id" | "createdAt" | "updatedAt">) => Promise<Source | null>;
   addExcerpt: (data: Omit<SourceExcerpt, "id" | "createdAt" | "updatedAt">) => Promise<SourceExcerpt | null>;
   addResearchNote: (data: Omit<ResearchNote, "id" | "createdAt" | "updatedAt">) => Promise<ResearchNote | null>;
+  addHypothesis: (data: Omit<Hypothesis, "id" | "createdAt" | "updatedAt">) => Promise<Hypothesis | null>;
   deleteEntity: (type: EntityType, id: string) => Promise<boolean>;
   deleteProject: (id: string) => Promise<boolean>;
   deleteSource: (id: string) => Promise<boolean>;
+  deleteHypothesis: (id: string) => Promise<boolean>;
 
   // Search
   searchAll: (query: string) => AnyEntity[];
@@ -281,7 +298,7 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
 
   fetchAll: async () => {
     set({ loading: true });
-    const [persons, groups, places, events, relationships, archiveItems, oralTestimonies, projects, sources, excerpts, researchNotes] =
+    const [persons, groups, places, events, relationships, archiveItems, oralTestimonies, projects, sources, excerpts, researchNotes, hypotheses] =
       await Promise.all([
         supabase.from("persons").select("*").order("created_at", { ascending: false }),
         supabase.from("groups").select("*").order("created_at", { ascending: false }),
@@ -294,6 +311,7 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
         supabase.from("sources").select("*").order("created_at", { ascending: false }),
         supabase.from("source_excerpts").select("*").order("created_at", { ascending: false }),
         supabase.from("research_notes").select("*").order("created_at", { ascending: false }),
+        supabase.from("hypotheses").select("*").order("created_at", { ascending: false }),
       ]);
     set({
       persons: (persons.data ?? []).map(rowToPerson),
@@ -307,6 +325,7 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
       sources: (sources.data ?? []).map(rowToSource),
       excerpts: (excerpts.data ?? []).map(rowToExcerpt),
       researchNotes: (researchNotes.data ?? []).map(rowToNote),
+      hypotheses: (hypotheses.data ?? []).map(rowToHypothesis),
       loading: false,
       initialized: true,
     });
@@ -596,6 +615,33 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
       sources: s.sources.filter((s2) => s2.id !== id),
       excerpts: s.excerpts.filter((e) => e.sourceId !== id),
     }));
+    return true;
+  },
+
+  addHypothesis: async (data) => {
+    const { data: rows, error } = await supabase
+      .from("hypotheses")
+      .insert({
+        title: data.title,
+        description: data.description,
+        status: data.status,
+        confidence_level: data.confidenceLevel,
+        author_id: data.authorId ?? null,
+        notes: data.notes,
+        tags: data.tags,
+      })
+      .select()
+      .single();
+    if (error || !rows) { console.error("addHypothesis:", error); return null; }
+    const hypothesis = rowToHypothesis(rows);
+    set((s) => ({ hypotheses: [hypothesis, ...s.hypotheses] }));
+    return hypothesis;
+  },
+
+  deleteHypothesis: async (id) => {
+    const { error } = await supabase.from("hypotheses").delete().eq("id", id);
+    if (error) { console.error("deleteHypothesis:", error); return false; }
+    set((s) => ({ hypotheses: s.hypotheses.filter((h) => h.id !== id) }));
     return true;
   },
 

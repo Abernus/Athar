@@ -26,7 +26,7 @@ export default function ProjectDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
   const router = useRouter();
-  const { projects, sources, researchNotes, getAllEntities, deleteProject } =
+  const { projects, sources, hypotheses, researchNotes, getAllEntities, deleteProject } =
     useResearchStore();
 
   const project = projects.find((p) => p.id === id);
@@ -111,17 +111,17 @@ export default function ProjectDetailScreen() {
         </Pressable>
         <Pressable
           style={styles.actionBtn}
-          onPress={() => router.push("/add/person" as never)}
+          onPress={() => router.push("/add/hypothesis" as never)}
         >
-          <Ionicons name="person-add-outline" size={18} color={Colors.accent} />
-          <Text style={styles.actionBtnText}>Entité</Text>
+          <Ionicons name="bulb-outline" size={18} color={Colors.accent} />
+          <Text style={styles.actionBtnText}>Hypothèse</Text>
         </Pressable>
         <Pressable
           style={styles.actionBtn}
-          onPress={() => router.push("/capture/photo" as never)}
+          onPress={() => router.push(`/add/note?projectId=${id}` as never)}
         >
-          <Ionicons name="camera-outline" size={18} color={Colors.accent} />
-          <Text style={styles.actionBtnText}>Photo</Text>
+          <Ionicons name="create-outline" size={18} color={Colors.accent} />
+          <Text style={styles.actionBtnText}>Note</Text>
         </Pressable>
       </View>
 
@@ -143,6 +143,27 @@ export default function ProjectDetailScreen() {
                 </View>
                 <Ionicons name="chevron-forward" size={14} color={Colors.borderStrong} />
               </Pressable>
+            ))}
+          </View>
+        </>
+      )}
+
+      {/* Hypotheses */}
+      {hypotheses.length > 0 && (
+        <>
+          <SectionHeader title={`Hypothèses (${hypotheses.length})`} />
+          <View style={styles.listCard}>
+            {hypotheses.slice(0, 5).map((hyp, i) => (
+              <View
+                key={hyp.id}
+                style={[styles.srcRow, i < Math.min(hypotheses.length, 5) - 1 && styles.srcBorder]}
+              >
+                <Ionicons name="bulb" size={16} color={Colors.warning} />
+                <View style={styles.srcText}>
+                  <Text style={styles.srcTitle} numberOfLines={1}>{hyp.title}</Text>
+                  <Text style={styles.srcType}>{hyp.status} · {hyp.confidenceLevel}</Text>
+                </View>
+              </View>
             ))}
           </View>
         </>

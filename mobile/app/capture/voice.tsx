@@ -13,6 +13,8 @@ import { useRouter } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useResearchStore } from "@/stores/research-store";
+import { EntityPicker } from "@/components/EntityPicker";
+import type { EntityType } from "@/types";
 
 type RecordingState = "idle" | "recording" | "paused" | "done";
 
@@ -32,6 +34,8 @@ export default function VoiceScreen() {
   const [summary, setSummary] = useState("");
   const recordingRef = useRef<Audio.Recording | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [linkedEntities, setLinkedEntities] = useState<{ entityType: EntityType; entityId: string }[]>([]);
+  const [showPicker, setShowPicker] = useState(false);
   const { addOralTestimony } = useResearchStore();
 
   async function startRecording() {
@@ -85,7 +89,7 @@ export default function VoiceScreen() {
       interviewer: "Moi",
       summary: summary.trim(),
       trustNote: "",
-      linkedEntityIds: [],
+      linkedEntityIds: linkedEntities,
       tags: [],
       ...(uri ? { transcript: uri } : {}),
     });
@@ -194,6 +198,35 @@ export default function VoiceScreen() {
           textAlignVertical="top"
         />
       </View>
+
+      {/* Entity linking */}
+      <Pressable
+        style={styles.linkToggle}
+        onPress={() => setShowPicker(!showPicker)}
+      >
+        <Ionicons name="link-outline" size={18} color={Colors.accent} />
+        <Text style={styles.linkToggleText}>
+          Lier à des entités ({linkedEntities.length})
+        </Text>
+        <Ionicons name={showPicker ? "chevron-up" : "chevron-down"} size={16} color={Colors.inkMuted} />
+      </Pressable>
+
+      {showPicker && (
+        <View style={styles.pickerCard}>
+          <EntityPicker
+            selectedType="person"
+            selectedId={null}
+            onSelect={(type, id) => {
+              const exists = linkedEntities.some((e) => e.entityType === type && e.entityId === id);
+              if (exists) {
+                setLinkedEntities(linkedEntities.filter((e) => !(e.entityType === type && e.entityId === id)));
+              } else {
+                setLinkedEntities([...linkedEntities, { entityType: type, entityId: id }]);
+              }
+            }}
+          />
+        </View>
+      )}
 
       <Pressable
         style={({ pressed }) => [
@@ -319,6 +352,24 @@ const styles = StyleSheet.create({
     color: Colors.ink,
   },
   multiline: { minHeight: 90, paddingTop: Spacing.sm + 2 },
+  linkToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    padding: Spacing.lg,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    marginTop: Spacing.lg,
+    ...Shadow.sm,
+  },
+  linkToggleText: { flex: 1, fontSize: FontSize.sm, color: Colors.accent, fontWeight: "600" },
+  pickerCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    marginTop: Spacing.sm,
+    ...Shadow.sm,
+  },
   saveBtn: {
     flexDirection: "row",
     gap: Spacing.sm,
