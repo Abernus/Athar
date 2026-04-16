@@ -254,13 +254,13 @@ Sérieux, lisible, sobre, méthodique, élégant mais non sentimental.
 - [x] Missions terrain (planification, checklist, debrief)
 - [ ] Collaboration multi-utilisateur (V3)
 
-### V3 — Niveau expert / labo
-- [ ] Prosopographie
-- [ ] Chaîne de preuve
-- [ ] Analyse de réseaux avancée
-- [ ] Publication publique scénarisée
-- [ ] Suggestions de rapprochement d'entités
-- [ ] Comparaisons multi-corpus
+### V3 — Niveau expert / labo ✅
+- [x] Chaîne de preuve (evidence chains + links avec force/direction)
+- [x] Prosopographie (cohortes + fiches comparables)
+- [x] Suggestions de rapprochement d'entités (duplicates/same identity)
+- [x] Publications (dossier/timeline/map/narrative/mini_site)
+- [ ] Analyse de réseaux avancée (centralité, communautés) — prévu
+- [ ] Comparaisons multi-corpus — prévu
 
 ---
 
