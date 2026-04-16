@@ -164,11 +164,13 @@ interface ResearchState {
 
   // Mutations — write to Supabase then update local state
   addPerson: (data: Omit<Person, "id" | "entityType" | "createdAt" | "updatedAt">) => Promise<Person | null>;
+  addGroup: (data: Omit<Group, "id" | "entityType" | "createdAt" | "updatedAt">) => Promise<Group | null>;
   addPlace: (data: Omit<Place, "id" | "entityType" | "createdAt" | "updatedAt">) => Promise<Place | null>;
   addEvent: (data: Omit<HistoricalEvent, "id" | "entityType" | "createdAt" | "updatedAt">) => Promise<HistoricalEvent | null>;
   addArchiveItem: (data: Omit<ArchiveItem, "id" | "createdAt" | "updatedAt">) => Promise<ArchiveItem | null>;
   addOralTestimony: (data: Omit<OralTestimony, "id" | "createdAt" | "updatedAt">) => Promise<OralTestimony | null>;
   addRelationship: (data: Omit<Relationship, "id" | "createdAt" | "updatedAt">) => Promise<Relationship | null>;
+  deleteEntity: (type: EntityType, id: string) => Promise<boolean>;
 
   // Search
   searchAll: (query: string) => AnyEntity[];
@@ -263,6 +265,25 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
     const person = rowToPerson(rows);
     set((s) => ({ persons: [person, ...s.persons] }));
     return person;
+  },
+
+  addGroup: async (data) => {
+    const { data: rows, error } = await supabase
+      .from("groups")
+      .insert({
+        name: data.name,
+        group_type: data.groupType,
+        summary: data.summary,
+        time_range: data.timeRange ?? null,
+        tags: data.tags,
+        notes: data.notes,
+      })
+      .select()
+      .single();
+    if (error || !rows) { console.error("addGroup:", error); return null; }
+    const group = rowToGroup(rows);
+    set((s) => ({ groups: [group, ...s.groups] }));
+    return group;
   },
 
   addPlace: async (data) => {
@@ -367,6 +388,27 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
     const rel = rowToRelationship(rows);
     set((s) => ({ relationships: [rel, ...s.relationships] }));
     return rel;
+  },
+
+  deleteEntity: async (type, id) => {
+    const table = { person: "persons", group: "groups", place: "places", event: "events" }[type];
+    const { error } = await supabase.from(table).delete().eq("id", id);
+    if (error) { console.error("deleteEntity:", error); return false; }
+    // Also delete related relationships
+    await supabase.from("relationships").delete().or(
+      `and(source_entity_type.eq.${type},source_entity_id.eq.${id}),and(target_entity_type.eq.${type},target_entity_id.eq.${id})`
+    );
+    set((s) => {
+      const key = { person: "persons", group: "groups", place: "places", event: "events" }[type] as keyof typeof s;
+      return {
+        [key]: (s[key] as AnyEntity[]).filter((e) => e.id !== id),
+        relationships: s.relationships.filter(
+          (r) => !(r.sourceEntityType === type && r.sourceEntityId === id) &&
+                 !(r.targetEntityType === type && r.targetEntityId === id)
+        ),
+      };
+    });
+    return true;
   },
 
   searchAll: (query) => {

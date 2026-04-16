@@ -4,9 +4,11 @@ import {
   Text,
   Pressable,
   StyleSheet,
+  Alert,
 } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useEffect } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
 import { Card } from "@/components/Card";
@@ -21,7 +23,7 @@ export default function EntityDetailScreen() {
   const { type, id } = useLocalSearchParams<{ type: string; id: string }>();
   const navigation = useNavigation();
   const router = useRouter();
-  const { getEntityById, getRelationshipsFor, getEntityDisplayName } =
+  const { getEntityById, getRelationshipsFor, getEntityDisplayName, deleteEntity } =
     useResearchStore();
 
   const entityType = type as EntityType;
@@ -176,6 +178,42 @@ export default function EntityDetailScreen() {
           </Card>
         </>
       ) : null}
+
+      {/* Add relation */}
+      <Pressable
+        style={styles.addRelBtn}
+        onPress={() =>
+          router.push(`/add/relationship?fromType=${entityType}&fromId=${id}` as never)
+        }
+      >
+        <Ionicons name="git-network-outline" size={18} color={Colors.accent} />
+        <Text style={styles.addRelBtnText}>Ajouter une relation</Text>
+      </Pressable>
+
+      {/* Delete */}
+      <Pressable
+        style={styles.deleteBtn}
+        onPress={() =>
+          Alert.alert(
+            "Supprimer",
+            `Supprimer ${getEntityName(entity)} et toutes ses relations ?`,
+            [
+              { text: "Annuler", style: "cancel" },
+              {
+                text: "Supprimer",
+                style: "destructive",
+                onPress: async () => {
+                  await deleteEntity(entityType, id);
+                  router.back();
+                },
+              },
+            ]
+          )
+        }
+      >
+        <Ionicons name="trash-outline" size={16} color={Colors.danger} />
+        <Text style={styles.deleteBtnText}>Supprimer cette entité</Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -307,5 +345,37 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.inkSecondary,
     lineHeight: 21,
+  },
+
+  addRelBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    marginTop: Spacing.lg,
+    padding: Spacing.lg,
+    borderRadius: Radius.lg,
+    backgroundColor: Colors.accentLight,
+  },
+  addRelBtnText: {
+    fontSize: FontSize.sm,
+    color: Colors.accent,
+    fontWeight: "600",
+  },
+
+  deleteBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    marginTop: Spacing.xxl,
+    padding: Spacing.lg,
+    borderRadius: Radius.lg,
+    backgroundColor: Colors.dangerLight,
+  },
+  deleteBtnText: {
+    fontSize: FontSize.sm,
+    color: Colors.danger,
+    fontWeight: "600",
   },
 });

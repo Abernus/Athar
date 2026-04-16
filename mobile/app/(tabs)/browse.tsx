@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, StyleSheet, FlatList } from "react-native";
+import { View, Text, ScrollView, Pressable, StyleSheet, FlatList, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
 import { EntityRow } from "@/components/EntityRow";
@@ -16,7 +17,7 @@ const TABS: { key: EntityType | "all"; label: string }[] = [
 
 export default function BrowseScreen() {
   const router = useRouter();
-  const { persons, groups, places, events } = useResearchStore();
+  const { persons, groups, places, events, fetchAll, loading } = useResearchStore();
   const [activeTab, setActiveTab] = useState<EntityType | "all">("all");
 
   const allEntities = [...persons, ...groups, ...places, ...events];
@@ -68,8 +69,19 @@ export default function BrowseScreen() {
           />
         )}
         ItemSeparatorComponent={() => <View style={styles.divider} />}
+        refreshing={loading}
+        onRefresh={fetchAll}
         style={styles.list}
         contentContainerStyle={styles.listContent}
+        ListEmptyComponent={() => (
+          <View style={styles.emptyState}>
+            <Ionicons name="compass-outline" size={32} color={Colors.borderStrong} />
+            <Text style={styles.emptyTitle}>Rien à explorer</Text>
+            <Text style={styles.emptyHint}>
+              Ajoutez des entités depuis l'onglet Capturer
+            </Text>
+          </View>
+        )}
       />
     </View>
   );
@@ -121,5 +133,20 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: Colors.border,
     marginHorizontal: Spacing.lg,
+  },
+  emptyState: {
+    alignItems: "center",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.xxxl,
+  },
+  emptyTitle: {
+    fontSize: FontSize.lg,
+    fontWeight: "600",
+    color: Colors.inkSecondary,
+  },
+  emptyHint: {
+    fontSize: FontSize.sm,
+    color: Colors.inkMuted,
+    textAlign: "center",
   },
 });

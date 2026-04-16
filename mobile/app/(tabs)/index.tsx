@@ -4,6 +4,8 @@ import {
   Text,
   Pressable,
   StyleSheet,
+  RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -47,9 +49,10 @@ const QUICK_ACTIONS = [
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { persons, groups, places, events, archiveItems, oralTestimonies, getAllEntities } =
+  const { persons, groups, places, events, archiveItems, oralTestimonies, getAllEntities, fetchAll, loading, initialized } =
     useResearchStore();
   const recent = getAllEntities().slice(0, 6);
+  const isEmpty = initialized && recent.length === 0;
 
   const stats = [
     { label: "Personnes", count: persons.length, icon: "person" as const, color: Colors.person },
@@ -62,6 +65,9 @@ export default function HomeScreen() {
     <ScrollView
       style={styles.scroll}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.lg }]}
+      refreshControl={
+        <RefreshControl refreshing={loading} onRefresh={fetchAll} tintColor={Colors.accent} />
+      }
     >
       {/* Brand header */}
       <View style={styles.header}>
@@ -106,20 +112,36 @@ export default function HomeScreen() {
       </View>
 
       {/* Recent entities */}
-      <SectionHeader title="Ajouts récents" />
-      <View style={styles.listCard}>
-        {recent.map((entity, i) => (
-          <View key={`${entity.entityType}-${entity.id}`}>
-            <EntityRow
-              entity={entity}
-              onPress={() =>
-                router.push(`/entity/${entity.entityType}/${entity.id}` as never)
-              }
-            />
-            {i < recent.length - 1 && <View style={styles.divider} />}
+      {!initialized ? (
+        <ActivityIndicator color={Colors.accent} style={{ marginTop: Spacing.xxl }} />
+      ) : isEmpty ? (
+        <View style={styles.emptyState}>
+          <View style={styles.emptyIcon}>
+            <Ionicons name="compass-outline" size={32} color={Colors.borderStrong} />
           </View>
-        ))}
-      </View>
+          <Text style={styles.emptyTitle}>Commencez votre recherche</Text>
+          <Text style={styles.emptyHint}>
+            Ajoutez des personnes, lieux ou événements pour démarrer
+          </Text>
+        </View>
+      ) : (
+        <>
+          <SectionHeader title="Ajouts récents" />
+          <View style={styles.listCard}>
+            {recent.map((entity, i) => (
+              <View key={`${entity.entityType}-${entity.id}`}>
+                <EntityRow
+                  entity={entity}
+                  onPress={() =>
+                    router.push(`/entity/${entity.entityType}/${entity.id}` as never)
+                  }
+                />
+                {i < recent.length - 1 && <View style={styles.divider} />}
+              </View>
+            ))}
+          </View>
+        </>
+      )}
     </ScrollView>
   );
 }
@@ -238,5 +260,33 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: Colors.border,
     marginHorizontal: Spacing.lg,
+  },
+
+  // Empty state
+  emptyState: {
+    alignItems: "center",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.xxxl,
+  },
+  emptyIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.surfaceSunken,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.sm,
+  },
+  emptyTitle: {
+    fontSize: FontSize.lg,
+    fontWeight: "600",
+    color: Colors.inkSecondary,
+  },
+  emptyHint: {
+    fontSize: FontSize.sm,
+    color: Colors.inkMuted,
+    textAlign: "center",
+    maxWidth: 250,
+    lineHeight: 20,
   },
 });

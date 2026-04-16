@@ -45,6 +45,14 @@ export default function RootLayout() {
           name="add/event"
           options={{ title: "Nouvel événement", presentation: "modal" }}
         />
+        <Stack.Screen
+          name="add/group"
+          options={{ title: "Nouveau groupe", presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="add/relationship"
+          options={{ title: "Nouvelle relation", presentation: "modal" }}
+        />
         <Stack.Screen name="entity/[type]/[id]" options={{ title: "" }} />
       </Stack>
     </>

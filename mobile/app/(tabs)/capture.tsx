@@ -28,6 +28,12 @@ const ADD_OPTIONS = [
     color: Colors.person,
   },
   {
+    icon: "people-outline" as const,
+    label: "Groupe",
+    route: "/add/group",
+    color: Colors.group,
+  },
+  {
     icon: "location-outline" as const,
     label: "Lieu",
     route: "/add/place",
