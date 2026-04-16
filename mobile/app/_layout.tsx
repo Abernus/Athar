@@ -72,6 +72,10 @@ export default function RootLayout() {
           options={{ title: "Nouvelle relation", presentation: "modal" }}
         />
         <Stack.Screen name="entity/[type]/[id]" options={{ title: "" }} />
+        <Stack.Screen
+          name="export/project"
+          options={{ title: "Exporter le dossier", presentation: "modal" }}
+        />
       </Stack>
     </>
   );

@@ -125,6 +125,15 @@ export default function ProjectDetailScreen() {
         </Pressable>
       </View>
 
+      {/* Export */}
+      <Pressable
+        style={styles.exportBtn}
+        onPress={() => router.push(`/export/project?id=${id}` as never)}
+      >
+        <Ionicons name="share-outline" size={18} color={Colors.accent} />
+        <Text style={styles.exportBtnText}>Exporter ce dossier</Text>
+      </Pressable>
+
       {/* Sources */}
       {sources.length > 0 && (
         <>
@@ -247,6 +256,17 @@ const styles = StyleSheet.create({
   tag: { backgroundColor: Colors.accentLight, borderRadius: Radius.full, paddingHorizontal: Spacing.sm + 2, paddingVertical: 4 },
   tagText: { fontSize: FontSize.xs, color: Colors.accent, fontWeight: "500" },
 
+  exportBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    padding: Spacing.md,
+    borderRadius: Radius.lg,
+    backgroundColor: Colors.accentLight,
+    marginTop: Spacing.sm,
+  },
+  exportBtnText: { fontSize: FontSize.sm, color: Colors.accent, fontWeight: "600" },
   actionsRow: { flexDirection: "row", gap: Spacing.sm, marginTop: Spacing.sm },
   actionBtn: {
     flex: 1,

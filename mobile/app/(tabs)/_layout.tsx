@@ -42,18 +42,18 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="capture"
         options={{
-          title: "Capturer",
+          title: "Ajouter",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="add-circle-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="browse"
+        name="timeline"
         options={{
-          title: "Explorer",
+          title: "Frise",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="compass-outline" size={size} color={color} />
+            <Ionicons name="time-outline" size={size} color={color} />
           ),
         }}
       />
@@ -66,6 +66,9 @@ export default function TabsLayout() {
           ),
         }}
       />
+      {/* Hidden tabs — accessible via navigation but not shown in tab bar */}
+      <Tabs.Screen name="browse" options={{ href: null, title: "Explorer" }} />
+      <Tabs.Screen name="map" options={{ href: null, title: "Lieux" }} />
     </Tabs>
   );
 }
