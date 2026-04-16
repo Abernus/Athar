@@ -79,6 +79,18 @@ const RESEARCH_OPTIONS = [
     route: "/add/contradiction",
     color: { bg: "#FEF2F2", icon: "#DC2626" },
   },
+  {
+    icon: "link-outline" as const,
+    label: "Preuve",
+    route: "/add/evidence-chain",
+    color: { bg: "#FEF3C7", icon: "#B45309" },
+  },
+  {
+    icon: "analytics-outline" as const,
+    label: "Cohorte",
+    route: "/add/cohort",
+    color: { bg: "#EDE9FE", icon: "#7C3AED" },
+  },
 ];
 
 const TERRAIN_OPTIONS = [

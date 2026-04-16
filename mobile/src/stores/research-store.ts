@@ -22,6 +22,12 @@ import type {
   InterviewSession,
   FieldMission,
   CorpusDocument,
+  EvidenceChain,
+  EvidenceChainLink,
+  ProsopographyCohort,
+  ProsopographyEntry,
+  EntitySuggestion,
+  Publication,
 } from "@/types";
 import { getEntityName } from "@/types";
 
@@ -313,6 +319,67 @@ function rowToCorpusDoc(r: any): CorpusDocument {
   };
 }
 
+function rowToEvidenceChain(r: any): EvidenceChain {
+  return {
+    id: r.id, projectId: r.project_id, title: r.title, claimText: r.claim_text,
+    claimStatus: r.claim_status ?? "unverified", conclusion: r.conclusion ?? "",
+    tags: r.tags ?? [], createdAt: r.created_at, updatedAt: r.updated_at,
+  };
+}
+
+function rowToChainLink(r: any): EvidenceChainLink {
+  return {
+    id: r.id, chainId: r.chain_id, position: r.position ?? 0,
+    linkType: r.link_type ?? "source", objectType: r.object_type,
+    objectId: r.object_id, description: r.description ?? "",
+    isSupporting: r.is_supporting ?? true, strength: r.strength ?? "moderate",
+    notes: r.notes ?? "", createdAt: r.created_at,
+  };
+}
+
+function rowToCohort(r: any): ProsopographyCohort {
+  return {
+    id: r.id, projectId: r.project_id, title: r.title,
+    description: r.description ?? "", criteria: r.criteria ?? "",
+    tags: r.tags ?? [], createdAt: r.created_at, updatedAt: r.updated_at,
+  };
+}
+
+function rowToProsEntry(r: any): ProsopographyEntry {
+  return {
+    id: r.id, cohortId: r.cohort_id, personId: r.person_id,
+    birthRegion: r.birth_region ?? "", socialOrigin: r.social_origin ?? "",
+    educationLevel: r.education_level ?? "", occupation: r.occupation ?? "",
+    politicalAffiliation: r.political_affiliation ?? "", militaryService: r.military_service ?? "",
+    migrationDate: r.migration_date ?? "", migrationDestination: r.migration_destination ?? "",
+    familyStatus: r.family_status ?? "", notableEvents: r.notable_events ?? "",
+    customFields: r.custom_fields ?? {}, notes: r.notes ?? "",
+    createdAt: r.created_at, updatedAt: r.updated_at,
+  };
+}
+
+function rowToSuggestion(r: any): EntitySuggestion {
+  return {
+    id: r.id, entityAType: r.entity_a_type, entityAId: r.entity_a_id,
+    entityBType: r.entity_b_type, entityBId: r.entity_b_id,
+    suggestionType: r.suggestion_type ?? "possible_duplicate",
+    confidence: r.confidence ?? "low", reason: r.reason ?? "",
+    status: r.status ?? "pending", resolutionNote: r.resolution_note ?? "",
+    createdAt: r.created_at, updatedAt: r.updated_at,
+  };
+}
+
+function rowToPublication(r: any): Publication {
+  return {
+    id: r.id, projectId: r.project_id, title: r.title,
+    description: r.description ?? "", publicationType: r.publication_type ?? "dossier",
+    contentHtml: r.content_html ?? "", isPublished: r.is_published ?? false,
+    publishedAt: r.published_at, shareToken: r.share_token,
+    settings: r.settings ?? {}, tags: r.tags ?? [],
+    createdAt: r.created_at, updatedAt: r.updated_at,
+  };
+}
+
 function rowToBibEntry(r: any): BibliographyEntry {
   return {
     id: r.id,
@@ -358,6 +425,12 @@ interface ResearchState {
   interviewSessions: InterviewSession[];
   fieldMissions: FieldMission[];
   corpusDocuments: CorpusDocument[];
+  evidenceChains: EvidenceChain[];
+  chainLinks: EvidenceChainLink[];
+  cohorts: ProsopographyCohort[];
+  prosEntries: ProsopographyEntry[];
+  entitySuggestions: EntitySuggestion[];
+  publications: Publication[];
 
   // Loading
   loading: boolean;
@@ -402,6 +475,12 @@ interface ResearchState {
   addFieldMission: (data: Omit<FieldMission, "id" | "createdAt" | "updatedAt">) => Promise<FieldMission | null>;
   addCorpusDocument: (data: Omit<CorpusDocument, "id" | "createdAt" | "updatedAt">) => Promise<CorpusDocument | null>;
   searchCorpus: (query: string) => CorpusDocument[];
+  addEvidenceChain: (data: Omit<EvidenceChain, "id" | "createdAt" | "updatedAt">) => Promise<EvidenceChain | null>;
+  addChainLink: (data: Omit<EvidenceChainLink, "id" | "createdAt">) => Promise<EvidenceChainLink | null>;
+  addCohort: (data: Omit<ProsopographyCohort, "id" | "createdAt" | "updatedAt">) => Promise<ProsopographyCohort | null>;
+  addProsEntry: (data: Omit<ProsopographyEntry, "id" | "createdAt" | "updatedAt">) => Promise<ProsopographyEntry | null>;
+  addEntitySuggestion: (data: Omit<EntitySuggestion, "id" | "createdAt" | "updatedAt">) => Promise<EntitySuggestion | null>;
+  addPublication: (data: Omit<Publication, "id" | "createdAt" | "updatedAt">) => Promise<Publication | null>;
 
   // Search
   searchAll: (query: string) => AnyEntity[];
@@ -427,12 +506,18 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
   interviewSessions: [],
   fieldMissions: [],
   corpusDocuments: [],
+  evidenceChains: [],
+  chainLinks: [],
+  cohorts: [],
+  prosEntries: [],
+  entitySuggestions: [],
+  publications: [],
   loading: false,
   initialized: false,
 
   fetchAll: async () => {
     set({ loading: true });
-    const [persons, groups, places, events, relationships, archiveItems, oralTestimonies, projects, sources, excerpts, researchNotes, hypotheses, contradictions, entityAliases, bibliography, witnesses, interviewSessions, fieldMissions, corpusDocuments] =
+    const [persons, groups, places, events, relationships, archiveItems, oralTestimonies, projects, sources, excerpts, researchNotes, hypotheses, contradictions, entityAliases, bibliography, witnesses, interviewSessions, fieldMissions, corpusDocuments, evidenceChains, chainLinks, cohorts, prosEntries, entitySuggestions, publications] =
       await Promise.all([
         supabase.from("persons").select("*").order("created_at", { ascending: false }),
         supabase.from("groups").select("*").order("created_at", { ascending: false }),
@@ -453,6 +538,12 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
         supabase.from("interview_sessions").select("*").order("created_at", { ascending: false }),
         supabase.from("field_missions").select("*").order("created_at", { ascending: false }),
         supabase.from("corpus_documents").select("*").order("created_at", { ascending: false }),
+        supabase.from("evidence_chains").select("*").order("created_at", { ascending: false }),
+        supabase.from("evidence_chain_links").select("*").order("position", { ascending: true }),
+        supabase.from("prosopography_cohorts").select("*").order("created_at", { ascending: false }),
+        supabase.from("prosopography_entries").select("*").order("created_at", { ascending: false }),
+        supabase.from("entity_suggestions").select("*").order("created_at", { ascending: false }),
+        supabase.from("publications").select("*").order("created_at", { ascending: false }),
       ]);
     set({
       persons: (persons.data ?? []).map(rowToPerson),
@@ -474,6 +565,12 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
       interviewSessions: (interviewSessions.data ?? []).map(rowToInterviewSession),
       fieldMissions: (fieldMissions.data ?? []).map(rowToFieldMission),
       corpusDocuments: (corpusDocuments.data ?? []).map(rowToCorpusDoc),
+      evidenceChains: (evidenceChains.data ?? []).map(rowToEvidenceChain),
+      chainLinks: (chainLinks.data ?? []).map(rowToChainLink),
+      cohorts: (cohorts.data ?? []).map(rowToCohort),
+      prosEntries: (prosEntries.data ?? []).map(rowToProsEntry),
+      entitySuggestions: (entitySuggestions.data ?? []).map(rowToSuggestion),
+      publications: (publications.data ?? []).map(rowToPublication),
       loading: false,
       initialized: true,
     });
@@ -924,6 +1021,84 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
     const d = rowToCorpusDoc(rows);
     set((s) => ({ corpusDocuments: [d, ...s.corpusDocuments] }));
     return d;
+  },
+
+  addEvidenceChain: async (data) => {
+    const { data: rows, error } = await supabase.from("evidence_chains").insert({
+      project_id: data.projectId ?? null, title: data.title,
+      claim_text: data.claimText, claim_status: data.claimStatus,
+      conclusion: data.conclusion, tags: data.tags,
+    }).select().single();
+    if (error || !rows) { console.error("addEvidenceChain:", error); return null; }
+    const c = rowToEvidenceChain(rows);
+    set((s) => ({ evidenceChains: [c, ...s.evidenceChains] }));
+    return c;
+  },
+
+  addChainLink: async (data) => {
+    const { data: rows, error } = await supabase.from("evidence_chain_links").insert({
+      chain_id: data.chainId, position: data.position,
+      link_type: data.linkType, object_type: data.objectType ?? null,
+      object_id: data.objectId ?? null, description: data.description,
+      is_supporting: data.isSupporting, strength: data.strength, notes: data.notes,
+    }).select().single();
+    if (error || !rows) { console.error("addChainLink:", error); return null; }
+    const l = rowToChainLink(rows);
+    set((s) => ({ chainLinks: [...s.chainLinks, l] }));
+    return l;
+  },
+
+  addCohort: async (data) => {
+    const { data: rows, error } = await supabase.from("prosopography_cohorts").insert({
+      project_id: data.projectId ?? null, title: data.title,
+      description: data.description, criteria: data.criteria, tags: data.tags,
+    }).select().single();
+    if (error || !rows) { console.error("addCohort:", error); return null; }
+    const c = rowToCohort(rows);
+    set((s) => ({ cohorts: [c, ...s.cohorts] }));
+    return c;
+  },
+
+  addProsEntry: async (data) => {
+    const { data: rows, error } = await supabase.from("prosopography_entries").insert({
+      cohort_id: data.cohortId, person_id: data.personId ?? null,
+      birth_region: data.birthRegion, social_origin: data.socialOrigin,
+      education_level: data.educationLevel, occupation: data.occupation,
+      political_affiliation: data.politicalAffiliation, military_service: data.militaryService,
+      migration_date: data.migrationDate, migration_destination: data.migrationDestination,
+      family_status: data.familyStatus, notable_events: data.notableEvents,
+      custom_fields: data.customFields, notes: data.notes,
+    }).select().single();
+    if (error || !rows) { console.error("addProsEntry:", error); return null; }
+    const e = rowToProsEntry(rows);
+    set((s) => ({ prosEntries: [...s.prosEntries, e] }));
+    return e;
+  },
+
+  addEntitySuggestion: async (data) => {
+    const { data: rows, error } = await supabase.from("entity_suggestions").insert({
+      entity_a_type: data.entityAType, entity_a_id: data.entityAId,
+      entity_b_type: data.entityBType, entity_b_id: data.entityBId,
+      suggestion_type: data.suggestionType, confidence: data.confidence,
+      reason: data.reason, status: data.status, resolution_note: data.resolutionNote,
+    }).select().single();
+    if (error || !rows) { console.error("addEntitySuggestion:", error); return null; }
+    const s2 = rowToSuggestion(rows);
+    set((s) => ({ entitySuggestions: [s2, ...s.entitySuggestions] }));
+    return s2;
+  },
+
+  addPublication: async (data) => {
+    const { data: rows, error } = await supabase.from("publications").insert({
+      project_id: data.projectId ?? null, title: data.title,
+      description: data.description, publication_type: data.publicationType,
+      content_html: data.contentHtml, is_published: data.isPublished,
+      share_token: data.shareToken ?? null, settings: data.settings, tags: data.tags,
+    }).select().single();
+    if (error || !rows) { console.error("addPublication:", error); return null; }
+    const p = rowToPublication(rows);
+    set((s) => ({ publications: [p, ...s.publications] }));
+    return p;
   },
 
   searchCorpus: (query) => {

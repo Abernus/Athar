@@ -76,6 +76,14 @@ export default function RootLayout() {
           options={{ title: "Mission terrain", presentation: "modal" }}
         />
         <Stack.Screen
+          name="add/evidence-chain"
+          options={{ title: "Chaîne de preuve", presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="add/cohort"
+          options={{ title: "Cohorte prosopographique", presentation: "modal" }}
+        />
+        <Stack.Screen
           name="add/contradiction"
           options={{ title: "Contradiction", presentation: "modal" }}
         />

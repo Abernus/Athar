@@ -538,6 +538,110 @@ export interface CorpusDocument {
   updatedAt: string;
 }
 
+// --- Evidence Chain ---
+
+export type ClaimStatus = "unverified" | "supported" | "weakly_supported" | "contested" | "refuted";
+export type LinkStrength = "strong" | "moderate" | "weak" | "speculative";
+
+export interface EvidenceChain {
+  id: string;
+  projectId?: string;
+  title: string;
+  claimText: string;
+  claimStatus: ClaimStatus;
+  conclusion: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EvidenceChainLink {
+  id: string;
+  chainId: string;
+  position: number;
+  linkType: string;
+  objectType?: string;
+  objectId?: string;
+  description: string;
+  isSupporting: boolean;
+  strength: LinkStrength;
+  notes: string;
+  createdAt: string;
+}
+
+// --- Prosopography ---
+
+export interface ProsopographyCohort {
+  id: string;
+  projectId?: string;
+  title: string;
+  description: string;
+  criteria: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProsopographyEntry {
+  id: string;
+  cohortId: string;
+  personId?: string;
+  birthRegion: string;
+  socialOrigin: string;
+  educationLevel: string;
+  occupation: string;
+  politicalAffiliation: string;
+  militaryService: string;
+  migrationDate: string;
+  migrationDestination: string;
+  familyStatus: string;
+  notableEvents: string;
+  customFields: Record<string, string>;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// --- Entity Suggestions ---
+
+export type SuggestionType = "possible_duplicate" | "related" | "same_identity";
+export type SuggestionStatus = "pending" | "accepted" | "rejected" | "merged";
+
+export interface EntitySuggestion {
+  id: string;
+  entityAType: EntityType;
+  entityAId: string;
+  entityBType: EntityType;
+  entityBId: string;
+  suggestionType: SuggestionType;
+  confidence: string;
+  reason: string;
+  status: SuggestionStatus;
+  resolutionNote: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// --- Publication ---
+
+export type PublicationType = "dossier" | "timeline" | "map" | "narrative" | "mini_site";
+
+export interface Publication {
+  id: string;
+  projectId?: string;
+  title: string;
+  description: string;
+  publicationType: PublicationType;
+  contentHtml: string;
+  isPublished: boolean;
+  publishedAt?: string;
+  shareToken?: string;
+  settings: Record<string, any>;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 // --- Union type for any entity ---
 
 export type AnyEntity = Person | Group | Place | HistoricalEvent;
