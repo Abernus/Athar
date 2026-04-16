@@ -74,12 +74,12 @@ export default function VoiceScreen() {
     }
   }
 
-  function saveTestimony() {
+  async function saveTestimony() {
     if (!title.trim() || !speaker.trim()) {
       Alert.alert("Champs requis", "Renseignez le titre et le nom du témoin.");
       return;
     }
-    addOralTestimony({
+    const result = await addOralTestimony({
       title: title.trim(),
       speaker: speaker.trim(),
       interviewer: "Moi",
@@ -89,6 +89,7 @@ export default function VoiceScreen() {
       tags: [],
       ...(uri ? { transcript: uri } : {}),
     });
+    if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
     Alert.alert("Témoignage sauvegardé", "L'entretien a été enregistré.", [
       { text: "OK", onPress: () => router.back() },
     ]);

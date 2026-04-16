@@ -1,8 +1,16 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
 import { Colors } from "@/lib/theme";
+import { useResearchStore } from "@/stores/research-store";
 
 export default function RootLayout() {
+  const fetchAll = useResearchStore((s) => s.fetchAll);
+
+  useEffect(() => {
+    fetchAll();
+  }, []);
+
   return (
     <>
       <StatusBar style="dark" />

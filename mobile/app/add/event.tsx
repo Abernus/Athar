@@ -39,12 +39,12 @@ export default function AddEventScreen() {
   const [dateStart, setDateStart] = useState("");
   const [tags, setTags] = useState("");
 
-  function save() {
+  async function save() {
     if (!title.trim()) {
       Alert.alert("Titre requis");
       return;
     }
-    addEvent({
+    const result = await addEvent({
       title: title.trim(),
       eventType,
       description: description.trim(),
@@ -57,6 +57,7 @@ export default function AddEventScreen() {
         .filter(Boolean),
       notes: "",
     });
+    if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
     Alert.alert("Événement ajouté", `${title.trim()} a été créé.`, [
       { text: "OK", onPress: () => router.back() },
     ]);

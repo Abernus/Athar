@@ -49,12 +49,12 @@ export default function PhotoCaptureScreen() {
     }
   }
 
-  function saveArchiveItem() {
+  async function saveArchiveItem() {
     if (!photoUri || !title.trim()) {
       Alert.alert("Titre requis", "Donnez un titre à cette archive.");
       return;
     }
-    addArchiveItem({
+    const result = await addArchiveItem({
       title: title.trim(),
       archiveType: "photo",
       description: notes.trim(),
@@ -63,6 +63,7 @@ export default function PhotoCaptureScreen() {
       tags: [],
       notes: "",
     });
+    if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
     Alert.alert("Archive sauvegardée", "La photo a été ajoutée.", [
       { text: "OK", onPress: () => router.back() },
     ]);

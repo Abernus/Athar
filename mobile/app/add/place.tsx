@@ -33,12 +33,12 @@ export default function AddPlaceScreen() {
   const [summary, setSummary] = useState("");
   const [tags, setTags] = useState("");
 
-  function save() {
+  async function save() {
     if (!name.trim()) {
       Alert.alert("Nom requis");
       return;
     }
-    addPlace({
+    const result = await addPlace({
       name: name.trim(),
       placeType,
       summary: summary.trim(),
@@ -48,6 +48,7 @@ export default function AddPlaceScreen() {
         .filter(Boolean),
       notes: "",
     });
+    if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
     Alert.alert("Lieu ajouté", `${name.trim()} a été créé.`, [
       { text: "OK", onPress: () => router.back() },
     ]);

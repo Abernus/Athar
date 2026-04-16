@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { supabase } from "@/lib/supabase";
 import type {
   Person,
   Group,
@@ -13,20 +14,127 @@ import type {
   EntityType,
 } from "@/types";
 import { getEntityName } from "@/types";
-import {
-  MOCK_PERSONS,
-  MOCK_GROUPS,
-  MOCK_PLACES,
-  MOCK_EVENTS,
-  MOCK_SOURCES,
-  MOCK_HYPOTHESES,
-  MOCK_RELATIONSHIPS,
-  MOCK_ARCHIVE_ITEMS,
-  MOCK_ORAL_TESTIMONIES,
-} from "@/data/mock";
-import { generateId, nowISO } from "@/lib/utils";
+
+// --- Supabase row ↔ app type mappers ---
+
+function rowToPerson(r: any): Person {
+  return {
+    id: r.id,
+    entityType: "person",
+    primaryName: r.primary_name,
+    alternateNames: r.alternate_names ?? [],
+    summary: r.summary ?? "",
+    birthDate: r.birth_date ?? undefined,
+    deathDate: r.death_date ?? undefined,
+    gender: r.gender,
+    tags: r.tags ?? [],
+    notes: r.notes ?? "",
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+function rowToGroup(r: any): Group {
+  return {
+    id: r.id,
+    entityType: "group",
+    name: r.name,
+    groupType: r.group_type,
+    summary: r.summary ?? "",
+    timeRange: r.time_range ?? undefined,
+    tags: r.tags ?? [],
+    notes: r.notes ?? "",
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+function rowToPlace(r: any): Place {
+  return {
+    id: r.id,
+    entityType: "place",
+    name: r.name,
+    placeType: r.place_type,
+    parentPlaceId: r.parent_place_id,
+    summary: r.summary ?? "",
+    coordinates: r.coordinates ?? undefined,
+    tags: r.tags ?? [],
+    notes: r.notes ?? "",
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+function rowToEvent(r: any): HistoricalEvent {
+  return {
+    id: r.id,
+    entityType: "event",
+    title: r.title,
+    eventType: r.event_type,
+    description: r.description ?? "",
+    dateStart: r.date_start ?? undefined,
+    dateEnd: r.date_end ?? undefined,
+    placeId: r.place_id,
+    tags: r.tags ?? [],
+    notes: r.notes ?? "",
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+function rowToRelationship(r: any): Relationship {
+  return {
+    id: r.id,
+    sourceEntityType: r.source_entity_type,
+    sourceEntityId: r.source_entity_id,
+    targetEntityType: r.target_entity_type,
+    targetEntityId: r.target_entity_id,
+    relationshipType: r.relationship_type,
+    label: r.label,
+    confidenceLevel: r.confidence_level,
+    notes: r.notes ?? "",
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+function rowToArchiveItem(r: any): ArchiveItem {
+  return {
+    id: r.id,
+    title: r.title,
+    archiveType: r.archive_type,
+    description: r.description ?? "",
+    dateOrPeriod: r.date_or_period ?? undefined,
+    fileRef: r.file_ref,
+    linkedEntityIds: r.linked_entity_ids ?? [],
+    tags: r.tags ?? [],
+    notes: r.notes ?? "",
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+function rowToOralTestimony(r: any): OralTestimony {
+  return {
+    id: r.id,
+    title: r.title,
+    speaker: r.speaker,
+    interviewer: r.interviewer ?? "",
+    recordedAt: r.recorded_at ?? undefined,
+    summary: r.summary ?? "",
+    transcript: r.transcript,
+    trustNote: r.trust_note ?? "",
+    linkedEntityIds: r.linked_entity_ids ?? [],
+    tags: r.tags ?? [],
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+// --- Store ---
 
 interface ResearchState {
+  // Data
   persons: Person[];
   groups: Group[];
   places: Place[];
@@ -36,6 +144,13 @@ interface ResearchState {
   relationships: Relationship[];
   archiveItems: ArchiveItem[];
   oralTestimonies: OralTestimony[];
+
+  // Loading
+  loading: boolean;
+  initialized: boolean;
+
+  // Init — fetch all data from Supabase
+  fetchAll: () => Promise<void>;
 
   // Lookups
   getPersonById: (id: string) => Person | undefined;
@@ -47,28 +162,55 @@ interface ResearchState {
   getRelationshipsFor: (type: EntityType, id: string) => Relationship[];
   getAllEntities: () => AnyEntity[];
 
-  // Mutations (local — will sync to API later)
-  addPerson: (data: Omit<Person, "id" | "entityType" | "createdAt" | "updatedAt">) => Person;
-  addPlace: (data: Omit<Place, "id" | "entityType" | "createdAt" | "updatedAt">) => Place;
-  addEvent: (data: Omit<HistoricalEvent, "id" | "entityType" | "createdAt" | "updatedAt">) => HistoricalEvent;
-  addArchiveItem: (data: Omit<ArchiveItem, "id" | "createdAt" | "updatedAt">) => ArchiveItem;
-  addOralTestimony: (data: Omit<OralTestimony, "id" | "createdAt" | "updatedAt">) => OralTestimony;
-  addRelationship: (data: Omit<Relationship, "id" | "createdAt" | "updatedAt">) => Relationship;
+  // Mutations — write to Supabase then update local state
+  addPerson: (data: Omit<Person, "id" | "entityType" | "createdAt" | "updatedAt">) => Promise<Person | null>;
+  addPlace: (data: Omit<Place, "id" | "entityType" | "createdAt" | "updatedAt">) => Promise<Place | null>;
+  addEvent: (data: Omit<HistoricalEvent, "id" | "entityType" | "createdAt" | "updatedAt">) => Promise<HistoricalEvent | null>;
+  addArchiveItem: (data: Omit<ArchiveItem, "id" | "createdAt" | "updatedAt">) => Promise<ArchiveItem | null>;
+  addOralTestimony: (data: Omit<OralTestimony, "id" | "createdAt" | "updatedAt">) => Promise<OralTestimony | null>;
+  addRelationship: (data: Omit<Relationship, "id" | "createdAt" | "updatedAt">) => Promise<Relationship | null>;
 
   // Search
   searchAll: (query: string) => AnyEntity[];
 }
 
 export const useResearchStore = create<ResearchState>((set, get) => ({
-  persons: MOCK_PERSONS,
-  groups: MOCK_GROUPS,
-  places: MOCK_PLACES,
-  events: MOCK_EVENTS,
-  sources: MOCK_SOURCES,
-  hypotheses: MOCK_HYPOTHESES,
-  relationships: MOCK_RELATIONSHIPS,
-  archiveItems: MOCK_ARCHIVE_ITEMS,
-  oralTestimonies: MOCK_ORAL_TESTIMONIES,
+  persons: [],
+  groups: [],
+  places: [],
+  events: [],
+  sources: [],
+  hypotheses: [],
+  relationships: [],
+  archiveItems: [],
+  oralTestimonies: [],
+  loading: false,
+  initialized: false,
+
+  fetchAll: async () => {
+    set({ loading: true });
+    const [persons, groups, places, events, relationships, archiveItems, oralTestimonies] =
+      await Promise.all([
+        supabase.from("persons").select("*").order("created_at", { ascending: false }),
+        supabase.from("groups").select("*").order("created_at", { ascending: false }),
+        supabase.from("places").select("*").order("created_at", { ascending: false }),
+        supabase.from("events").select("*").order("created_at", { ascending: false }),
+        supabase.from("relationships").select("*").order("created_at", { ascending: false }),
+        supabase.from("archive_items").select("*").order("created_at", { ascending: false }),
+        supabase.from("oral_testimonies").select("*").order("created_at", { ascending: false }),
+      ]);
+    set({
+      persons: (persons.data ?? []).map(rowToPerson),
+      groups: (groups.data ?? []).map(rowToGroup),
+      places: (places.data ?? []).map(rowToPlace),
+      events: (events.data ?? []).map(rowToEvent),
+      relationships: (relationships.data ?? []).map(rowToRelationship),
+      archiveItems: (archiveItems.data ?? []).map(rowToArchiveItem),
+      oralTestimonies: (oralTestimonies.data ?? []).map(rowToOralTestimony),
+      loading: false,
+      initialized: true,
+    });
+  },
 
   getPersonById: (id) => get().persons.find((p) => p.id === id),
   getGroupById: (id) => get().groups.find((g) => g.id === id),
@@ -102,71 +244,127 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
     return [...s.persons, ...s.groups, ...s.places, ...s.events];
   },
 
-  addPerson: (data) => {
-    const person: Person = {
-      ...data,
-      id: generateId(),
-      entityType: "person",
-      createdAt: nowISO(),
-      updatedAt: nowISO(),
-    };
+  addPerson: async (data) => {
+    const { data: rows, error } = await supabase
+      .from("persons")
+      .insert({
+        primary_name: data.primaryName,
+        alternate_names: data.alternateNames,
+        summary: data.summary,
+        birth_date: data.birthDate ?? null,
+        death_date: data.deathDate ?? null,
+        gender: data.gender,
+        tags: data.tags,
+        notes: data.notes,
+      })
+      .select()
+      .single();
+    if (error || !rows) { console.error("addPerson:", error); return null; }
+    const person = rowToPerson(rows);
     set((s) => ({ persons: [person, ...s.persons] }));
     return person;
   },
 
-  addPlace: (data) => {
-    const place: Place = {
-      ...data,
-      id: generateId(),
-      entityType: "place",
-      createdAt: nowISO(),
-      updatedAt: nowISO(),
-    };
+  addPlace: async (data) => {
+    const { data: rows, error } = await supabase
+      .from("places")
+      .insert({
+        name: data.name,
+        place_type: data.placeType,
+        parent_place_id: data.parentPlaceId ?? null,
+        summary: data.summary,
+        coordinates: data.coordinates ?? null,
+        tags: data.tags,
+        notes: data.notes,
+      })
+      .select()
+      .single();
+    if (error || !rows) { console.error("addPlace:", error); return null; }
+    const place = rowToPlace(rows);
     set((s) => ({ places: [place, ...s.places] }));
     return place;
   },
 
-  addEvent: (data) => {
-    const event: HistoricalEvent = {
-      ...data,
-      id: generateId(),
-      entityType: "event",
-      createdAt: nowISO(),
-      updatedAt: nowISO(),
-    };
+  addEvent: async (data) => {
+    const { data: rows, error } = await supabase
+      .from("events")
+      .insert({
+        title: data.title,
+        event_type: data.eventType,
+        description: data.description,
+        date_start: data.dateStart ?? null,
+        date_end: data.dateEnd ?? null,
+        place_id: data.placeId ?? null,
+        tags: data.tags,
+        notes: data.notes,
+      })
+      .select()
+      .single();
+    if (error || !rows) { console.error("addEvent:", error); return null; }
+    const event = rowToEvent(rows);
     set((s) => ({ events: [event, ...s.events] }));
     return event;
   },
 
-  addArchiveItem: (data) => {
-    const item: ArchiveItem = {
-      ...data,
-      id: generateId(),
-      createdAt: nowISO(),
-      updatedAt: nowISO(),
-    };
+  addArchiveItem: async (data) => {
+    const { data: rows, error } = await supabase
+      .from("archive_items")
+      .insert({
+        title: data.title,
+        archive_type: data.archiveType,
+        description: data.description,
+        date_or_period: data.dateOrPeriod ?? null,
+        file_ref: data.fileRef ?? null,
+        linked_entity_ids: data.linkedEntityIds,
+        tags: data.tags,
+        notes: data.notes,
+      })
+      .select()
+      .single();
+    if (error || !rows) { console.error("addArchiveItem:", error); return null; }
+    const item = rowToArchiveItem(rows);
     set((s) => ({ archiveItems: [item, ...s.archiveItems] }));
     return item;
   },
 
-  addOralTestimony: (data) => {
-    const testimony: OralTestimony = {
-      ...data,
-      id: generateId(),
-      createdAt: nowISO(),
-      updatedAt: nowISO(),
-    };
+  addOralTestimony: async (data) => {
+    const { data: rows, error } = await supabase
+      .from("oral_testimonies")
+      .insert({
+        title: data.title,
+        speaker: data.speaker,
+        interviewer: data.interviewer,
+        summary: data.summary,
+        transcript: data.transcript ?? null,
+        trust_note: data.trustNote,
+        linked_entity_ids: data.linkedEntityIds,
+        tags: data.tags,
+      })
+      .select()
+      .single();
+    if (error || !rows) { console.error("addOralTestimony:", error); return null; }
+    const testimony = rowToOralTestimony(rows);
     set((s) => ({ oralTestimonies: [testimony, ...s.oralTestimonies] }));
     return testimony;
   },
 
-  addRelationship: (data) => {
-    const rel: Relationship = {
-      ...data,
-      id: generateId(),
-      createdAt: nowISO(),
-      updatedAt: nowISO(),
-    };
+  addRelationship: async (data) => {
+    const { data: rows, error } = await supabase
+      .from("relationships")
+      .insert({
+        source_entity_type: data.sourceEntityType,
+        source_entity_id: data.sourceEntityId,
+        target_entity_type: data.targetEntityType,
+        target_entity_id: data.targetEntityId,
+        relationship_type: data.relationshipType,
+        label: data.label ?? null,
+        confidence_level: data.confidenceLevel,
+        notes: data.notes,
+      })
+      .select()
+      .single();
+    if (error || !rows) { console.error("addRelationship:", error); return null; }
+    const rel = rowToRelationship(rows);
     set((s) => ({ relationships: [rel, ...s.relationships] }));
     return rel;
   },
@@ -177,7 +375,11 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
     const s = get();
     const results: AnyEntity[] = [];
     for (const p of s.persons) {
-      if (p.primaryName.toLowerCase().includes(q) || p.alternateNames.some((n) => n.toLowerCase().includes(q)) || p.tags.some((t) => t.toLowerCase().includes(q)))
+      if (
+        p.primaryName.toLowerCase().includes(q) ||
+        p.alternateNames.some((n) => n.toLowerCase().includes(q)) ||
+        p.tags.some((t) => t.toLowerCase().includes(q))
+      )
         results.push(p);
     }
     for (const g of s.groups) {

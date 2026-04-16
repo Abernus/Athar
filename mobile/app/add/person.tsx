@@ -22,12 +22,12 @@ export default function AddPersonScreen() {
   const [deathYear, setDeathYear] = useState("");
   const [tags, setTags] = useState("");
 
-  function save() {
+  async function save() {
     if (!name.trim()) {
       Alert.alert("Nom requis", "Saisissez au moins le nom principal.");
       return;
     }
-    addPerson({
+    const result = await addPerson({
       primaryName: name.trim(),
       alternateNames: alternates
         .split(",")
@@ -46,6 +46,7 @@ export default function AddPersonScreen() {
         .filter(Boolean),
       notes: "",
     });
+    if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
     Alert.alert("Personne ajoutée", `${name.trim()} a été créée.`, [
       { text: "OK", onPress: () => router.back() },
     ]);
