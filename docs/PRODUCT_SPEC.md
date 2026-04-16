@@ -244,14 +244,15 @@ Sérieux, lisible, sobre, méthodique, élégant mais non sentimental.
 - [x] Carnet de recherche (notes)
 - [x] Exports PDF / HTML
 
-### V2 — Renforcement métier (en cours)
+### V2 — Renforcement métier ✅
 - [x] Graphe relationnel interactif
 - [x] Contradictions structurées
 - [x] Variantes de noms / identités incertaines (aliases)
 - [x] Bibliographie
-- [ ] Corpus + OCR + indexation plein texte
-- [ ] Histoire orale enrichie
-- [ ] Collaboration multi-utilisateur
+- [x] Corpus (documents, full-text search, entités détectées)
+- [x] Histoire orale enrichie (fiches témoins, sessions, consentement)
+- [x] Missions terrain (planification, checklist, debrief)
+- [ ] Collaboration multi-utilisateur (V3)
 
 ### V3 — Niveau expert / labo
 - [ ] Prosopographie
