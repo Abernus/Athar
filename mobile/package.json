@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "start": "npx expo start",
+    "start": "npx expo start --dev-client",
+    "start:go": "npx expo start",
     "android": "npx expo start --android",
     "ios": "npx expo start --ios",
     "web": "npx expo start --web"
@@ -14,6 +15,7 @@
     "expo-av": "^16.0.8",
     "expo-camera": "~17.0.7",
     "expo-constants": "^18.0.13",
+    "expo-dev-client": "~5.0.12",
     "expo-file-system": "~19.0.17",
     "expo-haptics": "~15.0.7",
     "expo-image-picker": "~17.0.8",
