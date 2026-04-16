@@ -5,6 +5,13 @@ import { Ionicons } from "@expo/vector-icons";
 
 const CAPTURE_OPTIONS = [
   {
+    icon: "document-text-outline" as const,
+    label: "Nouvelle source",
+    description: "Ajoutez une source : archive, témoignage, article, registre",
+    route: "/add/source",
+    color: Colors.event,
+  },
+  {
     icon: "camera-outline" as const,
     label: "Photo d'archive",
     description: "Photographiez un document, un acte, une photo d'époque",

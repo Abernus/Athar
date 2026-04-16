@@ -50,6 +50,16 @@ export default function RootLayout() {
           options={{ title: "Nouveau groupe", presentation: "modal" }}
         />
         <Stack.Screen
+          name="add/project"
+          options={{ title: "Nouveau dossier", presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="add/source"
+          options={{ title: "Nouvelle source", presentation: "modal" }}
+        />
+        <Stack.Screen name="project/[id]" options={{ title: "" }} />
+        <Stack.Screen name="source/[id]" options={{ title: "" }} />
+        <Stack.Screen
           name="add/relationship"
           options={{ title: "Nouvelle relation", presentation: "modal" }}
         />

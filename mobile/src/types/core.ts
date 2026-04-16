@@ -202,16 +202,15 @@ export interface Source {
   tags: string[];
   createdAt: string;
   updatedAt: string;
-}
-
-// --- SourceExcerpt ---
-
-export interface SourceExcerpt {
-  id: string;
-  sourceId: string;
-  excerptText: string;
-  pageOrLocation: string;
-  note: string;
+  // Enhanced fields
+  authorName?: string;
+  language?: string;
+  archiveReference?: string;
+  archiveFund?: string;
+  repositoryName?: string;
+  reliabilityLevel?: ReliabilityLevel;
+  biasNotes?: string;
+  fileRef?: string;
 }
 
 // --- Claim ---
@@ -316,12 +315,71 @@ export interface OralTestimony {
   updatedAt: string;
 }
 
-// --- ProjectWorkspace ---
+// --- ProjectWorkspace (legacy) ---
 
 export interface ProjectWorkspace {
   id: string;
   title: string;
   description: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// --- Research Project (Dossier de recherche) ---
+
+export type ProjectStatus = "active" | "paused" | "completed" | "archived";
+
+export interface ResearchProject {
+  id: string;
+  title: string;
+  summary: string;
+  researchQuestion: string;
+  periodStart?: string;
+  periodEnd?: string;
+  geographicScope: string;
+  status: ProjectStatus;
+  tags: string[];
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// --- Source Excerpt (Extrait) ---
+
+export type ExcerptType = "text" | "image_region" | "audio_segment" | "page";
+export type ExcerptClassification = "proof" | "clue" | "context" | "contradiction" | "doubt";
+export type ExcerptImportance = "high" | "normal" | "low";
+export type ReliabilityLevel = "high" | "medium" | "low" | "unknown";
+
+export interface SourceExcerpt {
+  id: string;
+  sourceId: string;
+  excerptType: ExcerptType;
+  selectedText: string;
+  pageOrLocation: string;
+  excerptSummary: string;
+  classification: ExcerptClassification;
+  importance: ExcerptImportance;
+  linkedEntityType?: EntityType;
+  linkedEntityId?: string;
+  tags: string[];
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// --- Research Note (Carnet de recherche) ---
+
+export type NoteType = "note" | "idea" | "todo" | "field_note" | "abandoned_lead";
+
+export interface ResearchNote {
+  id: string;
+  projectId?: string;
+  noteType: NoteType;
+  content: string;
+  linkedObjectType?: string;
+  linkedObjectId?: string;
+  tags: string[];
   createdAt: string;
   updatedAt: string;
 }

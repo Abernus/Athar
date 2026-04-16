@@ -12,6 +12,9 @@ import type {
   OralTestimony,
   AnyEntity,
   EntityType,
+  ResearchProject,
+  SourceExcerpt,
+  ResearchNote,
 } from "@/types";
 import { getEntityName } from "@/types";
 
@@ -131,6 +134,81 @@ function rowToOralTestimony(r: any): OralTestimony {
   };
 }
 
+function rowToProject(r: any): ResearchProject {
+  return {
+    id: r.id,
+    title: r.title,
+    summary: r.summary ?? "",
+    researchQuestion: r.research_question ?? "",
+    periodStart: r.period_start,
+    periodEnd: r.period_end,
+    geographicScope: r.geographic_scope ?? "",
+    status: r.status ?? "active",
+    tags: r.tags ?? [],
+    notes: r.notes ?? "",
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+function rowToSource(r: any): Source {
+  return {
+    id: r.id,
+    title: r.title,
+    sourceType: r.source_type,
+    origin: r.origin ?? "",
+    createdOrPublishedAt: r.created_or_published_at ?? undefined,
+    reference: r.reference ?? "",
+    summary: r.summary ?? "",
+    criticalNote: r.critical_note ?? "",
+    tags: r.tags ?? [],
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+    // Enhanced fields
+    authorName: r.author_name ?? "",
+    language: r.language ?? "",
+    archiveReference: r.archive_reference ?? "",
+    archiveFund: r.archive_fund ?? "",
+    repositoryName: r.repository_name ?? "",
+    reliabilityLevel: r.reliability_level ?? "unknown",
+    biasNotes: r.bias_notes ?? "",
+    fileRef: r.file_ref,
+  };
+}
+
+function rowToExcerpt(r: any): SourceExcerpt {
+  return {
+    id: r.id,
+    sourceId: r.source_id,
+    excerptType: r.excerpt_type,
+    selectedText: r.selected_text ?? "",
+    pageOrLocation: r.page_or_location ?? "",
+    excerptSummary: r.excerpt_summary ?? "",
+    classification: r.classification ?? "context",
+    importance: r.importance ?? "normal",
+    linkedEntityType: r.linked_entity_type,
+    linkedEntityId: r.linked_entity_id,
+    tags: r.tags ?? [],
+    notes: r.notes ?? "",
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+function rowToNote(r: any): ResearchNote {
+  return {
+    id: r.id,
+    projectId: r.project_id,
+    noteType: r.note_type ?? "note",
+    content: r.content,
+    linkedObjectType: r.linked_object_type,
+    linkedObjectId: r.linked_object_id,
+    tags: r.tags ?? [],
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
 // --- Store ---
 
 interface ResearchState {
@@ -144,6 +222,9 @@ interface ResearchState {
   relationships: Relationship[];
   archiveItems: ArchiveItem[];
   oralTestimonies: OralTestimony[];
+  projects: ResearchProject[];
+  excerpts: SourceExcerpt[];
+  researchNotes: ResearchNote[];
 
   // Loading
   loading: boolean;
@@ -170,7 +251,13 @@ interface ResearchState {
   addArchiveItem: (data: Omit<ArchiveItem, "id" | "createdAt" | "updatedAt">) => Promise<ArchiveItem | null>;
   addOralTestimony: (data: Omit<OralTestimony, "id" | "createdAt" | "updatedAt">) => Promise<OralTestimony | null>;
   addRelationship: (data: Omit<Relationship, "id" | "createdAt" | "updatedAt">) => Promise<Relationship | null>;
+  addProject: (data: Omit<ResearchProject, "id" | "createdAt" | "updatedAt">) => Promise<ResearchProject | null>;
+  addSource: (data: Omit<Source, "id" | "createdAt" | "updatedAt">) => Promise<Source | null>;
+  addExcerpt: (data: Omit<SourceExcerpt, "id" | "createdAt" | "updatedAt">) => Promise<SourceExcerpt | null>;
+  addResearchNote: (data: Omit<ResearchNote, "id" | "createdAt" | "updatedAt">) => Promise<ResearchNote | null>;
   deleteEntity: (type: EntityType, id: string) => Promise<boolean>;
+  deleteProject: (id: string) => Promise<boolean>;
+  deleteSource: (id: string) => Promise<boolean>;
 
   // Search
   searchAll: (query: string) => AnyEntity[];
@@ -186,12 +273,15 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
   relationships: [],
   archiveItems: [],
   oralTestimonies: [],
+  projects: [],
+  excerpts: [],
+  researchNotes: [],
   loading: false,
   initialized: false,
 
   fetchAll: async () => {
     set({ loading: true });
-    const [persons, groups, places, events, relationships, archiveItems, oralTestimonies] =
+    const [persons, groups, places, events, relationships, archiveItems, oralTestimonies, projects, sources, excerpts, researchNotes] =
       await Promise.all([
         supabase.from("persons").select("*").order("created_at", { ascending: false }),
         supabase.from("groups").select("*").order("created_at", { ascending: false }),
@@ -200,6 +290,10 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
         supabase.from("relationships").select("*").order("created_at", { ascending: false }),
         supabase.from("archive_items").select("*").order("created_at", { ascending: false }),
         supabase.from("oral_testimonies").select("*").order("created_at", { ascending: false }),
+        supabase.from("research_projects").select("*").order("created_at", { ascending: false }),
+        supabase.from("sources").select("*").order("created_at", { ascending: false }),
+        supabase.from("source_excerpts").select("*").order("created_at", { ascending: false }),
+        supabase.from("research_notes").select("*").order("created_at", { ascending: false }),
       ]);
     set({
       persons: (persons.data ?? []).map(rowToPerson),
@@ -209,6 +303,10 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
       relationships: (relationships.data ?? []).map(rowToRelationship),
       archiveItems: (archiveItems.data ?? []).map(rowToArchiveItem),
       oralTestimonies: (oralTestimonies.data ?? []).map(rowToOralTestimony),
+      projects: (projects.data ?? []).map(rowToProject),
+      sources: (sources.data ?? []).map(rowToSource),
+      excerpts: (excerpts.data ?? []).map(rowToExcerpt),
+      researchNotes: (researchNotes.data ?? []).map(rowToNote),
       loading: false,
       initialized: true,
     });
@@ -388,6 +486,117 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
     const rel = rowToRelationship(rows);
     set((s) => ({ relationships: [rel, ...s.relationships] }));
     return rel;
+  },
+
+  addProject: async (data) => {
+    const { data: rows, error } = await supabase
+      .from("research_projects")
+      .insert({
+        title: data.title,
+        summary: data.summary,
+        research_question: data.researchQuestion,
+        period_start: data.periodStart ?? null,
+        period_end: data.periodEnd ?? null,
+        geographic_scope: data.geographicScope,
+        status: data.status,
+        tags: data.tags,
+        notes: data.notes,
+      })
+      .select()
+      .single();
+    if (error || !rows) { console.error("addProject:", error); return null; }
+    const project = rowToProject(rows);
+    set((s) => ({ projects: [project, ...s.projects] }));
+    return project;
+  },
+
+  addSource: async (data) => {
+    const { data: rows, error } = await supabase
+      .from("sources")
+      .insert({
+        title: data.title,
+        source_type: data.sourceType,
+        origin: data.origin,
+        created_or_published_at: data.createdOrPublishedAt ?? null,
+        reference: data.reference,
+        summary: data.summary,
+        critical_note: data.criticalNote,
+        author_name: data.authorName ?? "",
+        language: data.language ?? "",
+        archive_reference: data.archiveReference ?? "",
+        archive_fund: data.archiveFund ?? "",
+        repository_name: data.repositoryName ?? "",
+        reliability_level: data.reliabilityLevel ?? "unknown",
+        bias_notes: data.biasNotes ?? "",
+        file_ref: data.fileRef ?? null,
+        tags: data.tags,
+      })
+      .select()
+      .single();
+    if (error || !rows) { console.error("addSource:", error); return null; }
+    const source = rowToSource(rows);
+    set((s) => ({ sources: [source, ...s.sources] }));
+    return source;
+  },
+
+  addExcerpt: async (data) => {
+    const { data: rows, error } = await supabase
+      .from("source_excerpts")
+      .insert({
+        source_id: data.sourceId,
+        excerpt_type: data.excerptType,
+        selected_text: data.selectedText,
+        page_or_location: data.pageOrLocation,
+        excerpt_summary: data.excerptSummary,
+        classification: data.classification,
+        importance: data.importance,
+        linked_entity_type: data.linkedEntityType ?? null,
+        linked_entity_id: data.linkedEntityId ?? null,
+        tags: data.tags,
+        notes: data.notes,
+      })
+      .select()
+      .single();
+    if (error || !rows) { console.error("addExcerpt:", error); return null; }
+    const excerpt = rowToExcerpt(rows);
+    set((s) => ({ excerpts: [excerpt, ...s.excerpts] }));
+    return excerpt;
+  },
+
+  addResearchNote: async (data) => {
+    const { data: rows, error } = await supabase
+      .from("research_notes")
+      .insert({
+        project_id: data.projectId ?? null,
+        note_type: data.noteType,
+        content: data.content,
+        linked_object_type: data.linkedObjectType ?? null,
+        linked_object_id: data.linkedObjectId ?? null,
+        tags: data.tags,
+      })
+      .select()
+      .single();
+    if (error || !rows) { console.error("addResearchNote:", error); return null; }
+    const note = rowToNote(rows);
+    set((s) => ({ researchNotes: [note, ...s.researchNotes] }));
+    return note;
+  },
+
+  deleteProject: async (id) => {
+    const { error } = await supabase.from("research_projects").delete().eq("id", id);
+    if (error) { console.error("deleteProject:", error); return false; }
+    set((s) => ({ projects: s.projects.filter((p) => p.id !== id) }));
+    return true;
+  },
+
+  deleteSource: async (id) => {
+    const { error } = await supabase.from("sources").delete().eq("id", id);
+    if (error) { console.error("deleteSource:", error); return false; }
+    set((s) => ({
+      sources: s.sources.filter((s2) => s2.id !== id),
+      excerpts: s.excerpts.filter((e) => e.sourceId !== id),
+    }));
+    return true;
   },
 
   deleteEntity: async (type, id) => {
