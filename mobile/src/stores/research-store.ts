@@ -18,6 +18,10 @@ import type {
   Contradiction,
   EntityAlias,
   BibliographyEntry,
+  Witness,
+  InterviewSession,
+  FieldMission,
+  CorpusDocument,
 } from "@/types";
 import { getEntityName } from "@/types";
 
@@ -259,6 +263,56 @@ function rowToAlias(r: any): EntityAlias {
   };
 }
 
+function rowToWitness(r: any): Witness {
+  return {
+    id: r.id, fullName: r.full_name, birthYear: r.birth_year ?? "",
+    birthPlace: r.birth_place ?? "", currentLocation: r.current_location ?? "",
+    relationToSubject: r.relation_to_subject ?? "", reliabilityAssessment: r.reliability_assessment ?? "",
+    contextNotes: r.context_notes ?? "", consentStatus: r.consent_status ?? "pending",
+    consentNotes: r.consent_notes ?? "", sensitivityLevel: r.sensitivity_level ?? "normal",
+    tags: r.tags ?? [], createdAt: r.created_at, updatedAt: r.updated_at,
+  };
+}
+
+function rowToInterviewSession(r: any): InterviewSession {
+  return {
+    id: r.id, witnessId: r.witness_id, testimonyId: r.testimony_id, projectId: r.project_id,
+    title: r.title, date: r.date ?? "", location: r.location ?? "",
+    durationMinutes: r.duration_minutes, interviewGuide: r.interview_guide ?? "",
+    simultaneousNotes: r.simultaneous_notes ?? "", topicsCovered: r.topics_covered ?? [],
+    namesMentioned: r.names_mentioned ?? [], placesMentioned: r.places_mentioned ?? [],
+    datesMentioned: r.dates_mentioned ?? [], followUpQuestions: r.follow_up_questions ?? "",
+    assessment: r.assessment ?? "", tags: r.tags ?? [],
+    createdAt: r.created_at, updatedAt: r.updated_at,
+  };
+}
+
+function rowToFieldMission(r: any): FieldMission {
+  return {
+    id: r.id, projectId: r.project_id, title: r.title,
+    location: r.location ?? "", dateStart: r.date_start ?? "", dateEnd: r.date_end ?? "",
+    objectives: r.objectives ?? "", personsToMeet: r.persons_to_meet ?? "",
+    placesToVisit: r.places_to_visit ?? "", archivesToConsult: r.archives_to_consult ?? "",
+    equipmentChecklist: r.equipment_checklist ?? "", debriefNotes: r.debrief_notes ?? "",
+    status: r.status ?? "planned", tags: r.tags ?? [],
+    createdAt: r.created_at, updatedAt: r.updated_at,
+  };
+}
+
+function rowToCorpusDoc(r: any): CorpusDocument {
+  return {
+    id: r.id, projectId: r.project_id, sourceId: r.source_id,
+    title: r.title, documentType: r.document_type ?? "text",
+    contentText: r.content_text ?? "", transcription: r.transcription ?? "",
+    translation: r.translation ?? "", language: r.language ?? "",
+    ocrStatus: r.ocr_status ?? "none", fileRef: r.file_ref,
+    detectedNames: r.detected_names ?? [], detectedPlaces: r.detected_places ?? [],
+    detectedDates: r.detected_dates ?? [], detectedOrganizations: r.detected_organizations ?? [],
+    tags: r.tags ?? [], notes: r.notes ?? "",
+    createdAt: r.created_at, updatedAt: r.updated_at,
+  };
+}
+
 function rowToBibEntry(r: any): BibliographyEntry {
   return {
     id: r.id,
@@ -300,6 +354,10 @@ interface ResearchState {
   contradictions: Contradiction[];
   entityAliases: EntityAlias[];
   bibliography: BibliographyEntry[];
+  witnesses: Witness[];
+  interviewSessions: InterviewSession[];
+  fieldMissions: FieldMission[];
+  corpusDocuments: CorpusDocument[];
 
   // Loading
   loading: boolean;
@@ -339,6 +397,11 @@ interface ResearchState {
   addEntityAlias: (data: Omit<EntityAlias, "id" | "createdAt">) => Promise<EntityAlias | null>;
   addBibEntry: (data: Omit<BibliographyEntry, "id" | "createdAt" | "updatedAt">) => Promise<BibliographyEntry | null>;
   getAliasesFor: (entityType: EntityType, entityId: string) => EntityAlias[];
+  addWitness: (data: Omit<Witness, "id" | "createdAt" | "updatedAt">) => Promise<Witness | null>;
+  addInterviewSession: (data: Omit<InterviewSession, "id" | "createdAt" | "updatedAt">) => Promise<InterviewSession | null>;
+  addFieldMission: (data: Omit<FieldMission, "id" | "createdAt" | "updatedAt">) => Promise<FieldMission | null>;
+  addCorpusDocument: (data: Omit<CorpusDocument, "id" | "createdAt" | "updatedAt">) => Promise<CorpusDocument | null>;
+  searchCorpus: (query: string) => CorpusDocument[];
 
   // Search
   searchAll: (query: string) => AnyEntity[];
@@ -360,12 +423,16 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
   contradictions: [],
   entityAliases: [],
   bibliography: [],
+  witnesses: [],
+  interviewSessions: [],
+  fieldMissions: [],
+  corpusDocuments: [],
   loading: false,
   initialized: false,
 
   fetchAll: async () => {
     set({ loading: true });
-    const [persons, groups, places, events, relationships, archiveItems, oralTestimonies, projects, sources, excerpts, researchNotes, hypotheses, contradictions, entityAliases, bibliography] =
+    const [persons, groups, places, events, relationships, archiveItems, oralTestimonies, projects, sources, excerpts, researchNotes, hypotheses, contradictions, entityAliases, bibliography, witnesses, interviewSessions, fieldMissions, corpusDocuments] =
       await Promise.all([
         supabase.from("persons").select("*").order("created_at", { ascending: false }),
         supabase.from("groups").select("*").order("created_at", { ascending: false }),
@@ -382,6 +449,10 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
         supabase.from("contradictions").select("*").order("created_at", { ascending: false }),
         supabase.from("entity_aliases").select("*").order("created_at", { ascending: false }),
         supabase.from("bibliography_entries").select("*").order("created_at", { ascending: false }),
+        supabase.from("witnesses").select("*").order("created_at", { ascending: false }),
+        supabase.from("interview_sessions").select("*").order("created_at", { ascending: false }),
+        supabase.from("field_missions").select("*").order("created_at", { ascending: false }),
+        supabase.from("corpus_documents").select("*").order("created_at", { ascending: false }),
       ]);
     set({
       persons: (persons.data ?? []).map(rowToPerson),
@@ -399,6 +470,10 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
       contradictions: (contradictions.data ?? []).map(rowToContradiction),
       entityAliases: (entityAliases.data ?? []).map(rowToAlias),
       bibliography: (bibliography.data ?? []).map(rowToBibEntry),
+      witnesses: (witnesses.data ?? []).map(rowToWitness),
+      interviewSessions: (interviewSessions.data ?? []).map(rowToInterviewSession),
+      fieldMissions: (fieldMissions.data ?? []).map(rowToFieldMission),
+      corpusDocuments: (corpusDocuments.data ?? []).map(rowToCorpusDoc),
       loading: false,
       initialized: true,
     });
@@ -790,6 +865,78 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
 
   getAliasesFor: (entityType, entityId) =>
     get().entityAliases.filter((a) => a.entityType === entityType && a.entityId === entityId),
+
+  addWitness: async (data) => {
+    const { data: rows, error } = await supabase.from("witnesses").insert({
+      full_name: data.fullName, birth_year: data.birthYear, birth_place: data.birthPlace,
+      current_location: data.currentLocation, relation_to_subject: data.relationToSubject,
+      reliability_assessment: data.reliabilityAssessment, context_notes: data.contextNotes,
+      consent_status: data.consentStatus, consent_notes: data.consentNotes,
+      sensitivity_level: data.sensitivityLevel, tags: data.tags,
+    }).select().single();
+    if (error || !rows) { console.error("addWitness:", error); return null; }
+    const w = rowToWitness(rows);
+    set((s) => ({ witnesses: [w, ...s.witnesses] }));
+    return w;
+  },
+
+  addInterviewSession: async (data) => {
+    const { data: rows, error } = await supabase.from("interview_sessions").insert({
+      witness_id: data.witnessId ?? null, testimony_id: data.testimonyId ?? null,
+      project_id: data.projectId ?? null, title: data.title, date: data.date,
+      location: data.location, duration_minutes: data.durationMinutes ?? null,
+      interview_guide: data.interviewGuide, simultaneous_notes: data.simultaneousNotes,
+      topics_covered: data.topicsCovered, names_mentioned: data.namesMentioned,
+      places_mentioned: data.placesMentioned, dates_mentioned: data.datesMentioned,
+      follow_up_questions: data.followUpQuestions, assessment: data.assessment, tags: data.tags,
+    }).select().single();
+    if (error || !rows) { console.error("addInterviewSession:", error); return null; }
+    const s2 = rowToInterviewSession(rows);
+    set((s) => ({ interviewSessions: [s2, ...s.interviewSessions] }));
+    return s2;
+  },
+
+  addFieldMission: async (data) => {
+    const { data: rows, error } = await supabase.from("field_missions").insert({
+      project_id: data.projectId ?? null, title: data.title, location: data.location,
+      date_start: data.dateStart, date_end: data.dateEnd, objectives: data.objectives,
+      persons_to_meet: data.personsToMeet, places_to_visit: data.placesToVisit,
+      archives_to_consult: data.archivesToConsult, equipment_checklist: data.equipmentChecklist,
+      debrief_notes: data.debriefNotes, status: data.status, tags: data.tags,
+    }).select().single();
+    if (error || !rows) { console.error("addFieldMission:", error); return null; }
+    const m = rowToFieldMission(rows);
+    set((s) => ({ fieldMissions: [m, ...s.fieldMissions] }));
+    return m;
+  },
+
+  addCorpusDocument: async (data) => {
+    const { data: rows, error } = await supabase.from("corpus_documents").insert({
+      project_id: data.projectId ?? null, source_id: data.sourceId ?? null,
+      title: data.title, document_type: data.documentType, content_text: data.contentText,
+      transcription: data.transcription, translation: data.translation, language: data.language,
+      ocr_status: data.ocrStatus, file_ref: data.fileRef ?? null,
+      detected_names: data.detectedNames, detected_places: data.detectedPlaces,
+      detected_dates: data.detectedDates, detected_organizations: data.detectedOrganizations,
+      tags: data.tags, notes: data.notes,
+    }).select().single();
+    if (error || !rows) { console.error("addCorpusDocument:", error); return null; }
+    const d = rowToCorpusDoc(rows);
+    set((s) => ({ corpusDocuments: [d, ...s.corpusDocuments] }));
+    return d;
+  },
+
+  searchCorpus: (query) => {
+    const q = query.toLowerCase().trim();
+    if (!q) return [];
+    return get().corpusDocuments.filter((d) =>
+      d.title.toLowerCase().includes(q) ||
+      d.contentText.toLowerCase().includes(q) ||
+      d.transcription.toLowerCase().includes(q) ||
+      d.detectedNames.some((n) => n.toLowerCase().includes(q)) ||
+      d.detectedPlaces.some((p) => p.toLowerCase().includes(q))
+    );
+  },
 
   deleteEntity: async (type, id) => {
     const table = { person: "persons", group: "groups", place: "places", event: "events" }[type];

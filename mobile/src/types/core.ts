@@ -442,6 +442,102 @@ export interface BibliographyEntry {
   updatedAt: string;
 }
 
+// --- Witness (Fiche témoin) ---
+
+export type ConsentStatus = "pending" | "obtained" | "refused" | "restricted";
+export type SensitivityLevel = "public" | "normal" | "sensitive" | "confidential";
+
+export interface Witness {
+  id: string;
+  fullName: string;
+  birthYear: string;
+  birthPlace: string;
+  currentLocation: string;
+  relationToSubject: string;
+  reliabilityAssessment: string;
+  contextNotes: string;
+  consentStatus: ConsentStatus;
+  consentNotes: string;
+  sensitivityLevel: SensitivityLevel;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// --- Interview Session ---
+
+export interface InterviewSession {
+  id: string;
+  witnessId?: string;
+  testimonyId?: string;
+  projectId?: string;
+  title: string;
+  date: string;
+  location: string;
+  durationMinutes?: number;
+  interviewGuide: string;
+  simultaneousNotes: string;
+  topicsCovered: string[];
+  namesMentioned: string[];
+  placesMentioned: string[];
+  datesMentioned: string[];
+  followUpQuestions: string;
+  assessment: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// --- Field Mission ---
+
+export type MissionStatus = "planned" | "in_progress" | "completed";
+
+export interface FieldMission {
+  id: string;
+  projectId?: string;
+  title: string;
+  location: string;
+  dateStart: string;
+  dateEnd: string;
+  objectives: string;
+  personsToMeet: string;
+  placesToVisit: string;
+  archivesToConsult: string;
+  equipmentChecklist: string;
+  debriefNotes: string;
+  status: MissionStatus;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// --- Corpus Document ---
+
+export type CorpusDocType = "text" | "image" | "pdf" | "audio" | "video";
+export type OcrStatus = "none" | "pending" | "completed" | "failed";
+
+export interface CorpusDocument {
+  id: string;
+  projectId?: string;
+  sourceId?: string;
+  title: string;
+  documentType: CorpusDocType;
+  contentText: string;
+  transcription: string;
+  translation: string;
+  language: string;
+  ocrStatus: OcrStatus;
+  fileRef?: string;
+  detectedNames: string[];
+  detectedPlaces: string[];
+  detectedDates: string[];
+  detectedOrganizations: string[];
+  tags: string[];
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // --- Union type for any entity ---
 
 export type AnyEntity = Person | Group | Place | HistoricalEvent;

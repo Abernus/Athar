@@ -68,6 +68,14 @@ export default function RootLayout() {
           options={{ title: "Nouvelle note", presentation: "modal" }}
         />
         <Stack.Screen
+          name="add/witness"
+          options={{ title: "Fiche témoin", presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="add/mission"
+          options={{ title: "Mission terrain", presentation: "modal" }}
+        />
+        <Stack.Screen
           name="add/contradiction"
           options={{ title: "Contradiction", presentation: "modal" }}
         />

@@ -73,6 +73,33 @@ const RESEARCH_OPTIONS = [
     route: "/add/relationship",
     color: { bg: "#FCE7F3", icon: "#DB2777" },
   },
+  {
+    icon: "alert-circle-outline" as const,
+    label: "Contradiction",
+    route: "/add/contradiction",
+    color: { bg: "#FEF2F2", icon: "#DC2626" },
+  },
+];
+
+const TERRAIN_OPTIONS = [
+  {
+    icon: "person-circle-outline" as const,
+    label: "Témoin",
+    route: "/add/witness",
+    color: { bg: "#F0FDF4", icon: "#059669" },
+  },
+  {
+    icon: "airplane-outline" as const,
+    label: "Mission",
+    route: "/add/mission",
+    color: { bg: "#EFF6FF", icon: "#2563EB" },
+  },
+  {
+    icon: "book-outline" as const,
+    label: "Biblio",
+    route: "/add/bibliography",
+    color: { bg: "#FDF4FF", icon: "#A855F7" },
+  },
 ];
 
 export default function CaptureTab() {
@@ -131,6 +158,29 @@ export default function CaptureTab() {
       {/* Research options */}
       <View style={styles.addRow}>
         {RESEARCH_OPTIONS.map((opt) => (
+          <Pressable
+            key={opt.route}
+            style={({ pressed }) => [styles.addBtn, pressed && styles.addPressed]}
+            onPress={() => router.push(opt.route as never)}
+          >
+            <View style={[styles.addIconWrap, { backgroundColor: opt.color.bg }]}>
+              <Ionicons name={opt.icon} size={20} color={opt.color.icon} />
+            </View>
+            <Text style={styles.addLabel}>{opt.label}</Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* Terrain divider */}
+      <View style={styles.dividerRow}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.dividerText}>Terrain & biblio</Text>
+        <View style={styles.dividerLine} />
+      </View>
+
+      {/* Terrain options */}
+      <View style={styles.addRow}>
+        {TERRAIN_OPTIONS.map((opt) => (
           <Pressable
             key={opt.route}
             style={({ pressed }) => [styles.addBtn, pressed && styles.addPressed]}
