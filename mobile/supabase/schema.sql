@@ -5,7 +5,7 @@
 -- ============================================================
 
 -- Enable UUID generation
-create extension if not exists "uuid-ossp";
+create extension if not exists "pgcrypto";
 
 -- Create dedicated schema
 create schema if not exists athar;
@@ -17,7 +17,7 @@ set search_path to athar;
 -- PERSONS
 -- ============================================================
 create table persons (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   primary_name text not null,
   alternate_names text[] default '{}',
   summary text default '',
@@ -34,7 +34,7 @@ create table persons (
 -- GROUPS
 -- ============================================================
 create table groups (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   name text not null,
   group_type text not null default 'other',
   summary text default '',
@@ -49,7 +49,7 @@ create table groups (
 -- PLACES
 -- ============================================================
 create table places (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   name text not null,
   place_type text not null default 'other',
   parent_place_id uuid references places(id),
@@ -65,7 +65,7 @@ create table places (
 -- EVENTS
 -- ============================================================
 create table events (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   title text not null,
   event_type text not null default 'other',
   description text default '',
@@ -82,7 +82,7 @@ create table events (
 -- RELATIONSHIPS
 -- ============================================================
 create table relationships (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   source_entity_type text not null,
   source_entity_id uuid not null,
   target_entity_type text not null,
@@ -99,7 +99,7 @@ create table relationships (
 -- SOURCES
 -- ============================================================
 create table sources (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   title text not null,
   source_type text not null default 'other',
   origin text default '',
@@ -116,7 +116,7 @@ create table sources (
 -- HYPOTHESES
 -- ============================================================
 create table hypotheses (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   title text not null,
   description text default '',
   status text not null default 'draft',
@@ -132,7 +132,7 @@ create table hypotheses (
 -- ARCHIVE ITEMS
 -- ============================================================
 create table archive_items (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   title text not null,
   archive_type text not null default 'other',
   description text default '',
@@ -149,7 +149,7 @@ create table archive_items (
 -- ORAL TESTIMONIES
 -- ============================================================
 create table oral_testimonies (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   title text not null,
   speaker text not null,
   interviewer text default '',
