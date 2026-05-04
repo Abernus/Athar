@@ -26,11 +26,12 @@ export default function ProjectDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
   const router = useRouter();
-  const { projects, sources, hypotheses, researchNotes, getAllEntities, deleteProject } =
+  const { projects, sources, hypotheses, researchNotes, contradictions, getAllEntities, deleteProject } =
     useResearchStore();
 
   const project = projects.find((p) => p.id === id);
   const projectNotes = researchNotes.filter((n) => n.projectId === id);
+  const projectContradictions = contradictions.filter((c) => c.projectId === id);
   const allEntities = getAllEntities();
 
   useEffect(() => {
@@ -146,10 +147,10 @@ export default function ProjectDetailScreen() {
         <>
           <SectionHeader title={`Sources (${sources.length})`} />
           <View style={styles.listCard}>
-            {sources.slice(0, 5).map((src, i) => (
+            {sources.map((src, i) => (
               <Pressable
                 key={src.id}
-                style={[styles.srcRow, i < Math.min(sources.length, 5) - 1 && styles.srcBorder]}
+                style={[styles.srcRow, i < sources.length - 1 && styles.srcBorder]}
                 onPress={() => router.push(`/source/${src.id}` as never)}
               >
                 <Ionicons name="document-text" size={16} color={Colors.inkMuted} />
@@ -169,16 +170,39 @@ export default function ProjectDetailScreen() {
         <>
           <SectionHeader title={`Hypothèses (${hypotheses.length})`} />
           <View style={styles.listCard}>
-            {hypotheses.slice(0, 5).map((hyp, i) => (
+            {hypotheses.map((hyp, i) => (
               <Pressable
                 key={hyp.id}
-                style={[styles.srcRow, i < Math.min(hypotheses.length, 5) - 1 && styles.srcBorder]}
+                style={[styles.srcRow, i < hypotheses.length - 1 && styles.srcBorder]}
                 onPress={() => router.push(`/hypothesis/${hyp.id}` as never)}
               >
                 <Ionicons name="bulb" size={16} color={Colors.warning} />
                 <View style={styles.srcText}>
                   <Text style={styles.srcTitle} numberOfLines={1}>{hyp.title}</Text>
                   <Text style={styles.srcType}>{hyp.status} · {hyp.confidenceLevel}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={14} color={Colors.borderStrong} />
+              </Pressable>
+            ))}
+          </View>
+        </>
+      )}
+
+      {/* Contradictions */}
+      {projectContradictions.length > 0 && (
+        <>
+          <SectionHeader title={`Contradictions (${projectContradictions.length})`} />
+          <View style={styles.listCard}>
+            {projectContradictions.map((c, i) => (
+              <Pressable
+                key={c.id}
+                style={[styles.srcRow, i < projectContradictions.length - 1 && styles.srcBorder]}
+                onPress={() => router.push(`/contradiction/${c.id}` as never)}
+              >
+                <Ionicons name="git-compare-outline" size={16} color={Colors.warning} />
+                <View style={styles.srcText}>
+                  <Text style={styles.srcTitle} numberOfLines={1}>{c.title}</Text>
+                  <Text style={styles.srcType}>{c.status}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={14} color={Colors.borderStrong} />
               </Pressable>

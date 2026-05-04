@@ -14,6 +14,7 @@ import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
 import { EntityRow } from "@/components/EntityRow";
 import { SectionHeader } from "@/components/SectionHeader";
+import { getEntityName } from "@/types";
 
 const QUICK_ACTIONS = [
   {
@@ -38,10 +39,10 @@ const QUICK_ACTIONS = [
     color: Colors.place,
   },
   {
-    label: "Lieu",
+    label: "Source",
     sub: "Ajouter",
-    icon: "location-outline" as const,
-    route: "/add/place",
+    icon: "document-text-outline" as const,
+    route: "/add/source",
     color: Colors.event,
   },
 ];
@@ -49,16 +50,28 @@ const QUICK_ACTIONS = [
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { persons, groups, places, events, archiveItems, oralTestimonies, getAllEntities, fetchAll, loading, initialized } =
-    useResearchStore();
+  const {
+    persons, groups, places, events, archiveItems, sources,
+    projects, hypotheses, contradictions,
+    getAllEntities, fetchAll, loading, initialized,
+  } = useResearchStore();
   const recent = getAllEntities().slice(0, 6);
-  const isEmpty = initialized && recent.length === 0;
+  const recentSources = sources.slice(0, 3);
+  const recentProjects = projects.slice(0, 3);
+  const isEmpty = initialized && recent.length === 0 && sources.length === 0 && projects.length === 0;
 
   const stats = [
     { label: "Personnes", count: persons.length, icon: "person" as const, color: Colors.person },
+    { label: "Sources", count: sources.length, icon: "document-text" as const, color: { bg: "#DBEAFE", icon: "#2563EB" } },
+    { label: "Dossiers", count: projects.length, icon: "folder" as const, color: Colors.event },
+    { label: "Hypothèses", count: hypotheses.length, icon: "bulb" as const, color: { bg: "#FEF3C7", icon: "#D97706" } },
+  ];
+
+  const stats2 = [
     { label: "Lieux", count: places.length, icon: "location" as const, color: Colors.place },
     { label: "Événements", count: events.length, icon: "calendar" as const, color: Colors.event },
-    { label: "Archives", count: archiveItems.length, icon: "document-text" as const, color: { bg: "#FEE2E2", icon: "#DC2626" } },
+    { label: "Groupes", count: groups.length, icon: "people" as const, color: Colors.group },
+    { label: "Archives", count: archiveItems.length, icon: "camera" as const, color: { bg: "#FEE2E2", icon: "#DC2626" } },
   ];
 
   return (
@@ -80,12 +93,25 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Stats */}
+      {/* Stats row 1 */}
       <View style={styles.statsRow}>
         {stats.map((s) => (
           <View key={s.label} style={styles.statCard}>
             <View style={[styles.statIcon, { backgroundColor: s.color.bg }]}>
-              <Ionicons name={s.icon} size={16} color={s.color.icon} />
+              <Ionicons name={s.icon} size={14} color={s.color.icon} />
+            </View>
+            <Text style={styles.statCount}>{s.count}</Text>
+            <Text style={styles.statLabel}>{s.label}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/* Stats row 2 */}
+      <View style={styles.statsRow}>
+        {stats2.map((s) => (
+          <View key={s.label} style={styles.statCard}>
+            <View style={[styles.statIcon, { backgroundColor: s.color.bg }]}>
+              <Ionicons name={s.icon} size={14} color={s.color.icon} />
             </View>
             <Text style={styles.statCount}>{s.count}</Text>
             <Text style={styles.statLabel}>{s.label}</Text>
@@ -111,7 +137,6 @@ export default function HomeScreen() {
         ))}
       </View>
 
-      {/* Recent entities */}
       {!initialized ? (
         <ActivityIndicator color={Colors.accent} style={{ marginTop: Spacing.xxl }} />
       ) : isEmpty ? (
@@ -121,25 +146,80 @@ export default function HomeScreen() {
           </View>
           <Text style={styles.emptyTitle}>Commencez votre recherche</Text>
           <Text style={styles.emptyHint}>
-            Ajoutez des personnes, lieux ou événements pour démarrer
+            Ajoutez des personnes, sources ou dossiers pour démarrer
           </Text>
         </View>
       ) : (
         <>
-          <SectionHeader title="Ajouts récents" />
-          <View style={styles.listCard}>
-            {recent.map((entity, i) => (
-              <View key={`${entity.entityType}-${entity.id}`}>
-                <EntityRow
-                  entity={entity}
-                  onPress={() =>
-                    router.push(`/entity/${entity.entityType}/${entity.id}` as never)
-                  }
-                />
-                {i < recent.length - 1 && <View style={styles.divider} />}
+          {/* Recent projects */}
+          {recentProjects.length > 0 && (
+            <>
+              <SectionHeader title="Dossiers récents" />
+              <View style={styles.listCard}>
+                {recentProjects.map((p, i) => (
+                  <Pressable
+                    key={p.id}
+                    style={[styles.compactRow, i < recentProjects.length - 1 && styles.compactBorder]}
+                    onPress={() => router.push(`/project/${p.id}` as never)}
+                  >
+                    <View style={[styles.compactIcon, { backgroundColor: `${Colors.accent}18` }]}>
+                      <Ionicons name="folder" size={14} color={Colors.accent} />
+                    </View>
+                    <View style={styles.compactText}>
+                      <Text style={styles.compactTitle} numberOfLines={1}>{p.title}</Text>
+                      <Text style={styles.compactSub}>{p.status}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={14} color={Colors.borderStrong} />
+                  </Pressable>
+                ))}
               </View>
-            ))}
-          </View>
+            </>
+          )}
+
+          {/* Recent sources */}
+          {recentSources.length > 0 && (
+            <>
+              <SectionHeader title="Sources récentes" />
+              <View style={styles.listCard}>
+                {recentSources.map((s, i) => (
+                  <Pressable
+                    key={s.id}
+                    style={[styles.compactRow, i < recentSources.length - 1 && styles.compactBorder]}
+                    onPress={() => router.push(`/source/${s.id}` as never)}
+                  >
+                    <View style={[styles.compactIcon, { backgroundColor: "#DBEAFE" }]}>
+                      <Ionicons name="document-text" size={14} color="#2563EB" />
+                    </View>
+                    <View style={styles.compactText}>
+                      <Text style={styles.compactTitle} numberOfLines={1}>{s.title}</Text>
+                      <Text style={styles.compactSub}>{s.sourceType}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={14} color={Colors.borderStrong} />
+                  </Pressable>
+                ))}
+              </View>
+            </>
+          )}
+
+          {/* Recent entities */}
+          {recent.length > 0 && (
+            <>
+              <SectionHeader title="Entités récentes" />
+              <View style={styles.listCard}>
+                {recent.map((entity, i) => (
+                  <View key={`${entity.entityType}-${entity.id}`}>
+                    <EntityRow
+                      entity={entity}
+                      onPress={() =>
+                        router.push(`/entity/${entity.entityType}/${entity.id}` as never)
+                      }
+                    />
+                    {i < recent.length - 1 && <View style={styles.divider} />}
+                  </View>
+                ))}
+              </View>
+            </>
+          )}
         </>
       )}
     </ScrollView>
@@ -150,7 +230,6 @@ const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.surfaceSunken },
   content: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xxxl },
 
-  // Header
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -183,7 +262,6 @@ const styles = StyleSheet.create({
     color: Colors.accent,
   },
 
-  // Stats
   statsRow: {
     flexDirection: "row",
     gap: Spacing.sm,
@@ -193,29 +271,28 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
-    padding: Spacing.md,
+    padding: Spacing.sm + 2,
     alignItems: "center",
-    gap: Spacing.xs,
+    gap: 2,
     ...Shadow.sm,
   },
   statIcon: {
-    width: 30,
-    height: 30,
+    width: 26,
+    height: 26,
     borderRadius: Radius.sm,
     alignItems: "center",
     justifyContent: "center",
   },
   statCount: {
-    fontSize: FontSize.xl,
+    fontSize: FontSize.lg,
     fontWeight: "700",
     color: Colors.ink,
   },
   statLabel: {
-    fontSize: FontSize.xs,
+    fontSize: 10,
     color: Colors.inkMuted,
   },
 
-  // Actions
   actionsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -249,7 +326,6 @@ const styles = StyleSheet.create({
     color: Colors.inkMuted,
   },
 
-  // Recent list
   listCard: {
     backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
@@ -262,7 +338,25 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg,
   },
 
-  // Empty state
+  compactRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    padding: Spacing.md + 2,
+    paddingHorizontal: Spacing.lg,
+  },
+  compactBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
+  compactIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: Radius.sm,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  compactText: { flex: 1 },
+  compactTitle: { fontSize: FontSize.sm, color: Colors.ink, fontWeight: "500" },
+  compactSub: { fontSize: FontSize.xs, color: Colors.inkMuted, marginTop: 1 },
+
   emptyState: {
     alignItems: "center",
     gap: Spacing.sm,
