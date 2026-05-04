@@ -8,6 +8,7 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "scheme": "athar",
+    "platforms": ["ios", "android"],
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
