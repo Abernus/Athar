@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ScrollView,
   View,
@@ -8,48 +8,66 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
 
 export default function AddPersonScreen() {
   const router = useRouter();
-  const { addPerson } = useResearchStore();
+  const navigation = useNavigation();
+  const { editId } = useLocalSearchParams<{ editId?: string }>();
+  const { addPerson, updatePerson, persons } = useResearchStore();
+
+  const existing = editId ? persons.find((p) => p.id === editId) : undefined;
+  const isEdit = !!existing;
+
   const [name, setName] = useState("");
   const [alternates, setAlternates] = useState("");
   const [summary, setSummary] = useState("");
   const [birthYear, setBirthYear] = useState("");
   const [deathYear, setDeathYear] = useState("");
   const [tags, setTags] = useState("");
+  const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    if (existing) {
+      navigation.setOptions({ title: "Modifier la personne" });
+      setName(existing.primaryName);
+      setAlternates(existing.alternateNames.join(", "));
+      setSummary(existing.summary);
+      setBirthYear(existing.birthDate?.value ?? "");
+      setDeathYear(existing.deathDate?.value ?? "");
+      setTags(existing.tags.join(", "));
+      setNotes(existing.notes);
+    }
+  }, [existing?.id]);
 
   async function save() {
     if (!name.trim()) {
       Alert.alert("Nom requis", "Saisissez au moins le nom principal.");
       return;
     }
-    const result = await addPerson({
+    const parsed = {
       primaryName: name.trim(),
-      alternateNames: alternates
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
+      alternateNames: alternates.split(",").map((s) => s.trim()).filter(Boolean),
       summary: summary.trim(),
-      birthDate: birthYear
-        ? { value: birthYear.trim(), precision: "estimated" }
-        : undefined,
-      deathDate: deathYear
-        ? { value: deathYear.trim(), precision: "estimated" }
-        : undefined,
-      tags: tags
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-      notes: "",
-    });
-    if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
-    Alert.alert("Personne ajoutée", `${name.trim()} a été créée.`, [
-      { text: "OK", onPress: () => router.back() },
-    ]);
+      birthDate: birthYear ? { value: birthYear.trim(), precision: "estimated" as const } : undefined,
+      deathDate: deathYear ? { value: deathYear.trim(), precision: "estimated" as const } : undefined,
+      tags: tags.split(",").map((s) => s.trim()).filter(Boolean),
+      notes: notes.trim(),
+    };
+
+    if (isEdit) {
+      const result = await updatePerson(editId!, parsed);
+      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      router.back();
+    } else {
+      const result = await addPerson(parsed);
+      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      Alert.alert("Personne ajoutée", `${name.trim()} a été créée.`, [
+        { text: "OK", onPress: () => router.back() },
+      ]);
+    }
   }
 
   return (
@@ -66,7 +84,7 @@ export default function AddPersonScreen() {
           onChangeText={setName}
           placeholder="Prénom et nom"
           placeholderTextColor={Colors.inkMuted}
-          autoFocus
+          autoFocus={!isEdit}
         />
 
         <Text style={styles.label}>Variantes de nom</Text>
@@ -115,6 +133,18 @@ export default function AddPersonScreen() {
           textAlignVertical="top"
         />
 
+        <Text style={styles.label}>Notes</Text>
+        <TextInput
+          style={[styles.input, styles.multiline]}
+          value={notes}
+          onChangeText={setNotes}
+          placeholder="Notes libres..."
+          placeholderTextColor={Colors.inkMuted}
+          multiline
+          numberOfLines={3}
+          textAlignVertical="top"
+        />
+
         <Text style={styles.label}>Tags</Text>
         <TextInput
           style={styles.input}
@@ -129,7 +159,9 @@ export default function AddPersonScreen() {
         style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]}
         onPress={save}
       >
-        <Text style={styles.saveBtnText}>Créer la personne</Text>
+        <Text style={styles.saveBtnText}>
+          {isEdit ? "Enregistrer" : "Créer la personne"}
+        </Text>
       </Pressable>
     </ScrollView>
   );

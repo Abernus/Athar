@@ -104,6 +104,13 @@ export default function ProjectDetailScreen() {
       <View style={styles.actionsRow}>
         <Pressable
           style={styles.actionBtn}
+          onPress={() => router.push(`/add/project?editId=${id}` as never)}
+        >
+          <Ionicons name="create-outline" size={18} color={Colors.accent} />
+          <Text style={styles.actionBtnText}>Modifier</Text>
+        </Pressable>
+        <Pressable
+          style={styles.actionBtn}
           onPress={() => router.push("/add/source" as never)}
         >
           <Ionicons name="document-text-outline" size={18} color={Colors.accent} />

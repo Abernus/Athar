@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ScrollView,
   View,
@@ -8,7 +8,7 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
 import type { ProjectStatus } from "@/types";
@@ -22,7 +22,13 @@ const STATUSES: { key: ProjectStatus; label: string }[] = [
 
 export default function AddProjectScreen() {
   const router = useRouter();
-  const { addProject } = useResearchStore();
+  const navigation = useNavigation();
+  const { editId } = useLocalSearchParams<{ editId?: string }>();
+  const { addProject, updateProject, projects } = useResearchStore();
+
+  const existing = editId ? projects.find((p) => p.id === editId) : undefined;
+  const isEdit = !!existing;
+
   const [title, setTitle] = useState("");
   const [question, setQuestion] = useState("");
   const [summary, setSummary] = useState("");
@@ -31,13 +37,26 @@ export default function AddProjectScreen() {
   const [geo, setGeo] = useState("");
   const [status, setStatus] = useState<ProjectStatus>("active");
   const [tags, setTags] = useState("");
+  const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    if (existing) {
+      navigation.setOptions({ title: "Modifier le dossier" });
+      setTitle(existing.title);
+      setQuestion(existing.researchQuestion);
+      setSummary(existing.summary);
+      setPeriodStart(existing.periodStart ?? "");
+      setPeriodEnd(existing.periodEnd ?? "");
+      setGeo(existing.geographicScope);
+      setStatus(existing.status as ProjectStatus);
+      setTags(existing.tags.join(", "));
+      setNotes(existing.notes);
+    }
+  }, [existing?.id]);
 
   async function save() {
-    if (!title.trim()) {
-      Alert.alert("Titre requis");
-      return;
-    }
-    const result = await addProject({
+    if (!title.trim()) { Alert.alert("Titre requis"); return; }
+    const parsed = {
       title: title.trim(),
       summary: summary.trim(),
       researchQuestion: question.trim(),
@@ -46,19 +65,26 @@ export default function AddProjectScreen() {
       geographicScope: geo.trim(),
       status,
       tags: tags.split(",").map((s) => s.trim()).filter(Boolean),
-      notes: "",
-    });
-    if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
-    Alert.alert("Dossier créé", `${title.trim()}`, [
-      { text: "OK", onPress: () => router.back() },
-    ]);
+      notes: notes.trim(),
+    };
+    if (isEdit) {
+      const result = await updateProject(editId!, parsed);
+      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      router.back();
+    } else {
+      const result = await addProject(parsed);
+      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      Alert.alert("Dossier créé", `${title.trim()}`, [
+        { text: "OK", onPress: () => router.back() },
+      ]);
+    }
   }
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.card}>
         <Text style={styles.label}>Titre du dossier *</Text>
-        <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="ex. Migration kabyle 1900-1960" placeholderTextColor={Colors.inkMuted} autoFocus />
+        <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="ex. Migration kabyle 1900-1960" placeholderTextColor={Colors.inkMuted} autoFocus={!isEdit} />
 
         <Text style={styles.label}>Question de recherche</Text>
         <TextInput style={[styles.input, styles.multiline]} value={question} onChangeText={setQuestion} placeholder="Quelle problématique guidera ce dossier ?" placeholderTextColor={Colors.inkMuted} multiline numberOfLines={3} textAlignVertical="top" />
@@ -89,12 +115,15 @@ export default function AddProjectScreen() {
         <Text style={styles.label}>Résumé</Text>
         <TextInput style={[styles.input, styles.multiline]} value={summary} onChangeText={setSummary} placeholder="Description du dossier..." placeholderTextColor={Colors.inkMuted} multiline numberOfLines={3} textAlignVertical="top" />
 
+        <Text style={styles.label}>Notes</Text>
+        <TextInput style={[styles.input, styles.multiline]} value={notes} onChangeText={setNotes} placeholder="Notes internes..." placeholderTextColor={Colors.inkMuted} multiline numberOfLines={3} textAlignVertical="top" />
+
         <Text style={styles.label}>Tags</Text>
         <TextInput style={styles.input} value={tags} onChangeText={setTags} placeholder="migration, algérie, guerre" placeholderTextColor={Colors.inkMuted} />
       </View>
 
       <Pressable style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]} onPress={save}>
-        <Text style={styles.saveBtnText}>Créer le dossier</Text>
+        <Text style={styles.saveBtnText}>{isEdit ? "Enregistrer" : "Créer le dossier"}</Text>
       </Pressable>
     </ScrollView>
   );

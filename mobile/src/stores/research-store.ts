@@ -482,6 +482,15 @@ interface ResearchState {
   addEntitySuggestion: (data: Omit<EntitySuggestion, "id" | "createdAt" | "updatedAt">) => Promise<EntitySuggestion | null>;
   addPublication: (data: Omit<Publication, "id" | "createdAt" | "updatedAt">) => Promise<Publication | null>;
 
+  // Updates
+  updatePerson: (id: string, data: Partial<Omit<Person, "id" | "entityType" | "createdAt" | "updatedAt">>) => Promise<Person | null>;
+  updateGroup: (id: string, data: Partial<Omit<Group, "id" | "entityType" | "createdAt" | "updatedAt">>) => Promise<Group | null>;
+  updatePlace: (id: string, data: Partial<Omit<Place, "id" | "entityType" | "createdAt" | "updatedAt">>) => Promise<Place | null>;
+  updateEvent: (id: string, data: Partial<Omit<HistoricalEvent, "id" | "entityType" | "createdAt" | "updatedAt">>) => Promise<HistoricalEvent | null>;
+  updateProject: (id: string, data: Partial<Omit<ResearchProject, "id" | "createdAt" | "updatedAt">>) => Promise<ResearchProject | null>;
+  updateSource: (id: string, data: Partial<Omit<Source, "id" | "createdAt" | "updatedAt">>) => Promise<Source | null>;
+  updateHypothesis: (id: string, data: Partial<Omit<Hypothesis, "id" | "createdAt" | "updatedAt">>) => Promise<Hypothesis | null>;
+
   // Search
   searchAll: (query: string) => AnyEntity[];
 }
@@ -1099,6 +1108,126 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
     const p = rowToPublication(rows);
     set((s) => ({ publications: [p, ...s.publications] }));
     return p;
+  },
+
+  updatePerson: async (id, data) => {
+    const row: Record<string, any> = {};
+    if (data.primaryName !== undefined) row.primary_name = data.primaryName;
+    if (data.alternateNames !== undefined) row.alternate_names = data.alternateNames;
+    if (data.summary !== undefined) row.summary = data.summary;
+    if (data.birthDate !== undefined) row.birth_date = data.birthDate ?? null;
+    if (data.deathDate !== undefined) row.death_date = data.deathDate ?? null;
+    if (data.gender !== undefined) row.gender = data.gender;
+    if (data.tags !== undefined) row.tags = data.tags;
+    if (data.notes !== undefined) row.notes = data.notes;
+    const { data: rows, error } = await supabase.from("persons").update(row).eq("id", id).select().single();
+    if (error || !rows) { console.error("updatePerson:", error); return null; }
+    const person = rowToPerson(rows);
+    set((s) => ({ persons: s.persons.map((p) => (p.id === id ? person : p)) }));
+    return person;
+  },
+
+  updateGroup: async (id, data) => {
+    const row: Record<string, any> = {};
+    if (data.name !== undefined) row.name = data.name;
+    if (data.groupType !== undefined) row.group_type = data.groupType;
+    if (data.summary !== undefined) row.summary = data.summary;
+    if (data.timeRange !== undefined) row.time_range = data.timeRange ?? null;
+    if (data.tags !== undefined) row.tags = data.tags;
+    if (data.notes !== undefined) row.notes = data.notes;
+    const { data: rows, error } = await supabase.from("groups").update(row).eq("id", id).select().single();
+    if (error || !rows) { console.error("updateGroup:", error); return null; }
+    const group = rowToGroup(rows);
+    set((s) => ({ groups: s.groups.map((g) => (g.id === id ? group : g)) }));
+    return group;
+  },
+
+  updatePlace: async (id, data) => {
+    const row: Record<string, any> = {};
+    if (data.name !== undefined) row.name = data.name;
+    if (data.placeType !== undefined) row.place_type = data.placeType;
+    if (data.summary !== undefined) row.summary = data.summary;
+    if (data.coordinates !== undefined) row.coordinates = data.coordinates ?? null;
+    if (data.tags !== undefined) row.tags = data.tags;
+    if (data.notes !== undefined) row.notes = data.notes;
+    const { data: rows, error } = await supabase.from("places").update(row).eq("id", id).select().single();
+    if (error || !rows) { console.error("updatePlace:", error); return null; }
+    const place = rowToPlace(rows);
+    set((s) => ({ places: s.places.map((p) => (p.id === id ? place : p)) }));
+    return place;
+  },
+
+  updateEvent: async (id, data) => {
+    const row: Record<string, any> = {};
+    if (data.title !== undefined) row.title = data.title;
+    if (data.eventType !== undefined) row.event_type = data.eventType;
+    if (data.description !== undefined) row.description = data.description;
+    if (data.dateStart !== undefined) row.date_start = data.dateStart ?? null;
+    if (data.dateEnd !== undefined) row.date_end = data.dateEnd ?? null;
+    if (data.placeId !== undefined) row.place_id = data.placeId ?? null;
+    if (data.tags !== undefined) row.tags = data.tags;
+    if (data.notes !== undefined) row.notes = data.notes;
+    const { data: rows, error } = await supabase.from("events").update(row).eq("id", id).select().single();
+    if (error || !rows) { console.error("updateEvent:", error); return null; }
+    const event = rowToEvent(rows);
+    set((s) => ({ events: s.events.map((e) => (e.id === id ? event : e)) }));
+    return event;
+  },
+
+  updateProject: async (id, data) => {
+    const row: Record<string, any> = {};
+    if (data.title !== undefined) row.title = data.title;
+    if (data.summary !== undefined) row.summary = data.summary;
+    if (data.researchQuestion !== undefined) row.research_question = data.researchQuestion;
+    if (data.periodStart !== undefined) row.period_start = data.periodStart ?? null;
+    if (data.periodEnd !== undefined) row.period_end = data.periodEnd ?? null;
+    if (data.geographicScope !== undefined) row.geographic_scope = data.geographicScope;
+    if (data.status !== undefined) row.status = data.status;
+    if (data.tags !== undefined) row.tags = data.tags;
+    if (data.notes !== undefined) row.notes = data.notes;
+    const { data: rows, error } = await supabase.from("research_projects").update(row).eq("id", id).select().single();
+    if (error || !rows) { console.error("updateProject:", error); return null; }
+    const project = rowToProject(rows);
+    set((s) => ({ projects: s.projects.map((p) => (p.id === id ? project : p)) }));
+    return project;
+  },
+
+  updateSource: async (id, data) => {
+    const row: Record<string, any> = {};
+    if (data.title !== undefined) row.title = data.title;
+    if (data.sourceType !== undefined) row.source_type = data.sourceType;
+    if (data.origin !== undefined) row.origin = data.origin;
+    if (data.reference !== undefined) row.reference = data.reference;
+    if (data.summary !== undefined) row.summary = data.summary;
+    if (data.criticalNote !== undefined) row.critical_note = data.criticalNote;
+    if (data.authorName !== undefined) row.author_name = data.authorName;
+    if (data.language !== undefined) row.language = data.language;
+    if (data.archiveReference !== undefined) row.archive_reference = data.archiveReference;
+    if (data.archiveFund !== undefined) row.archive_fund = data.archiveFund;
+    if (data.repositoryName !== undefined) row.repository_name = data.repositoryName;
+    if (data.reliabilityLevel !== undefined) row.reliability_level = data.reliabilityLevel;
+    if (data.biasNotes !== undefined) row.bias_notes = data.biasNotes;
+    if (data.tags !== undefined) row.tags = data.tags;
+    const { data: rows, error } = await supabase.from("sources").update(row).eq("id", id).select().single();
+    if (error || !rows) { console.error("updateSource:", error); return null; }
+    const source = rowToSource(rows);
+    set((s) => ({ sources: s.sources.map((s2) => (s2.id === id ? source : s2)) }));
+    return source;
+  },
+
+  updateHypothesis: async (id, data) => {
+    const row: Record<string, any> = {};
+    if (data.title !== undefined) row.title = data.title;
+    if (data.description !== undefined) row.description = data.description;
+    if (data.status !== undefined) row.status = data.status;
+    if (data.confidenceLevel !== undefined) row.confidence_level = data.confidenceLevel;
+    if (data.notes !== undefined) row.notes = data.notes;
+    if (data.tags !== undefined) row.tags = data.tags;
+    const { data: rows, error } = await supabase.from("hypotheses").update(row).eq("id", id).select().single();
+    if (error || !rows) { console.error("updateHypothesis:", error); return null; }
+    const hypothesis = rowToHypothesis(rows);
+    set((s) => ({ hypotheses: s.hypotheses.map((h) => (h.id === id ? hypothesis : h)) }));
+    return hypothesis;
   },
 
   searchCorpus: (query) => {

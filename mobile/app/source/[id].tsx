@@ -172,6 +172,15 @@ export default function SourceDetailScreen() {
         </Card>
       )}
 
+      {/* Edit source button */}
+      <Pressable
+        style={styles.addExcerptBtn}
+        onPress={() => router.push(`/add/source?editId=${id}` as never)}
+      >
+        <Ionicons name="create-outline" size={18} color={Colors.accent} />
+        <Text style={styles.addExcerptText}>Modifier cette source</Text>
+      </Pressable>
+
       {/* Add excerpt button */}
       <Pressable
         style={styles.addExcerptBtn}

@@ -184,6 +184,15 @@ export default function EntityDetailScreen() {
         <Pressable
           style={styles.addRelBtn}
           onPress={() =>
+            router.push(`/add/${entityType}?editId=${id}` as never)
+          }
+        >
+          <Ionicons name="create-outline" size={16} color={Colors.accent} />
+          <Text style={styles.addRelBtnText}>Modifier</Text>
+        </Pressable>
+        <Pressable
+          style={styles.addRelBtn}
+          onPress={() =>
             router.push(`/add/relationship?fromType=${entityType}&fromId=${id}` as never)
           }
         >

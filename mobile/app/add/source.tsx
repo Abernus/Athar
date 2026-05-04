@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ScrollView,
   View,
@@ -8,19 +8,14 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
 import { SOURCE_TYPE_LABELS } from "@/lib/constants";
 import type { SourceType, ReliabilityLevel } from "@/types";
 
 const SOURCE_TYPES: SourceType[] = [
-  "primary",
-  "secondary",
-  "testimony",
-  "private_archive",
-  "internal_note",
-  "other",
+  "primary", "secondary", "testimony", "private_archive", "internal_note", "other",
 ];
 
 const RELIABILITY: { key: ReliabilityLevel; label: string }[] = [
@@ -32,7 +27,13 @@ const RELIABILITY: { key: ReliabilityLevel; label: string }[] = [
 
 export default function AddSourceScreen() {
   const router = useRouter();
-  const { addSource } = useResearchStore();
+  const navigation = useNavigation();
+  const { editId } = useLocalSearchParams<{ editId?: string }>();
+  const { addSource, updateSource, sources } = useResearchStore();
+
+  const existing = editId ? sources.find((s) => s.id === editId) : undefined;
+  const isEdit = !!existing;
+
   const [title, setTitle] = useState("");
   const [sourceType, setSourceType] = useState<SourceType>("primary");
   const [authorName, setAuthorName] = useState("");
@@ -47,12 +48,28 @@ export default function AddSourceScreen() {
   const [biasNotes, setBiasNotes] = useState("");
   const [tags, setTags] = useState("");
 
-  async function save() {
-    if (!title.trim()) {
-      Alert.alert("Titre requis");
-      return;
+  useEffect(() => {
+    if (existing) {
+      navigation.setOptions({ title: "Modifier la source" });
+      setTitle(existing.title);
+      setSourceType(existing.sourceType);
+      setAuthorName(existing.authorName ?? "");
+      setOrigin(existing.origin);
+      setReference(existing.reference);
+      setArchiveRef(existing.archiveReference ?? "");
+      setArchiveFund(existing.archiveFund ?? "");
+      setRepository(existing.repositoryName ?? "");
+      setLanguage(existing.language ?? "");
+      setReliability((existing.reliabilityLevel ?? "unknown") as ReliabilityLevel);
+      setSummary(existing.summary);
+      setBiasNotes(existing.biasNotes ?? "");
+      setTags(existing.tags.join(", "));
     }
-    const result = await addSource({
+  }, [existing?.id]);
+
+  async function save() {
+    if (!title.trim()) { Alert.alert("Titre requis"); return; }
+    const parsed = {
       title: title.trim(),
       sourceType,
       origin: origin.trim(),
@@ -67,18 +84,25 @@ export default function AddSourceScreen() {
       reliabilityLevel: reliability,
       biasNotes: biasNotes.trim(),
       tags: tags.split(",").map((s) => s.trim()).filter(Boolean),
-    });
-    if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
-    Alert.alert("Source ajoutée", title.trim(), [
-      { text: "OK", onPress: () => router.back() },
-    ]);
+    };
+    if (isEdit) {
+      const result = await updateSource(editId!, parsed);
+      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      router.back();
+    } else {
+      const result = await addSource(parsed);
+      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      Alert.alert("Source ajoutée", title.trim(), [
+        { text: "OK", onPress: () => router.back() },
+      ]);
+    }
   }
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.card}>
         <Text style={styles.label}>Titre *</Text>
-        <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="ex. Registre d'état civil de Tizi, 1898" placeholderTextColor={Colors.inkMuted} autoFocus />
+        <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="ex. Registre d'état civil de Tizi, 1898" placeholderTextColor={Colors.inkMuted} autoFocus={!isEdit} />
 
         <Text style={styles.label}>Type de source</Text>
         <View style={styles.pillGrid}>
@@ -140,7 +164,7 @@ export default function AddSourceScreen() {
       </View>
 
       <Pressable style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]} onPress={save}>
-        <Text style={styles.saveBtnText}>Créer la source</Text>
+        <Text style={styles.saveBtnText}>{isEdit ? "Enregistrer" : "Créer la source"}</Text>
       </Pressable>
     </ScrollView>
   );
