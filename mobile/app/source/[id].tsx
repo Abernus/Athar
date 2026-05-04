@@ -34,7 +34,7 @@ export default function SourceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
   const router = useRouter();
-  const { sources, excerpts, deleteSource, addExcerpt } = useResearchStore();
+  const { sources, excerpts, deleteSource } = useResearchStore();
 
   const source = sources.find((s) => s.id === id);
   const sourceExcerpts = excerpts.filter((e) => e.sourceId === id);
@@ -184,28 +184,7 @@ export default function SourceDetailScreen() {
       {/* Add excerpt button */}
       <Pressable
         style={styles.addExcerptBtn}
-        onPress={() => {
-          Alert.prompt
-            ? Alert.prompt("Nouvel extrait", "Texte de l'extrait :", (text) => {
-                if (text?.trim()) {
-                  addExcerpt({
-                    sourceId: id,
-                    excerptType: "text",
-                    selectedText: text.trim(),
-                    pageOrLocation: "",
-                    excerptSummary: "",
-                    classification: "context",
-                    importance: "normal",
-                    tags: [],
-                    notes: "",
-                  });
-                }
-              })
-            : Alert.alert(
-                "Nouvel extrait",
-                "La saisie d'extraits sera améliorée dans une prochaine version."
-              );
-        }}
+        onPress={() => router.push(`/add/excerpt?sourceId=${id}` as never)}
       >
         <Ionicons name="add-circle-outline" size={18} color={Colors.accent} />
         <Text style={styles.addExcerptText}>Ajouter un extrait</Text>

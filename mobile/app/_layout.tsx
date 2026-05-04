@@ -100,6 +100,12 @@ export default function RootLayout() {
           options={{ title: "Réseau" }}
         />
         <Stack.Screen name="entity/[type]/[id]" options={{ title: "" }} />
+        <Stack.Screen name="hypothesis/[id]" options={{ title: "" }} />
+        <Stack.Screen name="contradiction/[id]" options={{ title: "" }} />
+        <Stack.Screen
+          name="add/excerpt"
+          options={{ title: "Nouvel extrait", presentation: "modal" }}
+        />
         <Stack.Screen
           name="export/project"
           options={{ title: "Exporter le dossier", presentation: "modal" }}

@@ -170,16 +170,18 @@ export default function ProjectDetailScreen() {
           <SectionHeader title={`Hypothèses (${hypotheses.length})`} />
           <View style={styles.listCard}>
             {hypotheses.slice(0, 5).map((hyp, i) => (
-              <View
+              <Pressable
                 key={hyp.id}
                 style={[styles.srcRow, i < Math.min(hypotheses.length, 5) - 1 && styles.srcBorder]}
+                onPress={() => router.push(`/hypothesis/${hyp.id}` as never)}
               >
                 <Ionicons name="bulb" size={16} color={Colors.warning} />
                 <View style={styles.srcText}>
                   <Text style={styles.srcTitle} numberOfLines={1}>{hyp.title}</Text>
                   <Text style={styles.srcType}>{hyp.status} · {hyp.confidenceLevel}</Text>
                 </View>
-              </View>
+                <Ionicons name="chevron-forward" size={14} color={Colors.borderStrong} />
+              </Pressable>
             ))}
           </View>
         </>
