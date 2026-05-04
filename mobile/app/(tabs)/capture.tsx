@@ -5,18 +5,25 @@ import { Ionicons } from "@expo/vector-icons";
 
 const CAPTURE_OPTIONS = [
   {
+    icon: "folder-outline" as const,
+    label: "Nouveau dossier",
+    description: "Créez un dossier de recherche pour structurer votre enquête",
+    route: "/add/project",
+    color: Colors.event,
+  },
+  {
     icon: "document-text-outline" as const,
     label: "Nouvelle source",
     description: "Ajoutez une source : archive, témoignage, article, registre",
     route: "/add/source",
-    color: Colors.event,
+    color: Colors.person,
   },
   {
     icon: "camera-outline" as const,
     label: "Photo d'archive",
     description: "Photographiez un document, un acte, une photo d'époque",
     route: "/capture/photo",
-    color: Colors.person,
+    color: Colors.place,
   },
   {
     icon: "mic-outline" as const,

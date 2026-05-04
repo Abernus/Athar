@@ -2,12 +2,13 @@ import {
   ScrollView,
   View,
   Text,
+  TextInput,
   Pressable,
   StyleSheet,
   Alert,
 } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
@@ -23,12 +24,23 @@ export default function EntityDetailScreen() {
   const { type, id } = useLocalSearchParams<{ type: string; id: string }>();
   const navigation = useNavigation();
   const router = useRouter();
-  const { getEntityById, getRelationshipsFor, getEntityDisplayName, deleteEntity } =
-    useResearchStore();
+  const {
+    getEntityById, getRelationshipsFor, getEntityDisplayName,
+    deleteEntity, getAliasesFor, addEntityAlias, excerpts, sources,
+  } = useResearchStore();
 
   const entityType = type as EntityType;
   const entity = getEntityById(entityType, id);
   const relationships = getRelationshipsFor(entityType, id);
+  const aliases = getAliasesFor(entityType, id);
+
+  const linkedExcerpts = excerpts.filter(
+    (e) => e.linkedEntityType === entityType && e.linkedEntityId === id
+  );
+
+  const [showAliasForm, setShowAliasForm] = useState(false);
+  const [aliasText, setAliasText] = useState("");
+  const [aliasLang, setAliasLang] = useState("");
 
   useEffect(() => {
     if (entity) navigation.setOptions({ title: getEntityName(entity) });
@@ -40,6 +52,22 @@ export default function EntityDetailScreen() {
         <Text style={styles.notFoundText}>Entité introuvable.</Text>
       </View>
     );
+  }
+
+  async function saveAlias() {
+    if (!aliasText.trim()) return;
+    await addEntityAlias({
+      entityType,
+      entityId: id,
+      alias: aliasText.trim(),
+      language: aliasLang.trim(),
+      script: "",
+      transcriptionSystem: "",
+      notes: "",
+    });
+    setAliasText("");
+    setAliasLang("");
+    setShowAliasForm(false);
   }
 
   return (
@@ -86,14 +114,52 @@ export default function EntityDetailScreen() {
           </View>
         )}
 
+        {/* Group fields */}
+        {entity.entityType === "group" && entity.timeRange && (
+          <View style={styles.fieldGrid}>
+            {entity.timeRange.start && (
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>Début</Text>
+                <Text style={styles.fieldValue}>{formatHistoricalDate(entity.timeRange.start)}</Text>
+              </View>
+            )}
+            {entity.timeRange.end && (
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>Fin</Text>
+                <Text style={styles.fieldValue}>{formatHistoricalDate(entity.timeRange.end)}</Text>
+              </View>
+            )}
+          </View>
+        )}
+
         {/* Event fields */}
-        {entity.entityType === "event" && entity.dateStart && (
+        {entity.entityType === "event" && (
+          <View style={styles.fieldGrid}>
+            {entity.dateStart && (
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>Date début</Text>
+                <Text style={styles.fieldValue}>
+                  {formatHistoricalDate(entity.dateStart)}
+                </Text>
+              </View>
+            )}
+            {entity.dateEnd && (
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>Date fin</Text>
+                <Text style={styles.fieldValue}>
+                  {formatHistoricalDate(entity.dateEnd)}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Place type */}
+        {entity.entityType === "place" && entity.placeType && (
           <View style={styles.fieldGrid}>
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Date</Text>
-              <Text style={styles.fieldValue}>
-                {formatHistoricalDate(entity.dateStart)}
-              </Text>
+              <Text style={styles.fieldLabel}>Type</Text>
+              <Text style={styles.fieldValue}>{entity.placeType}</Text>
             </View>
           </View>
         )}
@@ -118,12 +184,56 @@ export default function EntityDetailScreen() {
         )}
       </Card>
 
+      {/* Aliases */}
+      {(aliases.length > 0 || showAliasForm) && (
+        <>
+          <View style={styles.sectionRow}>
+            <View style={styles.sectionBar} />
+            <Text style={styles.sectionTitle}>Variantes de nom</Text>
+          </View>
+          <Card>
+            {aliases.map((a) => (
+              <View key={a.id} style={styles.aliasRow}>
+                <Text style={styles.aliasText}>{a.alias}</Text>
+                {a.language ? (
+                  <View style={styles.aliasLangBadge}>
+                    <Text style={styles.aliasLangText}>{a.language}</Text>
+                  </View>
+                ) : null}
+              </View>
+            ))}
+            {showAliasForm && (
+              <View style={styles.aliasForm}>
+                <TextInput
+                  style={styles.aliasInput}
+                  value={aliasText}
+                  onChangeText={setAliasText}
+                  placeholder="Variante de nom..."
+                  placeholderTextColor={Colors.inkMuted}
+                  autoFocus
+                />
+                <TextInput
+                  style={[styles.aliasInput, { flex: 0.4 }]}
+                  value={aliasLang}
+                  onChangeText={setAliasLang}
+                  placeholder="Langue"
+                  placeholderTextColor={Colors.inkMuted}
+                />
+                <Pressable style={styles.aliasSaveBtn} onPress={saveAlias}>
+                  <Ionicons name="checkmark" size={18} color="white" />
+                </Pressable>
+              </View>
+            )}
+          </Card>
+        </>
+      )}
+
       {/* Relations */}
       {relationships.length > 0 && (
         <>
           <View style={styles.sectionRow}>
             <View style={styles.sectionBar} />
-            <Text style={styles.sectionTitle}>Relations</Text>
+            <Text style={styles.sectionTitle}>Relations ({relationships.length})</Text>
           </View>
           <View style={styles.relCard}>
             {relationships.map((rel, i) => {
@@ -166,6 +276,38 @@ export default function EntityDetailScreen() {
         </>
       )}
 
+      {/* Linked excerpts */}
+      {linkedExcerpts.length > 0 && (
+        <>
+          <View style={styles.sectionRow}>
+            <View style={styles.sectionBar} />
+            <Text style={styles.sectionTitle}>Extraits liés ({linkedExcerpts.length})</Text>
+          </View>
+          <View style={styles.relCard}>
+            {linkedExcerpts.map((exc, i) => {
+              const src = sources.find((s) => s.id === exc.sourceId);
+              return (
+                <Pressable
+                  key={exc.id}
+                  style={[styles.relRow, i < linkedExcerpts.length - 1 && styles.relBorder]}
+                  onPress={() => src ? router.push(`/source/${src.id}` as never) : undefined}
+                >
+                  <Ionicons name="document-text" size={16} color={Colors.inkMuted} />
+                  <View style={styles.relText}>
+                    <Text style={styles.relName} numberOfLines={2}>
+                      {exc.selectedText || exc.excerptSummary}
+                    </Text>
+                    <Text style={styles.relType}>
+                      {src?.title ?? "Source"}{exc.pageOrLocation ? ` · ${exc.pageOrLocation}` : ""}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        </>
+      )}
+
       {/* Notes */}
       {entity.notes ? (
         <>
@@ -201,14 +343,20 @@ export default function EntityDetailScreen() {
         </Pressable>
         <Pressable
           style={styles.addRelBtn}
-          onPress={() =>
-            router.push(`/network?focusId=${id}` as never)
-          }
+          onPress={() => setShowAliasForm(true)}
         >
-          <Ionicons name="git-network-outline" size={16} color={Colors.accent} />
-          <Text style={styles.addRelBtnText}>Réseau</Text>
+          <Ionicons name="text-outline" size={16} color={Colors.accent} />
+          <Text style={styles.addRelBtnText}>Alias</Text>
         </Pressable>
       </View>
+
+      <Pressable
+        style={styles.networkBtn}
+        onPress={() => router.push(`/network?focusId=${id}` as never)}
+      >
+        <Ionicons name="git-network-outline" size={16} color={Colors.accent} />
+        <Text style={styles.addRelBtnText}>Voir le réseau</Text>
+      </Pressable>
 
       {/* Delete */}
       <Pressable
@@ -341,6 +489,45 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
+  aliasRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.xs,
+  },
+  aliasText: { fontSize: FontSize.sm, color: Colors.ink, fontWeight: "500" },
+  aliasLangBadge: {
+    backgroundColor: Colors.surfaceSunken,
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+  },
+  aliasLangText: { fontSize: FontSize.xs, color: Colors.inkMuted },
+
+  aliasForm: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+    alignItems: "center",
+  },
+  aliasInput: {
+    flex: 1,
+    backgroundColor: Colors.surfaceSunken,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    fontSize: FontSize.sm,
+    color: Colors.ink,
+  },
+  aliasSaveBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.accent,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
   relCard: {
     backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
@@ -386,6 +573,16 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.accent,
     fontWeight: "600",
+  },
+  networkBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    padding: Spacing.md,
+    borderRadius: Radius.lg,
+    backgroundColor: Colors.accentLight,
+    marginTop: Spacing.sm,
   },
 
   deleteBtn: {
