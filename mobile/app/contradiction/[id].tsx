@@ -29,7 +29,7 @@ export default function ContradictionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
   const router = useRouter();
-  const { contradictions } = useResearchStore();
+  const { contradictions, deleteContradiction } = useResearchStore();
 
   const contradiction = contradictions.find((c) => c.id === id);
 
@@ -110,6 +110,26 @@ export default function ContradictionDetailScreen() {
           <Text style={styles.actionBtnText}>Modifier</Text>
         </Pressable>
       </View>
+
+      <Pressable
+        style={styles.deleteBtn}
+        onPress={() =>
+          Alert.alert("Supprimer", `Supprimer "${contradiction.title}" ?`, [
+            { text: "Annuler", style: "cancel" },
+            {
+              text: "Supprimer",
+              style: "destructive",
+              onPress: async () => {
+                await deleteContradiction(id);
+                router.back();
+              },
+            },
+          ])
+        }
+      >
+        <Ionicons name="trash-outline" size={16} color={Colors.danger} />
+        <Text style={styles.deleteBtnText}>Supprimer</Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -162,4 +182,11 @@ const styles = StyleSheet.create({
     gap: Spacing.sm, padding: Spacing.md, borderRadius: Radius.lg, backgroundColor: Colors.accentLight,
   },
   actionBtnText: { fontSize: FontSize.sm, color: Colors.accent, fontWeight: "600" },
+
+  deleteBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: Spacing.sm, marginTop: Spacing.xxl, padding: Spacing.lg,
+    borderRadius: Radius.lg, backgroundColor: Colors.dangerLight,
+  },
+  deleteBtnText: { fontSize: FontSize.sm, color: Colors.danger, fontWeight: "600" },
 });

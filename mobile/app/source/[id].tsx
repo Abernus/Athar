@@ -34,7 +34,7 @@ export default function SourceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
   const router = useRouter();
-  const { sources, excerpts, deleteSource } = useResearchStore();
+  const { sources, excerpts, deleteSource, deleteExcerpt } = useResearchStore();
 
   const source = sources.find((s) => s.id === id);
   const sourceExcerpts = excerpts.filter((e) => e.sourceId === id);
@@ -143,9 +143,15 @@ export default function SourceDetailScreen() {
           {sourceExcerpts.map((exc, i) => {
             const cls = CLASSIFICATION_LABELS[exc.classification] ?? CLASSIFICATION_LABELS.context;
             return (
-              <View
+              <Pressable
                 key={exc.id}
                 style={[styles.excerptRow, i < sourceExcerpts.length - 1 && styles.excerptBorder]}
+                onLongPress={() =>
+                  Alert.alert("Supprimer cet extrait ?", (exc.selectedText || exc.excerptSummary).slice(0, 80), [
+                    { text: "Annuler", style: "cancel" },
+                    { text: "Supprimer", style: "destructive", onPress: () => deleteExcerpt(exc.id) },
+                  ])
+                }
               >
                 <View style={styles.excerptHeader}>
                   <View style={[styles.classificationDot, { backgroundColor: cls.color }]} />
@@ -160,7 +166,7 @@ export default function SourceDetailScreen() {
                 {exc.notes ? (
                   <Text style={styles.excerptNote}>{exc.notes}</Text>
                 ) : null}
-              </View>
+              </Pressable>
             );
           })}
         </View>

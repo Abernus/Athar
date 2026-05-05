@@ -26,7 +26,8 @@ export default function EntityDetailScreen() {
   const router = useRouter();
   const {
     getEntityById, getRelationshipsFor, getEntityDisplayName,
-    deleteEntity, getAliasesFor, addEntityAlias, excerpts, sources,
+    deleteEntity, getAliasesFor, addEntityAlias, deleteAlias,
+    deleteRelationship, excerpts, sources,
   } = useResearchStore();
 
   const entityType = type as EntityType;
@@ -193,14 +194,23 @@ export default function EntityDetailScreen() {
           </View>
           <Card>
             {aliases.map((a) => (
-              <View key={a.id} style={styles.aliasRow}>
+              <Pressable
+                key={a.id}
+                style={styles.aliasRow}
+                onLongPress={() =>
+                  Alert.alert("Supprimer l'alias ?", a.alias, [
+                    { text: "Annuler", style: "cancel" },
+                    { text: "Supprimer", style: "destructive", onPress: () => deleteAlias(a.id) },
+                  ])
+                }
+              >
                 <Text style={styles.aliasText}>{a.alias}</Text>
                 {a.language ? (
                   <View style={styles.aliasLangBadge}>
                     <Text style={styles.aliasLangText}>{a.language}</Text>
                   </View>
                 ) : null}
-              </View>
+              </Pressable>
             ))}
             {showAliasForm && (
               <View style={styles.aliasForm}>
@@ -256,6 +266,12 @@ export default function EntityDetailScreen() {
                   ]}
                   onPress={() =>
                     router.push(`/entity/${otherType}/${otherId}` as never)
+                  }
+                  onLongPress={() =>
+                    Alert.alert("Supprimer la relation ?", `${rel.label || RELATIONSHIP_TYPE_LABELS[rel.relationshipType]}`, [
+                      { text: "Annuler", style: "cancel" },
+                      { text: "Supprimer", style: "destructive", onPress: () => deleteRelationship(rel.id) },
+                    ])
                   }
                 >
                   <EntityBadge type={otherType} />

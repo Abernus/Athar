@@ -491,6 +491,13 @@ interface ResearchState {
   updateSource: (id: string, data: Partial<Omit<Source, "id" | "createdAt" | "updatedAt">>) => Promise<Source | null>;
   updateHypothesis: (id: string, data: Partial<Omit<Hypothesis, "id" | "createdAt" | "updatedAt">>) => Promise<Hypothesis | null>;
 
+  // Deletes
+  deleteRelationship: (id: string) => Promise<boolean>;
+  deleteExcerpt: (id: string) => Promise<boolean>;
+  deleteResearchNote: (id: string) => Promise<boolean>;
+  deleteAlias: (id: string) => Promise<boolean>;
+  deleteContradiction: (id: string) => Promise<boolean>;
+
   // Search
   searchAll: (query: string) => AnyEntity[];
 }
@@ -1215,6 +1222,41 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
     return source;
   },
 
+  deleteRelationship: async (id) => {
+    const { error } = await supabase.from("relationships").delete().eq("id", id);
+    if (error) { console.error("deleteRelationship:", error); return false; }
+    set((s) => ({ relationships: s.relationships.filter((r) => r.id !== id) }));
+    return true;
+  },
+
+  deleteExcerpt: async (id) => {
+    const { error } = await supabase.from("source_excerpts").delete().eq("id", id);
+    if (error) { console.error("deleteExcerpt:", error); return false; }
+    set((s) => ({ excerpts: s.excerpts.filter((e) => e.id !== id) }));
+    return true;
+  },
+
+  deleteResearchNote: async (id) => {
+    const { error } = await supabase.from("research_notes").delete().eq("id", id);
+    if (error) { console.error("deleteResearchNote:", error); return false; }
+    set((s) => ({ researchNotes: s.researchNotes.filter((n) => n.id !== id) }));
+    return true;
+  },
+
+  deleteAlias: async (id) => {
+    const { error } = await supabase.from("entity_aliases").delete().eq("id", id);
+    if (error) { console.error("deleteAlias:", error); return false; }
+    set((s) => ({ entityAliases: s.entityAliases.filter((a) => a.id !== id) }));
+    return true;
+  },
+
+  deleteContradiction: async (id) => {
+    const { error } = await supabase.from("contradictions").delete().eq("id", id);
+    if (error) { console.error("deleteContradiction:", error); return false; }
+    set((s) => ({ contradictions: s.contradictions.filter((c) => c.id !== id) }));
+    return true;
+  },
+
   updateHypothesis: async (id, data) => {
     const row: Record<string, any> = {};
     if (data.title !== undefined) row.title = data.title;
@@ -1268,24 +1310,27 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
     if (!q) return [];
     const s = get();
     const results: AnyEntity[] = [];
+    const aliasMatch = (type: EntityType, id: string) =>
+      s.entityAliases.some((a) => a.entityType === type && a.entityId === id && a.alias.toLowerCase().includes(q));
     for (const p of s.persons) {
       if (
         p.primaryName.toLowerCase().includes(q) ||
         p.alternateNames.some((n) => n.toLowerCase().includes(q)) ||
-        p.tags.some((t) => t.toLowerCase().includes(q))
+        p.tags.some((t) => t.toLowerCase().includes(q)) ||
+        aliasMatch("person", p.id)
       )
         results.push(p);
     }
     for (const g of s.groups) {
-      if (g.name.toLowerCase().includes(q) || g.tags.some((t) => t.toLowerCase().includes(q)))
+      if (g.name.toLowerCase().includes(q) || g.tags.some((t) => t.toLowerCase().includes(q)) || aliasMatch("group", g.id))
         results.push(g);
     }
     for (const pl of s.places) {
-      if (pl.name.toLowerCase().includes(q) || pl.tags.some((t) => t.toLowerCase().includes(q)))
+      if (pl.name.toLowerCase().includes(q) || pl.tags.some((t) => t.toLowerCase().includes(q)) || aliasMatch("place", pl.id))
         results.push(pl);
     }
     for (const ev of s.events) {
-      if (ev.title.toLowerCase().includes(q) || ev.tags.some((t) => t.toLowerCase().includes(q)))
+      if (ev.title.toLowerCase().includes(q) || ev.tags.some((t) => t.toLowerCase().includes(q)) || aliasMatch("event", ev.id))
         results.push(ev);
     }
     return results;
