@@ -207,6 +207,8 @@ export default function TimelineScreen() {
                   onPress={() => {
                     if (item.entityType && item.entityId) {
                       router.push(`/entity/${item.entityType}/${item.entityId}` as never);
+                    } else if (item.type === "source") {
+                      router.push(`/source/${item.id.replace("source-", "")}` as never);
                     }
                   }}
                 >

@@ -26,7 +26,7 @@ export default function ProjectDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
   const router = useRouter();
-  const { projects, sources, hypotheses, researchNotes, contradictions, getAllEntities, deleteProject } =
+  const { projects, sources, hypotheses, researchNotes, contradictions, getAllEntities, deleteProject, deleteResearchNote } =
     useResearchStore();
 
   const project = projects.find((p) => p.id === id);
@@ -101,34 +101,54 @@ export default function ProjectDetailScreen() {
         )}
       </Card>
 
+      {/* Stats summary */}
+      <View style={styles.statsRow}>
+        <View style={styles.statItem}>
+          <Text style={styles.statCount}>{sources.length}</Text>
+          <Text style={styles.statLabel}>Sources</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statCount}>{hypotheses.length}</Text>
+          <Text style={styles.statLabel}>Hypothèses</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statCount}>{projectContradictions.length}</Text>
+          <Text style={styles.statLabel}>Contrad.</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statCount}>{projectNotes.length}</Text>
+          <Text style={styles.statLabel}>Notes</Text>
+        </View>
+      </View>
+
       {/* Quick actions */}
       <View style={styles.actionsRow}>
         <Pressable
           style={styles.actionBtn}
           onPress={() => router.push(`/add/project?editId=${id}` as never)}
         >
-          <Ionicons name="create-outline" size={18} color={Colors.accent} />
+          <Ionicons name="create-outline" size={16} color={Colors.accent} />
           <Text style={styles.actionBtnText}>Modifier</Text>
         </Pressable>
         <Pressable
           style={styles.actionBtn}
           onPress={() => router.push("/add/source" as never)}
         >
-          <Ionicons name="document-text-outline" size={18} color={Colors.accent} />
+          <Ionicons name="document-text-outline" size={16} color={Colors.accent} />
           <Text style={styles.actionBtnText}>Source</Text>
         </Pressable>
         <Pressable
           style={styles.actionBtn}
           onPress={() => router.push("/add/hypothesis" as never)}
         >
-          <Ionicons name="bulb-outline" size={18} color={Colors.accent} />
+          <Ionicons name="bulb-outline" size={16} color={Colors.accent} />
           <Text style={styles.actionBtnText}>Hypothèse</Text>
         </Pressable>
         <Pressable
           style={styles.actionBtn}
           onPress={() => router.push(`/add/note?projectId=${id}` as never)}
         >
-          <Ionicons name="create-outline" size={18} color={Colors.accent} />
+          <Ionicons name="create-outline" size={16} color={Colors.accent} />
           <Text style={styles.actionBtnText}>Note</Text>
         </Pressable>
       </View>
@@ -217,9 +237,15 @@ export default function ProjectDetailScreen() {
           <SectionHeader title={`Notes (${projectNotes.length})`} />
           <View style={styles.listCard}>
             {projectNotes.map((note, i) => (
-              <View
+              <Pressable
                 key={note.id}
                 style={[styles.noteRow, i < projectNotes.length - 1 && styles.srcBorder]}
+                onLongPress={() =>
+                  Alert.alert("Supprimer cette note ?", note.content.slice(0, 80), [
+                    { text: "Annuler", style: "cancel" },
+                    { text: "Supprimer", style: "destructive", onPress: () => deleteResearchNote(note.id) },
+                  ])
+                }
               >
                 <Text style={styles.noteContent} numberOfLines={3}>
                   {note.content}
@@ -227,7 +253,7 @@ export default function ProjectDetailScreen() {
                 <Text style={styles.noteDate}>
                   {new Date(note.createdAt).toLocaleDateString("fr-FR")}
                 </Text>
-              </View>
+              </Pressable>
             ))}
           </View>
         </>
@@ -288,6 +314,22 @@ const styles = StyleSheet.create({
   tags: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.xs, marginTop: Spacing.lg },
   tag: { backgroundColor: Colors.accentLight, borderRadius: Radius.full, paddingHorizontal: Spacing.sm + 2, paddingVertical: 4 },
   tagText: { fontSize: FontSize.xs, color: Colors.accent, fontWeight: "500" },
+
+  statsRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  statItem: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.sm + 2,
+    alignItems: "center",
+    ...Shadow.sm,
+  },
+  statCount: { fontSize: FontSize.lg, fontWeight: "700", color: Colors.ink },
+  statLabel: { fontSize: 10, color: Colors.inkMuted },
 
   exportBtn: {
     flexDirection: "row",
