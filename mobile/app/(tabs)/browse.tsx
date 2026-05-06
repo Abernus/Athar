@@ -7,7 +7,7 @@ import { useResearchStore } from "@/stores/research-store";
 import { EntityRow } from "@/components/EntityRow";
 import { getEntityName } from "@/types";
 
-type BrowseTab = "entities" | "sources" | "hypotheses" | "contradictions" | "projects";
+type BrowseTab = "entities" | "sources" | "hypotheses" | "contradictions" | "projects" | "terrain";
 
 const TABS: { key: BrowseTab; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { key: "entities", label: "Entités", icon: "people" },
@@ -15,13 +15,15 @@ const TABS: { key: BrowseTab; label: string; icon: keyof typeof Ionicons.glyphMa
   { key: "projects", label: "Dossiers", icon: "folder" },
   { key: "hypotheses", label: "Hypothèses", icon: "bulb" },
   { key: "contradictions", label: "Contra.", icon: "git-compare-outline" },
+  { key: "terrain", label: "Terrain", icon: "airplane" },
 ];
 
 export default function BrowseScreen() {
   const router = useRouter();
   const {
     persons, groups, places, events, sources, projects,
-    hypotheses, contradictions, fetchAll, loading,
+    hypotheses, contradictions, witnesses, fieldMissions,
+    evidenceChains, fetchAll, loading,
   } = useResearchStore();
   const [activeTab, setActiveTab] = useState<BrowseTab>("entities");
 
@@ -162,6 +164,40 @@ export default function BrowseScreen() {
             )}
           </>
         );
+      case "terrain": {
+        const terrainItems = [
+          ...witnesses.map((w) => ({ id: w.id, type: "witness" as const, title: w.fullName, sub: `${w.consentStatus} · ${w.sensitivityLevel}`, icon: "person-circle" as const, iconColor: Colors.success })),
+          ...fieldMissions.map((m) => ({ id: m.id, type: "mission" as const, title: m.title, sub: `${m.status}${m.location ? ` · ${m.location}` : ""}`, icon: "airplane" as const, iconColor: "#2563EB" })),
+          ...evidenceChains.map((e) => ({ id: e.id, type: "evidence" as const, title: e.title, sub: e.claimStatus, icon: "link" as const, iconColor: Colors.accent })),
+        ];
+        return (
+          <>
+            <Text style={styles.count}>{terrainItems.length} élément{terrainItems.length !== 1 ? "s" : ""}</Text>
+            {terrainItems.length === 0 ? (
+              <EmptyState message="Aucun élément terrain. Ajoutez des témoins, missions ou chaînes de preuve." />
+            ) : (
+              <View style={styles.listCard}>
+                {terrainItems.map((item, i) => (
+                  <Pressable
+                    key={`${item.type}-${item.id}`}
+                    style={[styles.row, i < terrainItems.length - 1 && styles.rowBorder]}
+                    onPress={() => router.push(`/${item.type}/${item.id}` as never)}
+                  >
+                    <View style={[styles.rowIcon, { backgroundColor: `${item.iconColor}18` }]}>
+                      <Ionicons name={item.icon as any} size={16} color={item.iconColor} />
+                    </View>
+                    <View style={styles.rowText}>
+                      <Text style={styles.rowTitle} numberOfLines={1}>{item.title}</Text>
+                      <Text style={styles.rowSub}>{item.sub}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={14} color={Colors.borderStrong} />
+                  </Pressable>
+                ))}
+              </View>
+            )}
+          </>
+        );
+      }
     }
   }
 
