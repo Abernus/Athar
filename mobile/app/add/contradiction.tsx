@@ -60,9 +60,7 @@ export default function AddContradictionScreen() {
       tags: tags.split(",").map((s) => s.trim()).filter(Boolean),
     });
     if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
-    Alert.alert("Contradiction enregistrée", "", [
-      { text: "OK", onPress: () => router.back() },
-    ]);
+    router.back();
   }
 
   return (

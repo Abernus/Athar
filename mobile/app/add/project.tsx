@@ -74,9 +74,7 @@ export default function AddProjectScreen() {
     } else {
       const result = await addProject(parsed);
       if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
-      Alert.alert("Dossier créé", `${title.trim()}`, [
-        { text: "OK", onPress: () => router.back() },
-      ]);
+      router.back();
     }
   }
 

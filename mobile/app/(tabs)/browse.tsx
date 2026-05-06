@@ -23,7 +23,7 @@ export default function BrowseScreen() {
   const {
     persons, groups, places, events, sources, projects,
     hypotheses, contradictions, witnesses, fieldMissions,
-    evidenceChains, fetchAll, loading,
+    evidenceChains, bibliography, fetchAll, loading,
   } = useResearchStore();
   const [activeTab, setActiveTab] = useState<BrowseTab>("entities");
 
@@ -169,6 +169,7 @@ export default function BrowseScreen() {
           ...witnesses.map((w) => ({ id: w.id, type: "witness" as const, title: w.fullName, sub: `${w.consentStatus} · ${w.sensitivityLevel}`, icon: "person-circle" as const, iconColor: Colors.success })),
           ...fieldMissions.map((m) => ({ id: m.id, type: "mission" as const, title: m.title, sub: `${m.status}${m.location ? ` · ${m.location}` : ""}`, icon: "airplane" as const, iconColor: "#2563EB" })),
           ...evidenceChains.map((e) => ({ id: e.id, type: "evidence" as const, title: e.title, sub: e.claimStatus, icon: "link" as const, iconColor: Colors.accent })),
+          ...bibliography.map((b) => ({ id: b.id, type: "bibliography" as const, title: b.title, sub: `${b.entryType}${b.year ? ` · ${b.year}` : ""}`, icon: "book" as const, iconColor: "#A855F7" })),
         ];
         return (
           <>

@@ -61,9 +61,7 @@ export default function AddGroupScreen() {
     } else {
       const result = await addGroup(parsed);
       if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
-      Alert.alert("Groupe ajouté", `${name.trim()} a été créé.`, [
-        { text: "OK", onPress: () => router.back() },
-      ]);
+      router.back();
     }
   }
 

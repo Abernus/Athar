@@ -60,9 +60,7 @@ export default function AddPlaceScreen() {
     } else {
       const result = await addPlace(parsed);
       if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
-      Alert.alert("Lieu ajouté", `${name.trim()} a été créé.`, [
-        { text: "OK", onPress: () => router.back() },
-      ]);
+      router.back();
     }
   }
 

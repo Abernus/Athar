@@ -64,9 +64,7 @@ export default function AddEventScreen() {
     } else {
       const result = await addEvent(parsed);
       if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
-      Alert.alert("Événement ajouté", `${title.trim()} a été créé.`, [
-        { text: "OK", onPress: () => router.back() },
-      ]);
+      router.back();
     }
   }
 

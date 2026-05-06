@@ -78,9 +78,7 @@ export default function AddRelationshipScreen() {
       Alert.alert("Erreur", "Impossible de créer la relation.");
       return;
     }
-    Alert.alert("Relation créée", "", [
-      { text: "OK", onPress: () => router.back() },
-    ]);
+    router.back();
   }
 
   return (
