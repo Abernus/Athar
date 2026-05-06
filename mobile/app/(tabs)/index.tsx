@@ -18,6 +18,13 @@ import { getEntityName } from "@/types";
 
 const QUICK_ACTIONS = [
   {
+    label: "Explorer",
+    sub: "Tout voir",
+    icon: "compass-outline" as const,
+    route: "/(tabs)/browse",
+    color: { bg: "#EDE9FE", icon: "#7C3AED" },
+  },
+  {
     label: "Réseau",
     sub: "Graphe",
     icon: "git-network-outline" as const,
@@ -25,25 +32,18 @@ const QUICK_ACTIONS = [
     color: { bg: "#FCE7F3", icon: "#DB2777" },
   },
   {
+    label: "Lieux",
+    sub: "Carte",
+    icon: "map-outline" as const,
+    route: "/(tabs)/map",
+    color: Colors.place,
+  },
+  {
     label: "Photo",
     sub: "Archive",
     icon: "camera-outline" as const,
     route: "/capture/photo",
     color: Colors.person,
-  },
-  {
-    label: "Personne",
-    sub: "Ajouter",
-    icon: "person-add-outline" as const,
-    route: "/add/person",
-    color: Colors.place,
-  },
-  {
-    label: "Source",
-    sub: "Ajouter",
-    icon: "document-text-outline" as const,
-    route: "/add/source",
-    color: Colors.event,
   },
 ];
 

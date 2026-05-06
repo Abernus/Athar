@@ -60,7 +60,7 @@ export default function AddPlaceScreen() {
     } else {
       const result = await addPlace(parsed);
       if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
-      router.back();
+      router.replace(`/entity/place/${result.id}` as never);
     }
   }
 

@@ -61,7 +61,7 @@ export default function AddGroupScreen() {
     } else {
       const result = await addGroup(parsed);
       if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
-      router.back();
+      router.replace(`/entity/group/${result.id}` as never);
     }
   }
 

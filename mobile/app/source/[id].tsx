@@ -5,6 +5,7 @@ import {
   Pressable,
   StyleSheet,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useEffect } from "react";
@@ -34,7 +35,7 @@ export default function SourceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
   const router = useRouter();
-  const { sources, excerpts, deleteSource, deleteExcerpt } = useResearchStore();
+  const { sources, excerpts, deleteSource, deleteExcerpt, fetchAll, loading } = useResearchStore();
 
   const source = sources.find((s) => s.id === id);
   const sourceExcerpts = excerpts.filter((e) => e.sourceId === id);
@@ -52,7 +53,11 @@ export default function SourceDetailScreen() {
   }
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.content}
+      refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchAll} tintColor={Colors.accent} />}
+    >
       {/* Header */}
       <Card>
         <View style={styles.header}>

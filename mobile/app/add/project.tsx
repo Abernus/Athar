@@ -74,7 +74,7 @@ export default function AddProjectScreen() {
     } else {
       const result = await addProject(parsed);
       if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
-      router.back();
+      router.replace(`/project/${result.id}` as never);
     }
   }
 

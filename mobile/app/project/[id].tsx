@@ -5,6 +5,7 @@ import {
   Pressable,
   StyleSheet,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useEffect } from "react";
@@ -26,7 +27,7 @@ export default function ProjectDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
   const router = useRouter();
-  const { projects, sources, hypotheses, researchNotes, contradictions, getAllEntities, deleteProject, deleteResearchNote } =
+  const { projects, sources, hypotheses, researchNotes, contradictions, getAllEntities, deleteProject, deleteResearchNote, fetchAll, loading } =
     useResearchStore();
 
   const project = projects.find((p) => p.id === id);
@@ -47,7 +48,11 @@ export default function ProjectDetailScreen() {
   }
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.content}
+      refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchAll} tintColor={Colors.accent} />}
+    >
       <Card>
         <View style={styles.header}>
           <View style={styles.folderIcon}>

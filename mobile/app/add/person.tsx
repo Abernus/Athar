@@ -64,7 +64,7 @@ export default function AddPersonScreen() {
     } else {
       const result = await addPerson(parsed);
       if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
-      router.back();
+      router.replace(`/entity/person/${result.id}` as never);
     }
   }
 

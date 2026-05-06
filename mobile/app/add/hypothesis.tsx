@@ -67,7 +67,7 @@ export default function AddHypothesisScreen() {
     } else {
       const result = await addHypothesis(parsed);
       if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
-      router.back();
+      router.replace(`/hypothesis/${result.id}` as never);
     }
   }
 

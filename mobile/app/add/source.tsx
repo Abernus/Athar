@@ -92,7 +92,7 @@ export default function AddSourceScreen() {
     } else {
       const result = await addSource(parsed);
       if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
-      router.back();
+      router.replace(`/source/${result.id}` as never);
     }
   }
 

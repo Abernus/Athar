@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -27,7 +28,7 @@ export default function EntityDetailScreen() {
   const {
     getEntityById, getRelationshipsFor, getEntityDisplayName,
     deleteEntity, getAliasesFor, addEntityAlias, deleteAlias,
-    deleteRelationship, excerpts, sources,
+    deleteRelationship, excerpts, sources, fetchAll, loading,
   } = useResearchStore();
 
   const entityType = type as EntityType;
@@ -72,7 +73,11 @@ export default function EntityDetailScreen() {
   }
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.content}
+      refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchAll} tintColor={Colors.accent} />}
+    >
       {/* Header card */}
       <Card>
         <View style={styles.entityHeader}>
