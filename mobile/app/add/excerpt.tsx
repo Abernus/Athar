@@ -9,8 +9,11 @@ import {
   Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
+import { EntityPicker } from "@/components/EntityPicker";
+import type { EntityType } from "@/types";
 
 type Classification = "proof" | "clue" | "context" | "contradiction" | "doubt";
 
@@ -32,6 +35,9 @@ export default function AddExcerptScreen() {
   const [summary, setSummary] = useState("");
   const [classification, setClassification] = useState<Classification>("context");
   const [notes, setNotes] = useState("");
+  const [showEntityLink, setShowEntityLink] = useState(false);
+  const [linkedType, setLinkedType] = useState<EntityType>("person");
+  const [linkedId, setLinkedId] = useState<string | null>(null);
 
   async function save() {
     if (!text.trim() && !summary.trim()) {
@@ -46,6 +52,8 @@ export default function AddExcerptScreen() {
       excerptSummary: summary.trim(),
       classification,
       importance: "normal",
+      linkedEntityType: linkedId ? linkedType : undefined,
+      linkedEntityId: linkedId ?? undefined,
       tags: [],
       notes: notes.trim(),
     });
@@ -96,7 +104,7 @@ export default function AddExcerptScreen() {
 
         <Text style={styles.label}>Résumé de l'extrait</Text>
         <TextInput
-          style={[styles.input, styles.multiline]}
+          style={[styles.input, styles.multilineSmall]}
           value={summary}
           onChangeText={setSummary}
           placeholder="Ce que cet extrait apporte à l'enquête..."
@@ -108,7 +116,7 @@ export default function AddExcerptScreen() {
 
         <Text style={styles.label}>Notes</Text>
         <TextInput
-          style={[styles.input, styles.multiline]}
+          style={[styles.input, styles.multilineSmall]}
           value={notes}
           onChangeText={setNotes}
           placeholder="Remarques, questions..."
@@ -119,6 +127,28 @@ export default function AddExcerptScreen() {
         />
       </View>
 
+      {/* Entity link */}
+      {!showEntityLink ? (
+        <Pressable style={styles.linkBtn} onPress={() => setShowEntityLink(true)}>
+          <Ionicons name="link-outline" size={16} color={Colors.accent} />
+          <Text style={styles.linkBtnText}>Lier à une entité</Text>
+        </Pressable>
+      ) : (
+        <View style={styles.card}>
+          <EntityPicker
+            label="Entité liée"
+            selectedType={linkedType}
+            selectedId={linkedId}
+            onSelect={(t, id) => { setLinkedType(t); setLinkedId(id); }}
+          />
+          {linkedId && (
+            <Pressable style={styles.unlinkBtn} onPress={() => { setLinkedId(null); setShowEntityLink(false); }}>
+              <Text style={styles.unlinkText}>Retirer le lien</Text>
+            </Pressable>
+          )}
+        </View>
+      )}
+
       <Pressable style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]} onPress={save}>
         <Text style={styles.saveBtnText}>Ajouter l'extrait</Text>
       </Pressable>
@@ -128,11 +158,12 @@ export default function AddExcerptScreen() {
 
 const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.surfaceSunken },
-  content: { padding: Spacing.lg, paddingBottom: Spacing.xxxl },
+  content: { padding: Spacing.lg, paddingBottom: Spacing.xxxl, gap: Spacing.sm },
   card: { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, ...Shadow.sm },
   label: { fontSize: FontSize.sm, fontWeight: "600", color: Colors.inkSecondary, marginBottom: Spacing.xs, marginTop: Spacing.lg },
   input: { backgroundColor: Colors.surfaceSunken, borderRadius: Radius.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm + 2, fontSize: FontSize.base, color: Colors.ink },
   multiline: { minHeight: 100, paddingTop: Spacing.sm + 2 },
+  multilineSmall: { minHeight: 70, paddingTop: Spacing.sm + 2 },
   pillGrid: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm },
   pill: {
     flexDirection: "row", alignItems: "center", gap: 6,
@@ -143,7 +174,15 @@ const styles = StyleSheet.create({
   dot: { width: 8, height: 8, borderRadius: 4 },
   pillText: { fontSize: FontSize.sm, color: Colors.inkMuted, fontWeight: "500" },
   pillTextActive: { color: Colors.accent, fontWeight: "600" },
-  saveBtn: { backgroundColor: Colors.accent, borderRadius: Radius.lg, padding: Spacing.lg, alignItems: "center", marginTop: Spacing.xl, ...Shadow.md },
+  linkBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: Spacing.sm, padding: Spacing.md, borderRadius: Radius.lg,
+    backgroundColor: Colors.accentLight,
+  },
+  linkBtnText: { fontSize: FontSize.sm, color: Colors.accent, fontWeight: "600" },
+  unlinkBtn: { alignItems: "center", marginTop: Spacing.sm },
+  unlinkText: { fontSize: FontSize.xs, color: Colors.danger },
+  saveBtn: { backgroundColor: Colors.accent, borderRadius: Radius.lg, padding: Spacing.lg, alignItems: "center", marginTop: Spacing.md, ...Shadow.md },
   saveBtnPressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
   saveBtnText: { color: "white", fontSize: FontSize.base, fontWeight: "600" },
 });

@@ -28,6 +28,7 @@ export default function AddPersonScreen() {
   const [deathYear, setDeathYear] = useState("");
   const [tags, setTags] = useState("");
   const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (existing) {
@@ -47,6 +48,8 @@ export default function AddPersonScreen() {
       Alert.alert("Nom requis", "Saisissez au moins le nom principal.");
       return;
     }
+    if (saving) return;
+    setSaving(true);
     const parsed = {
       primaryName: name.trim(),
       alternateNames: alternates.split(",").map((s) => s.trim()).filter(Boolean),
@@ -59,11 +62,11 @@ export default function AddPersonScreen() {
 
     if (isEdit) {
       const result = await updatePerson(editId!, parsed);
-      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
       router.back();
     } else {
       const result = await addPerson(parsed);
-      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
       router.replace(`/entity/person/${result.id}` as never);
     }
   }
@@ -158,7 +161,7 @@ export default function AddPersonScreen() {
         onPress={save}
       >
         <Text style={styles.saveBtnText}>
-          {isEdit ? "Enregistrer" : "Créer la personne"}
+          {saving ? "Enregistrement..." : isEdit ? "Enregistrer" : "Créer la personne"}
         </Text>
       </Pressable>
     </ScrollView>
