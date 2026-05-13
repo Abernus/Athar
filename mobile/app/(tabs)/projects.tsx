@@ -1,16 +1,25 @@
-import { View, Text, FlatList, Pressable, StyleSheet, RefreshControl } from "react-native";
+import { useState } from "react";
+import { View, Text, FlatList, Pressable, StyleSheet, RefreshControl, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
-import type { ResearchProject } from "@/types";
+import type { ResearchProject, ProjectStatus } from "@/types";
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   active: { label: "Actif", color: Colors.success },
   paused: { label: "En pause", color: Colors.warning },
-  completed: { label: "Terminé", color: Colors.accent },
-  archived: { label: "Archivé", color: Colors.inkMuted },
+  completed: { label: "Termine", color: Colors.accent },
+  archived: { label: "Archive", color: Colors.inkMuted },
 };
+
+const FILTER_OPTIONS: { key: ProjectStatus | "all"; label: string }[] = [
+  { key: "all", label: "Tous" },
+  { key: "active", label: "Actifs" },
+  { key: "paused", label: "En pause" },
+  { key: "completed", label: "Termines" },
+  { key: "archived", label: "Archives" },
+];
 
 function ProjectCard({ project, onPress }: { project: ResearchProject; onPress: () => void }) {
   const st = STATUS_LABELS[project.status] ?? STATUS_LABELS.active;
@@ -28,7 +37,10 @@ function ProjectCard({ project, onPress }: { project: ResearchProject; onPress: 
             </Text>
           )}
         </View>
-        <View style={[styles.statusDot, { backgroundColor: st.color }]} />
+        <View style={[styles.statusBadge, { backgroundColor: `${st.color}18` }]}>
+          <View style={[styles.statusBadgeDot, { backgroundColor: st.color }]} />
+          <Text style={[styles.statusBadgeText, { color: st.color }]}>{st.label}</Text>
+        </View>
       </View>
       {project.researchQuestion ? (
         <Text style={styles.cardQuestion} numberOfLines={2}>
@@ -51,11 +63,25 @@ function ProjectCard({ project, onPress }: { project: ResearchProject; onPress: 
 export default function ProjectsScreen() {
   const router = useRouter();
   const { projects, fetchAll, loading } = useResearchStore();
+  const [filter, setFilter] = useState<ProjectStatus | "all">("all");
+
+  const statusCounts: Record<string, number> = {
+    all: projects.length,
+    active: 0,
+    paused: 0,
+    completed: 0,
+    archived: 0,
+  };
+  for (const p of projects) {
+    statusCounts[p.status] = (statusCounts[p.status] ?? 0) + 1;
+  }
+
+  const filtered = filter === "all" ? projects : projects.filter((p) => p.status === filter);
 
   return (
     <View style={styles.container}>
       <FlatList
-        data={projects}
+        data={filtered}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <ProjectCard
@@ -73,7 +99,7 @@ export default function ProjectsScreen() {
             </View>
             <Text style={styles.emptyTitle}>Aucun dossier</Text>
             <Text style={styles.emptyHint}>
-              Créez votre premier dossier de recherche pour structurer votre enquête
+              Creez votre premier dossier de recherche pour structurer votre enquete
             </Text>
             <Pressable
               style={styles.emptyBtn}
@@ -85,15 +111,41 @@ export default function ProjectsScreen() {
           </View>
         )}
         ListHeaderComponent={() => (
-          projects.length > 0 ? (
-            <Pressable
-              style={styles.addBtn}
-              onPress={() => router.push("/add/project" as never)}
-            >
-              <Ionicons name="add-circle-outline" size={18} color={Colors.accent} />
-              <Text style={styles.addBtnText}>Nouveau dossier</Text>
-            </Pressable>
-          ) : null
+          <View>
+            {projects.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.filterBar}
+              >
+                {FILTER_OPTIONS.map((opt) => {
+                  const count = statusCounts[opt.key] ?? 0;
+                  if (opt.key !== "all" && count === 0) return null;
+                  const isActive = filter === opt.key;
+                  return (
+                    <Pressable
+                      key={opt.key}
+                      style={[styles.filterPill, isActive && styles.filterPillActive]}
+                      onPress={() => setFilter(opt.key)}
+                    >
+                      <Text style={[styles.filterPillText, isActive && styles.filterPillTextActive]}>
+                        {opt.label} ({count})
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            )}
+            {projects.length > 0 ? (
+              <Pressable
+                style={styles.addBtn}
+                onPress={() => router.push("/add/project" as never)}
+              >
+                <Ionicons name="add-circle-outline" size={18} color={Colors.accent} />
+                <Text style={styles.addBtnText}>Nouveau dossier</Text>
+              </Pressable>
+            ) : null}
+          </View>
         )}
       />
     </View>
@@ -103,6 +155,18 @@ export default function ProjectsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.surfaceSunken },
   list: { padding: Spacing.lg, gap: Spacing.sm },
+
+  filterBar: { gap: Spacing.sm, paddingBottom: Spacing.sm },
+  filterPill: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs + 2,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.surface,
+    ...Shadow.sm,
+  },
+  filterPillActive: { backgroundColor: Colors.accentLight },
+  filterPillText: { fontSize: FontSize.xs, color: Colors.inkMuted, fontWeight: "500" },
+  filterPillTextActive: { color: Colors.accent, fontWeight: "600" },
 
   card: {
     backgroundColor: Colors.surface,
@@ -124,7 +188,16 @@ const styles = StyleSheet.create({
   cardHeaderText: { flex: 1 },
   cardTitle: { fontSize: FontSize.base, fontWeight: "600", color: Colors.ink },
   cardPeriod: { fontSize: FontSize.xs, color: Colors.inkMuted, marginTop: 2 },
-  statusDot: { width: 8, height: 8, borderRadius: 4, marginTop: 6 },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: Spacing.sm + 2,
+    paddingVertical: 3,
+    borderRadius: Radius.full,
+  },
+  statusBadgeDot: { width: 6, height: 6, borderRadius: 3 },
+  statusBadgeText: { fontSize: FontSize.xs, fontWeight: "600" },
   cardQuestion: { fontSize: FontSize.sm, color: Colors.inkSecondary, lineHeight: 19, fontStyle: "italic" },
   cardTags: { flexDirection: "row", gap: Spacing.xs, marginTop: Spacing.xs },
   tag: { backgroundColor: Colors.accentLight, borderRadius: Radius.full, paddingHorizontal: Spacing.sm, paddingVertical: 2 },

@@ -47,6 +47,7 @@ export default function AddSourceScreen() {
   const [summary, setSummary] = useState("");
   const [biasNotes, setBiasNotes] = useState("");
   const [tags, setTags] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (existing) {
@@ -69,6 +70,8 @@ export default function AddSourceScreen() {
 
   async function save() {
     if (!title.trim()) { Alert.alert("Titre requis"); return; }
+    if (saving) return;
+    setSaving(true);
     const parsed = {
       title: title.trim(),
       sourceType,
@@ -87,11 +90,11 @@ export default function AddSourceScreen() {
     };
     if (isEdit) {
       const result = await updateSource(editId!, parsed);
-      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
       router.back();
     } else {
       const result = await addSource(parsed);
-      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
       router.replace(`/source/${result.id}` as never);
     }
   }
@@ -162,7 +165,7 @@ export default function AddSourceScreen() {
       </View>
 
       <Pressable style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]} onPress={save}>
-        <Text style={styles.saveBtnText}>{isEdit ? "Enregistrer" : "Créer la source"}</Text>
+        <Text style={styles.saveBtnText}>{saving ? "Enregistrement..." : isEdit ? "Enregistrer" : "Créer la source"}</Text>
       </Pressable>
     </ScrollView>
   );

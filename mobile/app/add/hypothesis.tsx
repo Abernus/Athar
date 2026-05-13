@@ -37,6 +37,7 @@ export default function AddHypothesisScreen() {
   const [confidence, setConfidence] = useState<ConfidenceLevel>("uncertain");
   const [notes, setNotes] = useState("");
   const [tags, setTags] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (existing) {
@@ -52,6 +53,8 @@ export default function AddHypothesisScreen() {
 
   async function save() {
     if (!title.trim()) { Alert.alert("Titre requis"); return; }
+    if (saving) return;
+    setSaving(true);
     const parsed = {
       title: title.trim(),
       description: description.trim(),
@@ -62,11 +65,11 @@ export default function AddHypothesisScreen() {
     };
     if (isEdit) {
       const result = await updateHypothesis(editId!, parsed);
-      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
       router.back();
     } else {
       const result = await addHypothesis(parsed);
-      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
       router.replace(`/hypothesis/${result.id}` as never);
     }
   }
@@ -106,7 +109,7 @@ export default function AddHypothesisScreen() {
       </View>
 
       <Pressable style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]} onPress={save}>
-        <Text style={styles.saveBtnText}>{isEdit ? "Enregistrer" : "Créer l'hypothèse"}</Text>
+        <Text style={styles.saveBtnText}>{saving ? "Enregistrement..." : isEdit ? "Enregistrer" : "Créer l'hypothèse"}</Text>
       </Pressable>
     </ScrollView>
   );

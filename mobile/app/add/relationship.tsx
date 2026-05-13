@@ -58,12 +58,15 @@ export default function AddRelationshipScreen() {
   const [label, setLabel] = useState("");
   const [confidence, setConfidence] = useState<ConfidenceLevel>("probable");
   const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
 
   async function save() {
     if (!sourceId || !targetId) {
       Alert.alert("Sélection requise", "Choisissez les deux entités à relier.");
       return;
     }
+    if (saving) return;
+    setSaving(true);
     const result = await addRelationship({
       sourceEntityType: sourceType,
       sourceEntityId: sourceId,
@@ -75,6 +78,7 @@ export default function AddRelationshipScreen() {
       notes: notes.trim(),
     });
     if (!result) {
+      setSaving(false);
       Alert.alert("Erreur", "Impossible de créer la relation.");
       return;
     }
@@ -187,7 +191,7 @@ export default function AddRelationshipScreen() {
         onPress={save}
         disabled={!sourceId || !targetId}
       >
-        <Text style={styles.saveBtnText}>Créer la relation</Text>
+        <Text style={styles.saveBtnText}>{saving ? "Enregistrement..." : "Créer la relation"}</Text>
       </Pressable>
     </ScrollView>
   );

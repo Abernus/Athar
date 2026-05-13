@@ -28,19 +28,22 @@ export default function AddNoteScreen() {
   const [noteType, setNoteType] = useState<NoteType>("note");
   const [content, setContent] = useState("");
   const [tags, setTags] = useState("");
+  const [saving, setSaving] = useState(false);
 
   async function save() {
     if (!content.trim()) {
       Alert.alert("Contenu requis");
       return;
     }
+    if (saving) return;
+    setSaving(true);
     const result = await addResearchNote({
       projectId: projectId || undefined,
       noteType,
       content: content.trim(),
       tags: tags.split(",").map((s) => s.trim()).filter(Boolean),
     });
-    if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+    if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
     router.back();
   }
 
@@ -76,7 +79,7 @@ export default function AddNoteScreen() {
       </View>
 
       <Pressable style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]} onPress={save}>
-        <Text style={styles.saveBtnText}>Enregistrer</Text>
+        <Text style={styles.saveBtnText}>{saving ? "Enregistrement..." : "Enregistrer"}</Text>
       </Pressable>
     </ScrollView>
   );

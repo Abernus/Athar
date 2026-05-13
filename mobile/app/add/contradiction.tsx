@@ -32,6 +32,7 @@ export default function AddContradictionScreen() {
   const [status, setStatus] = useState("open");
   const [resolutionNote, setResolutionNote] = useState("");
   const [tags, setTags] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (existing) {
@@ -46,6 +47,8 @@ export default function AddContradictionScreen() {
 
   async function save() {
     if (!title.trim()) { Alert.alert("Titre requis"); return; }
+    if (saving) return;
+    setSaving(true);
     // No updateContradiction yet — just create for now
     if (isEdit) {
       Alert.alert("Modification enregistrée");
@@ -59,8 +62,8 @@ export default function AddContradictionScreen() {
       resolutionNote: resolutionNote.trim(),
       tags: tags.split(",").map((s) => s.trim()).filter(Boolean),
     });
-    if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
-    router.back();
+    if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+    router.replace(`/contradiction/${result.id}` as never);
   }
 
   return (
@@ -93,7 +96,7 @@ export default function AddContradictionScreen() {
       </View>
 
       <Pressable style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]} onPress={save}>
-        <Text style={styles.saveBtnText}>{isEdit ? "Enregistrer" : "Créer la contradiction"}</Text>
+        <Text style={styles.saveBtnText}>{saving ? "Enregistrement..." : isEdit ? "Enregistrer" : "Créer la contradiction"}</Text>
       </Pressable>
     </ScrollView>
   );

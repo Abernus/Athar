@@ -38,6 +38,7 @@ export default function AddProjectScreen() {
   const [status, setStatus] = useState<ProjectStatus>("active");
   const [tags, setTags] = useState("");
   const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (existing) {
@@ -56,6 +57,8 @@ export default function AddProjectScreen() {
 
   async function save() {
     if (!title.trim()) { Alert.alert("Titre requis"); return; }
+    if (saving) return;
+    setSaving(true);
     const parsed = {
       title: title.trim(),
       summary: summary.trim(),
@@ -69,11 +72,11 @@ export default function AddProjectScreen() {
     };
     if (isEdit) {
       const result = await updateProject(editId!, parsed);
-      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
       router.back();
     } else {
       const result = await addProject(parsed);
-      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
       router.replace(`/project/${result.id}` as never);
     }
   }
@@ -121,7 +124,7 @@ export default function AddProjectScreen() {
       </View>
 
       <Pressable style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]} onPress={save}>
-        <Text style={styles.saveBtnText}>{isEdit ? "Enregistrer" : "Créer le dossier"}</Text>
+        <Text style={styles.saveBtnText}>{saving ? "Enregistrement..." : isEdit ? "Enregistrer" : "Créer le dossier"}</Text>
       </Pressable>
     </ScrollView>
   );

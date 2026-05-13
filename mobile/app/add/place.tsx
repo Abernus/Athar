@@ -32,6 +32,7 @@ export default function AddPlaceScreen() {
   const [summary, setSummary] = useState("");
   const [tags, setTags] = useState("");
   const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (existing) {
@@ -46,6 +47,8 @@ export default function AddPlaceScreen() {
 
   async function save() {
     if (!name.trim()) { Alert.alert("Nom requis"); return; }
+    if (saving) return;
+    setSaving(true);
     const parsed = {
       name: name.trim(),
       placeType,
@@ -55,11 +58,11 @@ export default function AddPlaceScreen() {
     };
     if (isEdit) {
       const result = await updatePlace(editId!, parsed);
-      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
       router.back();
     } else {
       const result = await addPlace(parsed);
-      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
       router.replace(`/entity/place/${result.id}` as never);
     }
   }
@@ -90,7 +93,7 @@ export default function AddPlaceScreen() {
       </View>
 
       <Pressable style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]} onPress={save}>
-        <Text style={styles.saveBtnText}>{isEdit ? "Enregistrer" : "Créer le lieu"}</Text>
+        <Text style={styles.saveBtnText}>{saving ? "Enregistrement..." : isEdit ? "Enregistrer" : "Créer le lieu"}</Text>
       </Pressable>
     </ScrollView>
   );
