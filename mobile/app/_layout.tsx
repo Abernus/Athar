@@ -106,6 +106,7 @@ export default function RootLayout() {
         <Stack.Screen name="witness/[id]" options={{ title: "" }} />
         <Stack.Screen name="mission/[id]" options={{ title: "" }} />
         <Stack.Screen name="bibliography/[id]" options={{ title: "" }} />
+        <Stack.Screen name="corpus/[id]" options={{ title: "" }} />
         <Stack.Screen
           name="add/excerpt"
           options={{ title: "Nouvel extrait", presentation: "modal" }}

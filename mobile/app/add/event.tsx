@@ -34,6 +34,7 @@ export default function AddEventScreen() {
   const [dateStart, setDateStart] = useState("");
   const [tags, setTags] = useState("");
   const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (existing) {
@@ -49,6 +50,8 @@ export default function AddEventScreen() {
 
   async function save() {
     if (!title.trim()) { Alert.alert("Titre requis"); return; }
+    if (saving) return;
+    setSaving(true);
     const parsed = {
       title: title.trim(),
       eventType,
@@ -59,11 +62,11 @@ export default function AddEventScreen() {
     };
     if (isEdit) {
       const result = await updateEvent(editId!, parsed);
-      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
       router.back();
     } else {
       const result = await addEvent(parsed);
-      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
       router.replace(`/entity/event/${result.id}` as never);
     }
   }
@@ -97,7 +100,7 @@ export default function AddEventScreen() {
       </View>
 
       <Pressable style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]} onPress={save}>
-        <Text style={styles.saveBtnText}>{isEdit ? "Enregistrer" : "Créer l'événement"}</Text>
+        <Text style={styles.saveBtnText}>{saving ? "Enregistrement..." : isEdit ? "Enregistrer" : "Créer l'événement"}</Text>
       </Pressable>
     </ScrollView>
   );

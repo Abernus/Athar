@@ -38,12 +38,15 @@ export default function AddExcerptScreen() {
   const [showEntityLink, setShowEntityLink] = useState(false);
   const [linkedType, setLinkedType] = useState<EntityType>("person");
   const [linkedId, setLinkedId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   async function save() {
     if (!text.trim() && !summary.trim()) {
       Alert.alert("Contenu requis", "Saisissez le texte de l'extrait ou un résumé.");
       return;
     }
+    if (saving) return;
+    setSaving(true);
     const result = await addExcerpt({
       sourceId: sourceId!,
       excerptType: "text",
@@ -57,7 +60,7 @@ export default function AddExcerptScreen() {
       tags: [],
       notes: notes.trim(),
     });
-    if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+    if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
     router.back();
   }
 
@@ -150,7 +153,7 @@ export default function AddExcerptScreen() {
       )}
 
       <Pressable style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]} onPress={save}>
-        <Text style={styles.saveBtnText}>Ajouter l'extrait</Text>
+        <Text style={styles.saveBtnText}>{saving ? "Enregistrement..." : "Ajouter l'extrait"}</Text>
       </Pressable>
     </ScrollView>
   );

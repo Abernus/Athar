@@ -33,6 +33,7 @@ export default function AddGroupScreen() {
   const [summary, setSummary] = useState("");
   const [tags, setTags] = useState("");
   const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (existing) {
@@ -47,6 +48,8 @@ export default function AddGroupScreen() {
 
   async function save() {
     if (!name.trim()) { Alert.alert("Nom requis"); return; }
+    if (saving) return;
+    setSaving(true);
     const parsed = {
       name: name.trim(),
       groupType,
@@ -56,11 +59,11 @@ export default function AddGroupScreen() {
     };
     if (isEdit) {
       const result = await updateGroup(editId!, parsed);
-      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
       router.back();
     } else {
       const result = await addGroup(parsed);
-      if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
       router.replace(`/entity/group/${result.id}` as never);
     }
   }
@@ -91,7 +94,7 @@ export default function AddGroupScreen() {
       </View>
 
       <Pressable style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]} onPress={save}>
-        <Text style={styles.saveBtnText}>{isEdit ? "Enregistrer" : "Créer le groupe"}</Text>
+        <Text style={styles.saveBtnText}>{saving ? "Enregistrement..." : isEdit ? "Enregistrer" : "Créer le groupe"}</Text>
       </Pressable>
     </ScrollView>
   );
