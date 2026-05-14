@@ -26,11 +26,22 @@ export default function BrowseScreen() {
     evidenceChains, bibliography, fetchAll, loading,
   } = useResearchStore();
   const [activeTab, setActiveTab] = useState<BrowseTab>("entities");
+  const [sortBy, setSortBy] = useState<"recent" | "alpha">("recent");
+
+  function sorted<T extends { createdAt?: string }>(items: T[], nameKey: string): T[] {
+    if (sortBy === "alpha") {
+      return [...items].sort((a, b) => ((a as any)[nameKey] ?? "").localeCompare((b as any)[nameKey] ?? ""));
+    }
+    return items;
+  }
 
   function renderContent() {
     switch (activeTab) {
       case "entities": {
-        const allEntities = [...persons, ...groups, ...places, ...events];
+        const raw = [...persons, ...groups, ...places, ...events];
+        const allEntities = sortBy === "alpha"
+          ? [...raw].sort((a, b) => getEntityName(a).localeCompare(getEntityName(b)))
+          : raw;
         return (
           <>
             <Text style={styles.count}>{allEntities.length} entité{allEntities.length !== 1 ? "s" : ""}</Text>
@@ -52,7 +63,8 @@ export default function BrowseScreen() {
           </>
         );
       }
-      case "sources":
+      case "sources": {
+        const sortedSources = sortBy === "alpha" ? [...sources].sort((a, b) => a.title.localeCompare(b.title)) : sources;
         return (
           <>
             <Text style={styles.count}>{sources.length} source{sources.length !== 1 ? "s" : ""}</Text>
@@ -60,7 +72,7 @@ export default function BrowseScreen() {
               <EmptyState message="Aucune source. Créez-en depuis l'onglet Ajouter." />
             ) : (
               <View style={styles.listCard}>
-                {sources.map((src, i) => (
+                {sortedSources.map((src, i) => (
                   <Pressable
                     key={src.id}
                     style={[styles.row, i < sources.length - 1 && styles.rowBorder]}
@@ -80,7 +92,9 @@ export default function BrowseScreen() {
             )}
           </>
         );
-      case "projects":
+      }
+      case "projects": {
+        const sortedProjects = sortBy === "alpha" ? [...projects].sort((a, b) => a.title.localeCompare(b.title)) : projects;
         return (
           <>
             <Text style={styles.count}>{projects.length} dossier{projects.length !== 1 ? "s" : ""}</Text>
@@ -88,7 +102,7 @@ export default function BrowseScreen() {
               <EmptyState message="Aucun dossier. Créez un dossier de recherche pour commencer." />
             ) : (
               <View style={styles.listCard}>
-                {projects.map((p, i) => (
+                {sortedProjects.map((p, i) => (
                   <Pressable
                     key={p.id}
                     style={[styles.row, i < projects.length - 1 && styles.rowBorder]}
@@ -108,7 +122,9 @@ export default function BrowseScreen() {
             )}
           </>
         );
-      case "hypotheses":
+      }
+      case "hypotheses": {
+        const sortedHypo = sortBy === "alpha" ? [...hypotheses].sort((a, b) => a.title.localeCompare(b.title)) : hypotheses;
         return (
           <>
             <Text style={styles.count}>{hypotheses.length} hypothèse{hypotheses.length !== 1 ? "s" : ""}</Text>
@@ -116,7 +132,7 @@ export default function BrowseScreen() {
               <EmptyState message="Aucune hypothèse. Formulez des hypothèses depuis vos dossiers." />
             ) : (
               <View style={styles.listCard}>
-                {hypotheses.map((h, i) => (
+                {sortedHypo.map((h, i) => (
                   <Pressable
                     key={h.id}
                     style={[styles.row, i < hypotheses.length - 1 && styles.rowBorder]}
@@ -136,7 +152,9 @@ export default function BrowseScreen() {
             )}
           </>
         );
-      case "contradictions":
+      }
+      case "contradictions": {
+        const sortedContra = sortBy === "alpha" ? [...contradictions].sort((a, b) => a.title.localeCompare(b.title)) : contradictions;
         return (
           <>
             <Text style={styles.count}>{contradictions.length} contradiction{contradictions.length !== 1 ? "s" : ""}</Text>
@@ -144,7 +162,7 @@ export default function BrowseScreen() {
               <EmptyState message="Aucune contradiction documentée." />
             ) : (
               <View style={styles.listCard}>
-                {contradictions.map((c, i) => (
+                {sortedContra.map((c, i) => (
                   <Pressable
                     key={c.id}
                     style={[styles.row, i < contradictions.length - 1 && styles.rowBorder]}
@@ -164,6 +182,7 @@ export default function BrowseScreen() {
             )}
           </>
         );
+      }
       case "terrain": {
         const terrainItems = [
           ...witnesses.map((w) => ({ id: w.id, type: "witness" as const, title: w.fullName, sub: `${w.consentStatus} · ${w.sensitivityLevel}`, icon: "person-circle" as const, iconColor: Colors.success })),
@@ -231,6 +250,24 @@ export default function BrowseScreen() {
         })}
       </ScrollView>
 
+      {/* Sort toggle */}
+      <View style={styles.sortRow}>
+        <Pressable
+          style={[styles.sortBtn, sortBy === "recent" && styles.sortBtnActive]}
+          onPress={() => setSortBy("recent")}
+        >
+          <Ionicons name="time-outline" size={14} color={sortBy === "recent" ? Colors.accent : Colors.inkMuted} />
+          <Text style={[styles.sortText, sortBy === "recent" && styles.sortTextActive]}>Récents</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.sortBtn, sortBy === "alpha" && styles.sortBtnActive]}
+          onPress={() => setSortBy("alpha")}
+        >
+          <Ionicons name="text-outline" size={14} color={sortBy === "alpha" ? Colors.accent : Colors.inkMuted} />
+          <Text style={[styles.sortText, sortBy === "alpha" && styles.sortTextActive]}>A → Z</Text>
+        </Pressable>
+      </View>
+
       <ScrollView
         style={styles.scrollContent}
         contentContainerStyle={styles.scrollPadding}
@@ -276,6 +313,26 @@ const styles = StyleSheet.create({
   tabActive: { backgroundColor: Colors.accentLight },
   tabLabel: { fontSize: FontSize.sm, color: Colors.inkMuted, fontWeight: "500" },
   tabLabelActive: { color: Colors.accent, fontWeight: "600" },
+
+  sortRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.surfaceSunken,
+  },
+  sortBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs + 1,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.surface,
+  },
+  sortBtnActive: { backgroundColor: Colors.accentLight },
+  sortText: { fontSize: FontSize.xs, color: Colors.inkMuted, fontWeight: "500" },
+  sortTextActive: { color: Colors.accent, fontWeight: "600" },
 
   scrollContent: { flex: 1 },
   scrollPadding: { padding: Spacing.lg, paddingBottom: Spacing.xxxl },
