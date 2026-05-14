@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ScrollView, View, Text, TextInput, Pressable, StyleSheet, Alert } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
 import type { MissionStatus } from "@/types";
@@ -13,7 +13,13 @@ const STATUSES: { key: MissionStatus; label: string }[] = [
 
 export default function AddMissionScreen() {
   const router = useRouter();
-  const { addFieldMission } = useResearchStore();
+  const navigation = useNavigation();
+  const { editId } = useLocalSearchParams<{ editId?: string }>();
+  const { addFieldMission, updateFieldMission, fieldMissions } = useResearchStore();
+
+  const existing = editId ? fieldMissions.find((m) => m.id === editId) : undefined;
+  const isEdit = !!existing;
+
   const [title, setTitle] = useState("");
   const [location, setLocation] = useState("");
   const [dateStart, setDateStart] = useState("");
@@ -25,26 +31,54 @@ export default function AddMissionScreen() {
   const [equipment, setEquipment] = useState("");
   const [status, setStatus] = useState<MissionStatus>("planned");
   const [tags, setTags] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (existing) {
+      navigation.setOptions({ title: "Modifier la mission" });
+      setTitle(existing.title);
+      setLocation(existing.location ?? "");
+      setDateStart(existing.dateStart ?? "");
+      setDateEnd(existing.dateEnd ?? "");
+      setObjectives(existing.objectives ?? "");
+      setPersons(existing.personsToMeet ?? "");
+      setPlaces(existing.placesToVisit ?? "");
+      setArchives(existing.archivesToConsult ?? "");
+      setEquipment(existing.equipmentChecklist ?? "");
+      setStatus(existing.status ?? "planned");
+      setTags(existing.tags.join(", "));
+    }
+  }, [existing?.id]);
 
   async function save() {
     if (!title.trim()) { Alert.alert("Titre requis"); return; }
-    const result = await addFieldMission({
+    if (saving) return;
+    setSaving(true);
+    const parsed = {
       title: title.trim(), location: location.trim(),
       dateStart: dateStart.trim(), dateEnd: dateEnd.trim(),
       objectives: objectives.trim(), personsToMeet: persons.trim(),
       placesToVisit: places.trim(), archivesToConsult: archives.trim(),
       equipmentChecklist: equipment.trim(), debriefNotes: "",
       status, tags: tags.split(",").map((s) => s.trim()).filter(Boolean),
-    });
-    if (!result) { Alert.alert("Erreur"); return; }
-    Alert.alert("Mission créée", title.trim(), [{ text: "OK", onPress: () => router.back() }]);
+    };
+
+    if (isEdit) {
+      const result = await updateFieldMission(editId!, parsed);
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      router.back();
+    } else {
+      const result = await addFieldMission(parsed);
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      router.replace(`/mission/${result.id}` as never);
+    }
   }
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.card}>
         <Text style={styles.label}>Titre de la mission *</Text>
-        <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="ex. Mission terrain Kabylie — août 2024" placeholderTextColor={Colors.inkMuted} autoFocus />
+        <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="ex. Mission terrain Kabylie — août 2024" placeholderTextColor={Colors.inkMuted} autoFocus={!isEdit} />
 
         <View style={styles.row}>
           <View style={styles.half}>
@@ -94,7 +128,9 @@ export default function AddMissionScreen() {
       </View>
 
       <Pressable style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]} onPress={save}>
-        <Text style={styles.saveBtnText}>Créer la mission</Text>
+        <Text style={styles.saveBtnText}>
+          {saving ? "Enregistrement..." : isEdit ? "Enregistrer" : "Créer la mission"}
+        </Text>
       </Pressable>
     </ScrollView>
   );

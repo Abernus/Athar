@@ -2,6 +2,7 @@ import {
   ScrollView,
   View,
   Text,
+  Pressable,
   StyleSheet,
 } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
@@ -119,6 +120,13 @@ export default function WitnessDetailScreen() {
         ) : null}
       </Card>
 
+      <View style={styles.actionRow}>
+        <Pressable style={styles.actionBtn} onPress={() => router.push(`/add/witness?editId=${id}` as never)}>
+          <Ionicons name="create-outline" size={16} color={Colors.accent} />
+          <Text style={styles.actionBtnText}>Modifier</Text>
+        </Pressable>
+      </View>
+
       {sessions.length > 0 && (
         <>
           <View style={styles.sectionRow}>
@@ -176,6 +184,13 @@ const styles = StyleSheet.create({
   sectionRow: { flexDirection: "row", alignItems: "center", gap: Spacing.sm, marginTop: Spacing.lg, marginBottom: Spacing.xs },
   sectionBar: { width: 3, height: 14, borderRadius: 2, backgroundColor: Colors.accent },
   sectionTitleText: { fontSize: FontSize.sm, fontWeight: "600", color: Colors.inkSecondary, letterSpacing: 0.3 },
+
+  actionRow: { flexDirection: "row", gap: Spacing.sm, marginTop: Spacing.lg },
+  actionBtn: {
+    flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: Spacing.sm, padding: Spacing.md, borderRadius: Radius.lg, backgroundColor: Colors.accentLight,
+  },
+  actionBtnText: { fontSize: FontSize.sm, color: Colors.accent, fontWeight: "600" },
 
   listCard: { backgroundColor: Colors.surface, borderRadius: Radius.lg, overflow: "hidden", ...Shadow.sm },
   sessionRow: { padding: Spacing.lg },
