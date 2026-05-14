@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -6,18 +6,18 @@ import {
   StyleSheet,
   Dimensions,
   ScrollView,
-  PanResponder,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
 import { getEntityName } from "@/types";
-import { RELATIONSHIP_TYPE_LABELS, CONFIDENCE_LABELS } from "@/lib/constants";
+import { RELATIONSHIP_TYPE_LABELS, CONFIDENCE_LABELS, ENTITY_TYPE_LABELS } from "@/lib/constants";
+import { ConfidencePill } from "@/components/ConfidencePill";
 import type { EntityType, AnyEntity, Relationship } from "@/types";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
-const GRAPH_SIZE = Math.max(SCREEN_W, SCREEN_H) * 1.5;
+const GRAPH_SIZE = Math.max(SCREEN_W, SCREEN_H) * 1.8;
 
 const NODE_COLORS: Record<EntityType, string> = {
   person: Colors.person.icon,
@@ -26,13 +26,12 @@ const NODE_COLORS: Record<EntityType, string> = {
   event: Colors.event.icon,
 };
 
-const TYPE_FILTERS: { key: EntityType | "all"; label: string }[] = [
-  { key: "all", label: "Tout" },
-  { key: "person", label: "Personnes" },
-  { key: "group", label: "Groupes" },
-  { key: "place", label: "Lieux" },
-  { key: "event", label: "Événements" },
-];
+const TYPE_SECTORS: Record<EntityType, number> = {
+  person: 0,
+  group: 1,
+  place: 2,
+  event: 3,
+};
 
 interface GraphNode {
   id: string;
@@ -40,6 +39,7 @@ interface GraphNode {
   label: string;
   x: number;
   y: number;
+  connectionCount: number;
 }
 
 interface GraphEdge {
@@ -48,43 +48,51 @@ interface GraphEdge {
   target: string;
   label: string;
   confidence: string;
+  relType: string;
 }
 
 function layoutNodes(entities: AnyEntity[], relationships: Relationship[]): GraphNode[] {
-  const nodes: GraphNode[] = [];
   const cx = GRAPH_SIZE / 2;
   const cy = GRAPH_SIZE / 2;
 
-  const connectedIds = new Set<string>();
+  const connectionCounts = new Map<string, number>();
   for (const r of relationships) {
-    connectedIds.add(r.sourceEntityId);
-    connectedIds.add(r.targetEntityId);
+    connectionCounts.set(r.sourceEntityId, (connectionCounts.get(r.sourceEntityId) ?? 0) + 1);
+    connectionCounts.set(r.targetEntityId, (connectionCounts.get(r.targetEntityId) ?? 0) + 1);
   }
 
-  const connected = entities.filter((e) => connectedIds.has(e.id));
-  const unconnected = entities.filter((e) => !connectedIds.has(e.id));
+  const byType: Record<EntityType, AnyEntity[]> = { person: [], group: [], place: [], event: [] };
+  for (const e of entities) byType[e.entityType].push(e);
 
-  const mainRadius = Math.min(connected.length * 30, GRAPH_SIZE * 0.35);
-  connected.forEach((entity, i) => {
-    const angle = (2 * Math.PI * i) / connected.length;
-    nodes.push({
-      id: entity.id,
-      entityType: entity.entityType,
-      label: getEntityName(entity),
-      x: cx + mainRadius * Math.cos(angle),
-      y: cy + mainRadius * Math.sin(angle),
-    });
-  });
+  const nodes: GraphNode[] = [];
+  const typeKeys = (Object.keys(byType) as EntityType[]).filter((t) => byType[t].length > 0);
 
-  const outerRadius = mainRadius + 120;
-  unconnected.forEach((entity, i) => {
-    const angle = (2 * Math.PI * i) / Math.max(unconnected.length, 1);
-    nodes.push({
-      id: entity.id,
-      entityType: entity.entityType,
-      label: getEntityName(entity),
-      x: cx + outerRadius * Math.cos(angle),
-      y: cy + outerRadius * Math.sin(angle),
+  typeKeys.forEach((type, typeIdx) => {
+    const typeEntities = byType[type];
+    const sectorAngle = (2 * Math.PI) / Math.max(typeKeys.length, 1);
+    const sectorStart = sectorAngle * typeIdx - Math.PI / 2;
+
+    typeEntities.sort((a, b) => (connectionCounts.get(b.id) ?? 0) - (connectionCounts.get(a.id) ?? 0));
+
+    typeEntities.forEach((entity, i) => {
+      const conns = connectionCounts.get(entity.id) ?? 0;
+      const radius = conns > 0
+        ? 80 + i * 55
+        : 200 + typeEntities.filter((e) => (connectionCounts.get(e.id) ?? 0) > 0).length * 55 + (i - typeEntities.filter((e) => (connectionCounts.get(e.id) ?? 0) > 0).length) * 50;
+
+      const spread = Math.min(sectorAngle * 0.8, Math.PI * 0.4);
+      const entityAngle = typeEntities.length === 1
+        ? sectorStart + sectorAngle / 2
+        : sectorStart + spread * 0.1 + (spread * 0.8 * i) / Math.max(typeEntities.length - 1, 1);
+
+      nodes.push({
+        id: entity.id,
+        entityType: entity.entityType,
+        label: getEntityName(entity),
+        x: cx + radius * Math.cos(entityAngle),
+        y: cy + radius * Math.sin(entityAngle),
+        connectionCount: conns,
+      });
     });
   });
 
@@ -94,13 +102,17 @@ function layoutNodes(entities: AnyEntity[], relationships: Relationship[]): Grap
 export default function NetworkScreen() {
   const router = useRouter();
   const { focusId } = useLocalSearchParams<{ focusId?: string }>();
-  const { getAllEntities, relationships } = useResearchStore();
+  const { getAllEntities, relationships, getEntityDisplayName } = useResearchStore();
   const [filter, setFilter] = useState<EntityType | "all">("all");
   const [selectedNode, setSelectedNode] = useState<string | null>(focusId ?? null);
+  const [showLegend, setShowLegend] = useState(true);
 
   const allEntities = getAllEntities();
   const filteredEntities =
     filter === "all" ? allEntities : allEntities.filter((e) => e.entityType === filter);
+
+  const typeCounts: Record<string, number> = { all: allEntities.length, person: 0, group: 0, place: 0, event: 0 };
+  for (const e of allEntities) typeCounts[e.entityType]++;
 
   const nodes = useMemo(
     () => layoutNodes(filteredEntities, relationships),
@@ -117,6 +129,7 @@ export default function NetworkScreen() {
         target: r.targetEntityId,
         label: r.label || RELATIONSHIP_TYPE_LABELS[r.relationshipType],
         confidence: r.confidenceLevel,
+        relType: r.relationshipType,
       }));
   }, [nodes, relationships]);
 
@@ -142,17 +155,30 @@ export default function NetworkScreen() {
         style={styles.filterBar}
         contentContainerStyle={styles.filterContent}
       >
-        {TYPE_FILTERS.map((f) => (
-          <Pressable
-            key={f.key}
-            style={[styles.filterPill, filter === f.key && styles.filterPillActive]}
-            onPress={() => { setFilter(f.key); setSelectedNode(null); }}
-          >
-            <Text style={[styles.filterText, filter === f.key && styles.filterTextActive]}>
-              {f.label}
-            </Text>
-          </Pressable>
-        ))}
+        {[
+          { key: "all" as const, label: "Tout" },
+          { key: "person" as const, label: "Personnes" },
+          { key: "group" as const, label: "Groupes" },
+          { key: "place" as const, label: "Lieux" },
+          { key: "event" as const, label: "Événements" },
+        ].map((f) => {
+          const count = typeCounts[f.key] ?? 0;
+          if (f.key !== "all" && count === 0) return null;
+          return (
+            <Pressable
+              key={f.key}
+              style={[styles.filterPill, filter === f.key && styles.filterPillActive]}
+              onPress={() => { setFilter(f.key); setSelectedNode(null); }}
+            >
+              {f.key !== "all" && (
+                <View style={[styles.filterDot, { backgroundColor: NODE_COLORS[f.key] }]} />
+              )}
+              <Text style={[styles.filterText, filter === f.key && styles.filterTextActive]}>
+                {f.label} ({count})
+              </Text>
+            </Pressable>
+          );
+        })}
       </ScrollView>
 
       {/* Graph area */}
@@ -160,7 +186,7 @@ export default function NetworkScreen() {
         style={styles.graphScroll}
         contentContainerStyle={{ width: GRAPH_SIZE, height: GRAPH_SIZE }}
         maximumZoomScale={3}
-        minimumZoomScale={0.3}
+        minimumZoomScale={0.2}
         bouncesZoom
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
@@ -180,21 +206,36 @@ export default function NetworkScreen() {
           const angle = Math.atan2(dy, dx) * (180 / Math.PI);
 
           return (
-            <View
-              key={edge.id}
-              style={[
-                styles.edge,
-                {
-                  left: src.x,
-                  top: src.y,
-                  width: len,
-                  transform: [{ rotate: `${angle}deg` }],
-                  opacity: selectedNode ? (isHighlighted ? 1 : 0.15) : 0.4,
-                  backgroundColor: isHighlighted ? Colors.accent : Colors.borderStrong,
-                  height: isHighlighted ? 2 : 1,
-                },
-              ]}
-            />
+            <View key={edge.id}>
+              <View
+                style={[
+                  styles.edge,
+                  {
+                    left: src.x,
+                    top: src.y,
+                    width: len,
+                    transform: [{ rotate: `${angle}deg` }],
+                    opacity: selectedNode ? (isHighlighted ? 1 : 0.1) : 0.35,
+                    backgroundColor: isHighlighted ? Colors.accent : Colors.borderStrong,
+                    height: isHighlighted ? 2.5 : 1,
+                  },
+                ]}
+              />
+              {isHighlighted && len > 100 && (
+                <Text
+                  style={[
+                    styles.edgeLabel,
+                    {
+                      left: (src.x + tgt.x) / 2 - 40,
+                      top: (src.y + tgt.y) / 2 - 8,
+                    },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {edge.label}
+                </Text>
+              )}
+            </View>
           );
         })}
 
@@ -209,6 +250,7 @@ export default function NetworkScreen() {
               )
             : false;
           const dimmed = selectedNode && !isSelected && !isConnected;
+          const size = node.connectionCount > 3 ? 56 : node.connectionCount > 0 ? 48 : 36;
 
           return (
             <Pressable
@@ -216,17 +258,20 @@ export default function NetworkScreen() {
               style={[
                 styles.node,
                 {
-                  left: node.x - 24,
-                  top: node.y - 24,
+                  left: node.x - size / 2,
+                  top: node.y - size / 2,
+                  width: size,
+                  height: size,
+                  borderRadius: size / 2,
                   backgroundColor: NODE_COLORS[node.entityType],
-                  opacity: dimmed ? 0.2 : 1,
-                  transform: [{ scale: isSelected ? 1.3 : 1 }],
+                  opacity: dimmed ? 0.15 : 1,
+                  transform: [{ scale: isSelected ? 1.25 : 1 }],
                 },
                 isSelected && styles.nodeSelected,
               ]}
               onPress={() => setSelectedNode(isSelected ? null : node.id)}
             >
-              <Text style={styles.nodeLabel} numberOfLines={1}>
+              <Text style={[styles.nodeLabel, { fontSize: size > 48 ? 14 : size > 36 ? 13 : 11 }]} numberOfLines={1}>
                 {node.label.slice(0, 2).toUpperCase()}
               </Text>
             </Pressable>
@@ -250,8 +295,8 @@ export default function NetworkScreen() {
                 styles.nodeName,
                 {
                   left: node.x - 50,
-                  top: node.y + 26,
-                  opacity: dimmed ? 0.15 : 1,
+                  top: node.y + (node.connectionCount > 3 ? 30 : node.connectionCount > 0 ? 26 : 20),
+                  opacity: dimmed ? 0.1 : 1,
                 },
               ]}
               numberOfLines={1}
@@ -262,14 +307,34 @@ export default function NetworkScreen() {
         })}
       </ScrollView>
 
+      {/* Legend */}
+      {showLegend && !selectedEntity && (
+        <View style={styles.legend}>
+          {(Object.keys(NODE_COLORS) as EntityType[]).map((type) => (
+            <View key={type} style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: NODE_COLORS[type] }]} />
+              <Text style={styles.legendText}>{ENTITY_TYPE_LABELS[type]}</Text>
+            </View>
+          ))}
+          <Pressable onPress={() => setShowLegend(false)} style={styles.legendClose}>
+            <Ionicons name="close" size={14} color={Colors.inkMuted} />
+          </Pressable>
+        </View>
+      )}
+
       {/* Detail panel */}
       {selectedEntity && (
         <View style={styles.detailPanel}>
           <View style={styles.detailHeader}>
             <View style={[styles.detailDot, { backgroundColor: NODE_COLORS[selectedEntity.entityType] }]} />
-            <Text style={styles.detailName} numberOfLines={1}>
-              {getEntityName(selectedEntity)}
-            </Text>
+            <View style={styles.detailHeaderText}>
+              <Text style={styles.detailName} numberOfLines={1}>
+                {getEntityName(selectedEntity)}
+              </Text>
+              <Text style={styles.detailType}>
+                {ENTITY_TYPE_LABELS[selectedEntity.entityType]} · {selectedEdges.length} relation{selectedEdges.length !== 1 ? "s" : ""}
+              </Text>
+            </View>
             <Pressable
               style={styles.detailGoBtn}
               onPress={() =>
@@ -283,20 +348,28 @@ export default function NetworkScreen() {
             </Pressable>
           </View>
           {selectedEdges.length > 0 && (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.detailEdges}>
+            <ScrollView
+              horizontal={false}
+              style={styles.detailEdges}
+              showsVerticalScrollIndicator={false}
+            >
               {selectedEdges.map((edge) => {
                 const otherId = edge.source === selectedNode ? edge.target : edge.source;
                 const other = allEntities.find((e) => e.id === otherId);
                 return (
                   <Pressable
                     key={edge.id}
-                    style={styles.edgeChip}
+                    style={styles.edgeRow}
                     onPress={() => setSelectedNode(otherId)}
                   >
-                    <Text style={styles.edgeChipLabel}>{edge.label}</Text>
-                    <Text style={styles.edgeChipName}>
-                      {other ? getEntityName(other) : "?"}
-                    </Text>
+                    <View style={[styles.edgeRowDot, { backgroundColor: other ? NODE_COLORS[other.entityType] : Colors.inkMuted }]} />
+                    <View style={styles.edgeRowText}>
+                      <Text style={styles.edgeRowName} numberOfLines={1}>
+                        {other ? getEntityName(other) : "?"}
+                      </Text>
+                      <Text style={styles.edgeRowLabel}>{edge.label}</Text>
+                    </View>
+                    <ConfidencePill level={edge.confidence} />
                   </Pressable>
                 );
               })}
@@ -338,12 +411,16 @@ const styles = StyleSheet.create({
   },
   filterContent: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, gap: Spacing.sm },
   filterPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: Radius.full,
     backgroundColor: Colors.surfaceSunken,
   },
   filterPillActive: { backgroundColor: Colors.accentLight },
+  filterDot: { width: 8, height: 8, borderRadius: 4 },
   filterText: { fontSize: FontSize.sm, color: Colors.inkMuted, fontWeight: "500" },
   filterTextActive: { color: Colors.accent, fontWeight: "600" },
 
@@ -354,25 +431,34 @@ const styles = StyleSheet.create({
     height: 1,
     transformOrigin: "left center",
   },
+  edgeLabel: {
+    position: "absolute",
+    width: 80,
+    textAlign: "center",
+    fontSize: 9,
+    color: Colors.accent,
+    fontWeight: "600",
+    backgroundColor: "rgba(255,255,255,0.85)",
+    borderRadius: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    overflow: "hidden",
+  },
 
   node: {
     position: "absolute",
-    width: 48,
-    height: 48,
-    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
   },
   nodeSelected: {
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
   },
   nodeLabel: {
     color: "white",
-    fontSize: 13,
     fontWeight: "700",
   },
   nodeName: {
@@ -384,6 +470,21 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
+  legend: {
+    position: "absolute",
+    bottom: Spacing.xxxl + 40,
+    left: Spacing.lg,
+    backgroundColor: "rgba(255,255,255,0.95)",
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    gap: Spacing.xs,
+    ...Shadow.sm,
+  },
+  legendItem: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
+  legendDot: { width: 10, height: 10, borderRadius: 5 },
+  legendText: { fontSize: FontSize.xs, color: Colors.inkSecondary, fontWeight: "500" },
+  legendClose: { position: "absolute", top: 6, right: 6 },
+
   detailPanel: {
     position: "absolute",
     bottom: 0,
@@ -394,6 +495,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: Radius.xl,
     padding: Spacing.lg,
     paddingBottom: Spacing.xxxl,
+    maxHeight: SCREEN_H * 0.45,
     ...Shadow.lg,
   },
   detailHeader: {
@@ -401,26 +503,31 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.md,
   },
-  detailDot: { width: 12, height: 12, borderRadius: 6 },
-  detailName: { flex: 1, fontSize: FontSize.base, fontWeight: "600", color: Colors.ink },
+  detailDot: { width: 14, height: 14, borderRadius: 7 },
+  detailHeaderText: { flex: 1 },
+  detailName: { fontSize: FontSize.base, fontWeight: "700", color: Colors.ink },
+  detailType: { fontSize: FontSize.xs, color: Colors.inkMuted, marginTop: 1 },
   detailGoBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: Radius.sm,
+    width: 34,
+    height: 34,
+    borderRadius: Radius.md,
     backgroundColor: Colors.accentLight,
     alignItems: "center",
     justifyContent: "center",
   },
-  detailEdges: { marginTop: Spacing.md },
-  edgeChip: {
-    backgroundColor: Colors.surfaceSunken,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    marginRight: Spacing.sm,
+  detailEdges: { marginTop: Spacing.md, maxHeight: 180 },
+  edgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    paddingVertical: Spacing.sm + 2,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
   },
-  edgeChipLabel: { fontSize: FontSize.xs, color: Colors.inkMuted, fontWeight: "500" },
-  edgeChipName: { fontSize: FontSize.sm, color: Colors.ink, fontWeight: "500", marginTop: 2 },
+  edgeRowDot: { width: 8, height: 8, borderRadius: 4 },
+  edgeRowText: { flex: 1 },
+  edgeRowName: { fontSize: FontSize.sm, color: Colors.ink, fontWeight: "500" },
+  edgeRowLabel: { fontSize: FontSize.xs, color: Colors.inkMuted, marginTop: 1 },
 
   emptyState: {
     position: "absolute",
