@@ -135,6 +135,13 @@ export default function BibliographyDetailScreen() {
           </View>
         )}
       </Card>
+
+      <View style={styles.actionRow}>
+        <Pressable style={styles.actionBtn} onPress={() => router.push(`/add/bibliography?editId=${id}` as never)}>
+          <Ionicons name="create-outline" size={16} color={Colors.accent} />
+          <Text style={styles.actionBtnText}>Modifier</Text>
+        </Pressable>
+      </View>
     </ScrollView>
   );
 }
@@ -170,6 +177,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accentLight, borderRadius: Radius.md,
   },
   urlText: { flex: 1, fontSize: FontSize.sm, color: Colors.accent },
+
+  actionRow: { flexDirection: "row", gap: Spacing.sm, marginTop: Spacing.lg },
+  actionBtn: {
+    flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: Spacing.sm, padding: Spacing.md, borderRadius: Radius.lg, backgroundColor: Colors.accentLight,
+  },
+  actionBtnText: { fontSize: FontSize.sm, color: Colors.accent, fontWeight: "600" },
 
   tags: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.xs, marginTop: Spacing.lg },
   tag: { backgroundColor: Colors.accentLight, borderRadius: Radius.full, paddingHorizontal: Spacing.sm + 2, paddingVertical: 4 },

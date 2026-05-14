@@ -491,6 +491,10 @@ interface ResearchState {
   updateSource: (id: string, data: Partial<Omit<Source, "id" | "createdAt" | "updatedAt">>) => Promise<Source | null>;
   updateHypothesis: (id: string, data: Partial<Omit<Hypothesis, "id" | "createdAt" | "updatedAt">>) => Promise<Hypothesis | null>;
 
+  updateWitness: (id: string, data: Partial<Omit<Witness, "id" | "createdAt" | "updatedAt">>) => Promise<Witness | null>;
+  updateBibEntry: (id: string, data: Partial<Omit<BibliographyEntry, "id" | "createdAt" | "updatedAt">>) => Promise<BibliographyEntry | null>;
+  updateFieldMission: (id: string, data: Partial<Omit<FieldMission, "id" | "createdAt" | "updatedAt">>) => Promise<FieldMission | null>;
+
   // Deletes
   deleteRelationship: (id: string) => Promise<boolean>;
   deleteExcerpt: (id: string) => Promise<boolean>;
@@ -1220,6 +1224,69 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
     const source = rowToSource(rows);
     set((s) => ({ sources: s.sources.map((s2) => (s2.id === id ? source : s2)) }));
     return source;
+  },
+
+  updateWitness: async (id, data) => {
+    const row: Record<string, any> = {};
+    if (data.fullName !== undefined) row.full_name = data.fullName;
+    if (data.birthYear !== undefined) row.birth_year = data.birthYear;
+    if (data.birthPlace !== undefined) row.birth_place = data.birthPlace;
+    if (data.currentLocation !== undefined) row.current_location = data.currentLocation;
+    if (data.relationToSubject !== undefined) row.relation_to_subject = data.relationToSubject;
+    if (data.reliabilityAssessment !== undefined) row.reliability_assessment = data.reliabilityAssessment;
+    if (data.contextNotes !== undefined) row.context_notes = data.contextNotes;
+    if (data.consentStatus !== undefined) row.consent_status = data.consentStatus;
+    if (data.consentNotes !== undefined) row.consent_notes = data.consentNotes;
+    if (data.sensitivityLevel !== undefined) row.sensitivity_level = data.sensitivityLevel;
+    if (data.tags !== undefined) row.tags = data.tags;
+    const { data: rows, error } = await supabase.from("witnesses").update(row).eq("id", id).select().single();
+    if (error || !rows) { console.error("updateWitness:", error); return null; }
+    const w = rowToWitness(rows);
+    set((s) => ({ witnesses: s.witnesses.map((x) => (x.id === id ? w : x)) }));
+    return w;
+  },
+
+  updateBibEntry: async (id, data) => {
+    const row: Record<string, any> = {};
+    if (data.entryType !== undefined) row.entry_type = data.entryType;
+    if (data.title !== undefined) row.title = data.title;
+    if (data.authors !== undefined) row.authors = data.authors;
+    if (data.year !== undefined) row.year = data.year;
+    if (data.publisher !== undefined) row.publisher = data.publisher;
+    if (data.journal !== undefined) row.journal = data.journal;
+    if (data.volume !== undefined) row.volume = data.volume;
+    if (data.pages !== undefined) row.pages = data.pages;
+    if (data.url !== undefined) row.url = data.url;
+    if (data.isbn !== undefined) row.isbn = data.isbn;
+    if (data.abstract !== undefined) row.abstract = data.abstract;
+    if (data.notes !== undefined) row.notes = data.notes;
+    if (data.tags !== undefined) row.tags = data.tags;
+    const { data: rows, error } = await supabase.from("bibliography_entries").update(row).eq("id", id).select().single();
+    if (error || !rows) { console.error("updateBibEntry:", error); return null; }
+    const b = rowToBibEntry(rows);
+    set((s) => ({ bibliography: s.bibliography.map((x) => (x.id === id ? b : x)) }));
+    return b;
+  },
+
+  updateFieldMission: async (id, data) => {
+    const row: Record<string, any> = {};
+    if (data.title !== undefined) row.title = data.title;
+    if (data.location !== undefined) row.location = data.location;
+    if (data.dateStart !== undefined) row.date_start = data.dateStart;
+    if (data.dateEnd !== undefined) row.date_end = data.dateEnd;
+    if (data.objectives !== undefined) row.objectives = data.objectives;
+    if (data.personsToMeet !== undefined) row.persons_to_meet = data.personsToMeet;
+    if (data.placesToVisit !== undefined) row.places_to_visit = data.placesToVisit;
+    if (data.archivesToConsult !== undefined) row.archives_to_consult = data.archivesToConsult;
+    if (data.equipmentChecklist !== undefined) row.equipment_checklist = data.equipmentChecklist;
+    if (data.debriefNotes !== undefined) row.debrief_notes = data.debriefNotes;
+    if (data.status !== undefined) row.status = data.status;
+    if (data.tags !== undefined) row.tags = data.tags;
+    const { data: rows, error } = await supabase.from("field_missions").update(row).eq("id", id).select().single();
+    if (error || !rows) { console.error("updateFieldMission:", error); return null; }
+    const m = rowToFieldMission(rows);
+    set((s) => ({ fieldMissions: s.fieldMissions.map((x) => (x.id === id ? m : x)) }));
+    return m;
   },
 
   deleteRelationship: async (id) => {

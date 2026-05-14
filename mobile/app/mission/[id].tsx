@@ -2,9 +2,10 @@ import {
   ScrollView,
   View,
   Text,
+  Pressable,
   StyleSheet,
 } from "react-native";
-import { useLocalSearchParams, useNavigation } from "expo-router";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
@@ -21,6 +22,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 export default function MissionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
+  const router = useRouter();
   const { fieldMissions } = useResearchStore();
 
   const mission = fieldMissions.find((m) => m.id === id);
@@ -89,6 +91,13 @@ export default function MissionDetailScreen() {
           </View>
         )}
       </Card>
+
+      <View style={styles.actionRow}>
+        <Pressable style={styles.actionBtn} onPress={() => router.push(`/add/mission?editId=${id}` as never)}>
+          <Ionicons name="create-outline" size={16} color={Colors.accent} />
+          <Text style={styles.actionBtnText}>Modifier</Text>
+        </Pressable>
+      </View>
     </ScrollView>
   );
 }
@@ -130,6 +139,13 @@ const styles = StyleSheet.create({
   metaItem: { minWidth: "45%", marginBottom: Spacing.sm },
   metaLabel: { fontSize: FontSize.xs, color: Colors.inkMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 },
   metaValue: { fontSize: FontSize.sm, color: Colors.ink, fontWeight: "500" },
+
+  actionRow: { flexDirection: "row", gap: Spacing.sm, marginTop: Spacing.lg },
+  actionBtn: {
+    flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: Spacing.sm, padding: Spacing.md, borderRadius: Radius.lg, backgroundColor: Colors.accentLight,
+  },
+  actionBtnText: { fontSize: FontSize.sm, color: Colors.accent, fontWeight: "600" },
 
   tags: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.xs, marginTop: Spacing.lg },
   tag: { backgroundColor: Colors.accentLight, borderRadius: Radius.full, paddingHorizontal: Spacing.sm + 2, paddingVertical: 4 },

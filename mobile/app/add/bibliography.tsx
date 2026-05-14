@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ScrollView,
   View,
@@ -8,7 +8,7 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
 import type { BibEntryType } from "@/types";
@@ -25,7 +25,13 @@ const ENTRY_TYPES: { key: BibEntryType; label: string }[] = [
 
 export default function AddBibliographyScreen() {
   const router = useRouter();
-  const { addBibEntry } = useResearchStore();
+  const navigation = useNavigation();
+  const { editId } = useLocalSearchParams<{ editId?: string }>();
+  const { addBibEntry, updateBibEntry, bibliography } = useResearchStore();
+
+  const existing = editId ? bibliography.find((b) => b.id === editId) : undefined;
+  const isEdit = !!existing;
+
   const [entryType, setEntryType] = useState<BibEntryType>("book");
   const [title, setTitle] = useState("");
   const [authors, setAuthors] = useState("");
@@ -36,13 +42,32 @@ export default function AddBibliographyScreen() {
   const [url, setUrl] = useState("");
   const [abstract, setAbstract] = useState("");
   const [tags, setTags] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (existing) {
+      navigation.setOptions({ title: "Modifier l'entrée" });
+      setEntryType(existing.entryType);
+      setTitle(existing.title);
+      setAuthors(existing.authors ?? "");
+      setYear(existing.year ?? "");
+      setPublisher(existing.publisher ?? "");
+      setJournal(existing.journal ?? "");
+      setPages(existing.pages ?? "");
+      setUrl(existing.url ?? "");
+      setAbstract(existing.abstract ?? "");
+      setTags(existing.tags.join(", "));
+    }
+  }, [existing?.id]);
 
   async function save() {
     if (!title.trim()) {
       Alert.alert("Titre requis");
       return;
     }
-    const result = await addBibEntry({
+    if (saving) return;
+    setSaving(true);
+    const parsed = {
       entryType,
       title: title.trim(),
       authors: authors.trim(),
@@ -56,11 +81,17 @@ export default function AddBibliographyScreen() {
       abstract: abstract.trim(),
       notes: "",
       tags: tags.split(",").map((s) => s.trim()).filter(Boolean),
-    });
-    if (!result) { Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
-    Alert.alert("Entrée ajoutée", title.trim(), [
-      { text: "OK", onPress: () => router.back() },
-    ]);
+    };
+
+    if (isEdit) {
+      const result = await updateBibEntry(editId!, parsed);
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      router.back();
+    } else {
+      const result = await addBibEntry(parsed);
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      router.replace(`/bibliography/${result.id}` as never);
+    }
   }
 
   return (
@@ -76,7 +107,7 @@ export default function AddBibliographyScreen() {
         </View>
 
         <Text style={styles.label}>Titre *</Text>
-        <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="Titre de l'ouvrage ou article" placeholderTextColor={Colors.inkMuted} autoFocus />
+        <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="Titre de l'ouvrage ou article" placeholderTextColor={Colors.inkMuted} autoFocus={!isEdit} />
 
         <Text style={styles.label}>Auteur(s)</Text>
         <TextInput style={styles.input} value={authors} onChangeText={setAuthors} placeholder="Nom, Prénom ; Nom, Prénom" placeholderTextColor={Colors.inkMuted} />
@@ -106,7 +137,9 @@ export default function AddBibliographyScreen() {
       </View>
 
       <Pressable style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]} onPress={save}>
-        <Text style={styles.saveBtnText}>Ajouter à la bibliographie</Text>
+        <Text style={styles.saveBtnText}>
+          {saving ? "Enregistrement..." : isEdit ? "Enregistrer" : "Ajouter à la bibliographie"}
+        </Text>
       </Pressable>
     </ScrollView>
   );

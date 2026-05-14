@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ScrollView, View, Text, TextInput, Pressable, StyleSheet, Alert } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
 import type { ConsentStatus, SensitivityLevel } from "@/types";
@@ -21,7 +21,13 @@ const SENSITIVITY: { key: SensitivityLevel; label: string }[] = [
 
 export default function AddWitnessScreen() {
   const router = useRouter();
-  const { addWitness } = useResearchStore();
+  const navigation = useNavigation();
+  const { editId } = useLocalSearchParams<{ editId?: string }>();
+  const { addWitness, updateWitness, witnesses } = useResearchStore();
+
+  const existing = editId ? witnesses.find((w) => w.id === editId) : undefined;
+  const isEdit = !!existing;
+
   const [name, setName] = useState("");
   const [birthYear, setBirthYear] = useState("");
   const [birthPlace, setBirthPlace] = useState("");
@@ -31,25 +37,51 @@ export default function AddWitnessScreen() {
   const [consent, setConsent] = useState<ConsentStatus>("pending");
   const [sensitivity, setSensitivity] = useState<SensitivityLevel>("normal");
   const [tags, setTags] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (existing) {
+      navigation.setOptions({ title: "Modifier le témoin" });
+      setName(existing.fullName);
+      setBirthYear(existing.birthYear ?? "");
+      setBirthPlace(existing.birthPlace ?? "");
+      setLocation(existing.currentLocation ?? "");
+      setRelation(existing.relationToSubject ?? "");
+      setContext(existing.contextNotes ?? "");
+      setConsent(existing.consentStatus ?? "pending");
+      setSensitivity(existing.sensitivityLevel ?? "normal");
+      setTags(existing.tags.join(", "));
+    }
+  }, [existing?.id]);
 
   async function save() {
     if (!name.trim()) { Alert.alert("Nom requis"); return; }
-    const result = await addWitness({
+    if (saving) return;
+    setSaving(true);
+    const parsed = {
       fullName: name.trim(), birthYear: birthYear.trim(), birthPlace: birthPlace.trim(),
       currentLocation: location.trim(), relationToSubject: relation.trim(),
       reliabilityAssessment: "", contextNotes: context.trim(),
       consentStatus: consent, consentNotes: "", sensitivityLevel: sensitivity,
       tags: tags.split(",").map((s) => s.trim()).filter(Boolean),
-    });
-    if (!result) { Alert.alert("Erreur"); return; }
-    Alert.alert("Fiche témoin créée", name.trim(), [{ text: "OK", onPress: () => router.back() }]);
+    };
+
+    if (isEdit) {
+      const result = await updateWitness(editId!, parsed);
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      router.back();
+    } else {
+      const result = await addWitness(parsed);
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      router.replace(`/witness/${result.id}` as never);
+    }
   }
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.card}>
         <Text style={styles.label}>Nom complet *</Text>
-        <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Prénom et nom du témoin" placeholderTextColor={Colors.inkMuted} autoFocus />
+        <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Prénom et nom du témoin" placeholderTextColor={Colors.inkMuted} autoFocus={!isEdit} />
 
         <View style={styles.row}>
           <View style={styles.half}>
@@ -94,7 +126,9 @@ export default function AddWitnessScreen() {
       </View>
 
       <Pressable style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]} onPress={save}>
-        <Text style={styles.saveBtnText}>Créer la fiche témoin</Text>
+        <Text style={styles.saveBtnText}>
+          {saving ? "Enregistrement..." : isEdit ? "Enregistrer" : "Créer la fiche témoin"}
+        </Text>
       </Pressable>
     </ScrollView>
   );
