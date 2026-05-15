@@ -29,7 +29,10 @@ function PlaceCard({ place, onPress }: { place: Place; onPress: () => void }) {
         </View>
         <View style={styles.cardText}>
           <Text style={styles.cardTitle} numberOfLines={1}>{place.name}</Text>
-          <Text style={styles.cardType}>{PLACE_TYPE_LABELS[place.placeType]}</Text>
+          <Text style={styles.cardType}>
+            {PLACE_TYPE_LABELS[place.placeType]}
+            {(place as any).eventCount > 0 ? ` · ${(place as any).eventCount} événement${(place as any).eventCount > 1 ? "s" : ""}` : ""}
+          </Text>
         </View>
         {hasCoords && (
           <Pressable
