@@ -37,6 +37,11 @@ export default function ExportProjectScreen() {
     relationships,
     excerpts,
     researchNotes,
+    contradictions,
+    evidenceChains,
+    chainLinks,
+    witnesses,
+    bibliography,
   } = useResearchStore();
   const [exporting, setExporting] = useState(false);
 
@@ -148,6 +153,46 @@ ${projectNotes.map((n) => `
 <p>${n.content}</p>
 </div>`).join("")}` : ""}
 
+${contradictions.length > 0 ? `
+<h2>Contradictions (${contradictions.length})</h2>
+${contradictions.map((c) => `
+<div class="entity-card">
+<h3>${c.title}</h3>
+<p class="meta">Statut : ${c.status}</p>
+${c.description ? `<p>${c.description}</p>` : ""}
+${c.resolutionNote ? `<p><em>Résolution : ${c.resolutionNote}</em></p>` : ""}
+</div>`).join("")}` : ""}
+
+${evidenceChains.length > 0 ? `
+<h2>Chaînes de preuve (${evidenceChains.length})</h2>
+${evidenceChains.map((ec) => {
+  const links = chainLinks.filter((l) => l.chainId === ec.id).sort((a, b) => a.position - b.position);
+  return `
+<div class="entity-card">
+<h3>${ec.title}</h3>
+<p class="meta">Statut : ${ec.claimStatus}</p>
+<blockquote>${ec.claimText}</blockquote>
+${ec.conclusion ? `<p>${ec.conclusion}</p>` : ""}
+${links.length > 0 ? `<p class="meta">Maillons :</p><ol>${links.map((l) => `<li>${l.description || l.linkType} — <em>${l.strength}, ${l.isSupporting ? "soutient" : "conteste"}</em></li>`).join("")}</ol>` : ""}
+</div>`;
+}).join("")}` : ""}
+
+${witnesses.length > 0 ? `
+<h2>Témoins (${witnesses.length})</h2>
+<table>
+<tr><th>Nom</th><th>Naissance</th><th>Consentement</th><th>Sensibilité</th></tr>
+${witnesses.map((w) => `<tr><td><strong>${w.fullName}</strong></td><td>${w.birthYear || "—"}</td><td>${w.consentStatus}</td><td>${w.sensitivityLevel}</td></tr>`).join("")}
+</table>` : ""}
+
+${bibliography.length > 0 ? `
+<h2>Bibliographie (${bibliography.length})</h2>
+${bibliography.map((b) => `
+<div class="entity-card">
+<p><strong>${b.authors ? `${b.authors}, ` : ""}${b.title}</strong>${b.year ? ` (${b.year})` : ""}</p>
+<p class="meta">${b.entryType}${b.publisher ? ` · ${b.publisher}` : ""}${b.journal ? ` · ${b.journal}` : ""}${b.pages ? ` · pp. ${b.pages}` : ""}</p>
+${b.abstract ? `<p class="meta">${b.abstract}</p>` : ""}
+</div>`).join("")}` : ""}
+
 <footer>
 <p>Athar (أثر) — Dossier de recherche exporté automatiquement.</p>
 </footer>
@@ -205,7 +250,10 @@ ${projectNotes.map((n) => `
         <Ionicons name="document-text" size={32} color={Colors.accent} />
         <Text style={styles.previewTitle}>{project.title}</Text>
         <Text style={styles.previewMeta}>
-          {persons.length} personnes · {events.length} événements · {sources.length} sources · {hypotheses.length} hypothèses
+          {persons.length} personnes · {events.length} événements · {sources.length} sources
+        </Text>
+        <Text style={styles.previewMeta}>
+          {hypotheses.length} hypothèses · {contradictions.length} contradictions · {bibliography.length} biblio
         </Text>
       </View>
 
