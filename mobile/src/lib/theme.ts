@@ -11,6 +11,7 @@ export const Colors = {
   surface: "#FFFFFF",
   surfaceRaised: "#FAFAF9",
   surfaceSunken: "#F5F5F4",
+  surfaceWarm: "#FEF7ED",
 
   // Borders
   border: "#E7E5E4",
@@ -65,6 +66,7 @@ export const Radius = {
   md: 12,
   lg: 16,
   xl: 20,
+  xxl: 24,
   full: 999,
 };
 
@@ -76,6 +78,7 @@ export const FontSize = {
   xl: 20,
   xxl: 26,
   xxxl: 32,
+  hero: 38,
 };
 
 export const FontWeight = {
@@ -83,28 +86,36 @@ export const FontWeight = {
   medium: "500" as const,
   semibold: "600" as const,
   bold: "700" as const,
+  heavy: "800" as const,
 };
 
 export const Shadow = {
   sm: {
     shadowColor: "#1C1917",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 1,
   },
   md: {
     shadowColor: "#1C1917",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
     elevation: 3,
   },
   lg: {
     shadowColor: "#1C1917",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 6,
+  },
+  glow: {
+    shadowColor: "#B45309",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 4,
   },
 };
