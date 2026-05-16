@@ -1,5 +1,6 @@
 import { Tabs } from "expo-router";
-import { Colors, FontSize } from "@/lib/theme";
+import { View } from "react-native";
+import { Colors, FontSize, Shadow } from "@/lib/theme";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function TabsLayout() {
@@ -10,13 +11,16 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: Colors.inkMuted,
         tabBarStyle: {
           backgroundColor: Colors.surface,
-          borderTopColor: Colors.border,
-          borderTopWidth: 1,
-          paddingTop: 4,
+          borderTopColor: "transparent",
+          borderTopWidth: 0,
+          paddingTop: 6,
+          paddingBottom: 2,
+          height: 56,
+          ...Shadow.md,
         },
-        tabBarLabelStyle: { fontSize: FontSize.xs, fontWeight: "500" },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: "600", marginTop: -2 },
         headerStyle: { backgroundColor: Colors.surface },
-        headerTitleStyle: { color: Colors.ink, fontWeight: "600", fontSize: 17 },
+        headerTitleStyle: { color: Colors.ink, fontWeight: "700", fontSize: 18 },
         headerShadowVisible: false,
       }}
     >
@@ -25,8 +29,8 @@ export default function TabsLayout() {
         options={{
           title: "Accueil",
           headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "home" : "home-outline"} size={22} color={color} />
           ),
         }}
       />
@@ -34,8 +38,8 @@ export default function TabsLayout() {
         name="projects"
         options={{
           title: "Dossiers",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="folder-outline" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "folder" : "folder-outline"} size={22} color={color} />
           ),
         }}
       />
@@ -43,8 +47,18 @@ export default function TabsLayout() {
         name="capture"
         options={{
           title: "Ajouter",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="add-circle-outline" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={{
+              width: 38,
+              height: 38,
+              borderRadius: 19,
+              backgroundColor: focused ? Colors.accent : Colors.accentLight,
+              alignItems: "center",
+              justifyContent: "center",
+              marginTop: -4,
+            }}>
+              <Ionicons name="add" size={24} color={focused ? "white" : Colors.accent} />
+            </View>
           ),
         }}
       />
@@ -52,8 +66,8 @@ export default function TabsLayout() {
         name="timeline"
         options={{
           title: "Frise",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="time-outline" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "time" : "time-outline"} size={22} color={color} />
           ),
         }}
       />
@@ -61,12 +75,12 @@ export default function TabsLayout() {
         name="search"
         options={{
           title: "Chercher",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="search-outline" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "search" : "search-outline"} size={22} color={color} />
           ),
         }}
       />
-      {/* Hidden tabs — accessible via navigation but not shown in tab bar */}
+      {/* Hidden tabs */}
       <Tabs.Screen name="browse" options={{ href: null, title: "Explorer" }} />
       <Tabs.Screen name="map" options={{ href: null, title: "Lieux" }} />
     </Tabs>
