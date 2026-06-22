@@ -93,10 +93,27 @@ const RESEARCH_OPTIONS = [
     color: { bg: "#FEF3C7", icon: "#B45309" },
   },
   {
-    icon: "analytics-outline" as const,
+    icon: "people-outline" as const,
     label: "Cohorte",
     route: "/add/cohort",
     color: { bg: "#EDE9FE", icon: "#7C3AED" },
+  },
+];
+
+const ANALYSIS_OPTIONS = [
+  {
+    icon: "analytics-outline" as const,
+    label: "Tableau de bord",
+    description: "Qualité des preuves, zones d'ombre, couverture de l'enquête",
+    route: "/analytics",
+    color: { bg: "#FEE2E2", icon: "#DC2626" },
+  },
+  {
+    icon: "git-network-outline" as const,
+    label: "Réseau relationnel",
+    description: "Visualisez les connexions entre vos entités",
+    route: "/network",
+    color: { bg: "#FCE7F3", icon: "#DB2777" },
   },
 ];
 
@@ -212,6 +229,31 @@ export default function CaptureTab() {
           </Pressable>
         ))}
       </View>
+
+      {/* Analysis divider */}
+      <View style={styles.dividerRow}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.dividerText}>Analyser</Text>
+        <View style={styles.dividerLine} />
+      </View>
+
+      {/* Analysis options */}
+      {ANALYSIS_OPTIONS.map((opt) => (
+        <Pressable
+          key={opt.route}
+          style={({ pressed }) => [styles.captureCard, pressed && styles.pressed]}
+          onPress={() => router.push(opt.route as never)}
+        >
+          <View style={[styles.captureIcon, { backgroundColor: opt.color.bg }]}>
+            <Ionicons name={opt.icon} size={28} color={opt.color.icon} />
+          </View>
+          <View style={styles.captureText}>
+            <Text style={styles.captureLabel}>{opt.label}</Text>
+            <Text style={styles.captureDesc}>{opt.description}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={Colors.borderStrong} />
+        </Pressable>
+      ))}
     </ScrollView>
   );
 }
