@@ -13,8 +13,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
 import { Card } from "@/components/Card";
+import { EntityBadge } from "@/components/EntityBadge";
 import { SectionHeader } from "@/components/SectionHeader";
 import { SOURCE_TYPE_LABELS } from "@/lib/constants";
+import { getEntityName } from "@/types";
 
 const RELIABILITY_LABELS: Record<string, string> = {
   high: "Haute",
@@ -35,7 +37,7 @@ export default function SourceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
   const router = useRouter();
-  const { sources, excerpts, deleteSource, deleteExcerpt, fetchAll, loading } = useResearchStore();
+  const { sources, excerpts, deleteSource, deleteExcerpt, fetchAll, loading, getEntitiesInSource } = useResearchStore();
 
   const source = sources.find((s) => s.id === id);
   const sourceExcerpts = excerpts.filter((e) => e.sourceId === id);
@@ -139,6 +141,30 @@ export default function SourceDetailScreen() {
           </View>
         )}
       </Card>
+
+      {/* Entities mentioned */}
+      {(() => {
+        const mentioned = getEntitiesInSource(id);
+        if (mentioned.length === 0) return null;
+        return (
+          <>
+            <SectionHeader title={`Entités mentionnées (${mentioned.length})`} />
+            <View style={styles.listCard}>
+              {mentioned.map((e, i) => (
+                <Pressable
+                  key={e.id}
+                  style={[styles.mentionRow, i < mentioned.length - 1 && styles.excerptBorder]}
+                  onPress={() => router.push(`/entity/${e.entityType}/${e.id}` as never)}
+                >
+                  <EntityBadge type={e.entityType} size="sm" />
+                  <Text style={[styles.classificationLabel, { flex: 1, textTransform: "none" }]} numberOfLines={1}>{getEntityName(e)}</Text>
+                  <Ionicons name="chevron-forward" size={14} color={Colors.borderStrong} />
+                </Pressable>
+              ))}
+            </View>
+          </>
+        );
+      })()}
 
       {/* Excerpts */}
       <SectionHeader title={`Extraits (${sourceExcerpts.length})`} />
@@ -258,6 +284,7 @@ const styles = StyleSheet.create({
   tagText: { fontSize: FontSize.xs, color: Colors.accent, fontWeight: "500" },
 
   listCard: { backgroundColor: Colors.surface, borderRadius: Radius.lg, overflow: "hidden", ...Shadow.sm },
+  mentionRow: { flexDirection: "row", alignItems: "center", gap: Spacing.md, padding: Spacing.lg },
   excerptRow: { padding: Spacing.lg },
   excerptBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
   excerptHeader: { flexDirection: "row", alignItems: "center", gap: Spacing.sm, marginBottom: Spacing.sm },
