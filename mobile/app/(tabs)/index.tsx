@@ -29,6 +29,13 @@ export default function HomeScreen() {
   const totalEntities = persons.length + groups.length + places.length + events.length;
   const isEmpty = initialized && totalEntities === 0 && sources.length === 0 && projects.length === 0;
 
+  const recentActivity = [
+    ...persons.slice(0, 2).map((p) => ({ id: p.id, type: "person" as const, name: p.primaryName, route: `/entity/person/${p.id}`, icon: "person" as const, color: Colors.person.icon, date: p.createdAt })),
+    ...sources.slice(0, 2).map((s) => ({ id: s.id, type: "source" as const, name: s.title, route: `/source/${s.id}`, icon: "document-text" as const, color: Colors.accent, date: s.createdAt })),
+    ...hypotheses.slice(0, 1).map((h) => ({ id: h.id, type: "hypothesis" as const, name: h.title, route: `/hypothesis/${h.id}`, icon: "bulb" as const, color: Colors.warning, date: h.createdAt })),
+    ...places.slice(0, 1).map((p) => ({ id: p.id, type: "place" as const, name: p.name, route: `/entity/place/${p.id}`, icon: "location" as const, color: Colors.place.icon, date: p.createdAt })),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
+
   return (
     <ScrollView
       style={styles.scroll}
@@ -205,20 +212,27 @@ export default function HomeScreen() {
           )}
 
           {/* Recent entities */}
-          {recent.length > 0 && (
+          {recentActivity.length > 0 && (
             <>
-              <SectionHeader title="Entités récentes" />
+              <SectionHeader title="Activité récente" />
               <View style={styles.listCard}>
-                {recent.map((entity, i) => (
-                  <View key={`${entity.entityType}-${entity.id}`}>
-                    <EntityRow
-                      entity={entity}
-                      onPress={() =>
-                        router.push(`/entity/${entity.entityType}/${entity.id}` as never)
-                      }
-                    />
-                    {i < recent.length - 1 && <View style={styles.divider} />}
-                  </View>
+                {recentActivity.map((item, i) => (
+                  <Pressable
+                    key={`${item.type}-${item.id}`}
+                    style={[styles.activityRow, i < recentActivity.length - 1 && styles.activityBorder]}
+                    onPress={() => router.push(item.route as never)}
+                  >
+                    <View style={[styles.activityIcon, { backgroundColor: `${item.color}18` }]}>
+                      <Ionicons name={item.icon} size={14} color={item.color} />
+                    </View>
+                    <View style={styles.activityText}>
+                      <Text style={styles.activityName} numberOfLines={1}>{item.name}</Text>
+                      <Text style={styles.activityDate}>
+                        {new Date(item.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={14} color={Colors.borderStrong} />
+                  </Pressable>
                 ))}
               </View>
             </>
@@ -443,6 +457,25 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.border,
     marginHorizontal: Spacing.lg,
   },
+  activityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    padding: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+  },
+  activityBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
+  activityIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: Radius.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  activityText: { flex: 1 },
+  activityName: { fontSize: FontSize.sm, color: Colors.ink, fontWeight: "500" },
+  activityDate: { fontSize: FontSize.xs, color: Colors.inkMuted, marginTop: 1 },
+
   compactRow: {
     flexDirection: "row",
     alignItems: "center",

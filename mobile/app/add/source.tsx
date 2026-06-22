@@ -11,6 +11,7 @@ import {
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
+import { TagInput } from "@/components/TagInput";
 import { SOURCE_TYPE_LABELS } from "@/lib/constants";
 import type { SourceType, ReliabilityLevel } from "@/types";
 
@@ -161,7 +162,7 @@ export default function AddSourceScreen() {
         <TextInput style={[styles.input, styles.multiline]} value={biasNotes} onChangeText={setBiasNotes} placeholder="Limites, biais connus, contexte de production..." placeholderTextColor={Colors.inkMuted} multiline numberOfLines={2} textAlignVertical="top" />
 
         <Text style={styles.label}>Tags</Text>
-        <TextInput style={styles.input} value={tags} onChangeText={setTags} placeholder="archive, état-civil, militaire" placeholderTextColor={Colors.inkMuted} />
+        <TagInput value={tags} onChangeText={setTags} placeholder="archive, état-civil, militaire" />
       </View>
 
       <Pressable style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]} onPress={save}>

@@ -11,6 +11,7 @@ import {
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
+import { TagInput } from "@/components/TagInput";
 
 export default function AddPersonScreen() {
   const router = useRouter();
@@ -147,13 +148,7 @@ export default function AddPersonScreen() {
         />
 
         <Text style={styles.label}>Tags</Text>
-        <TextInput
-          style={styles.input}
-          value={tags}
-          onChangeText={setTags}
-          placeholder="migration, kabylie, ouvrier"
-          placeholderTextColor={Colors.inkMuted}
-        />
+        <TagInput value={tags} onChangeText={setTags} placeholder="migration, kabylie, ouvrier" />
       </View>
 
       <Pressable
