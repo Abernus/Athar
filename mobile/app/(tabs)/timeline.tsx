@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import {
   View,
   Text,
+  TextInput,
   ScrollView,
   Pressable,
   StyleSheet,
@@ -32,6 +33,7 @@ interface TimelineItem {
   type: "person_birth" | "person_death" | "event" | "source" | "testimony";
   entityType?: "person" | "group" | "place" | "event";
   entityId?: string;
+  sourceId?: string;
   color: string;
   icon: keyof typeof Ionicons.glyphMap;
 }
@@ -58,40 +60,30 @@ export default function TimelineScreen() {
   const router = useRouter();
   const { persons, events, sources, oralTestimonies } = useResearchStore();
   const [layer, setLayer] = useState<Layer>("all");
+  const [yearFrom, setYearFrom] = useState("");
+  const [yearTo, setYearTo] = useState("");
 
   const items = useMemo(() => {
     const result: TimelineItem[] = [];
+    const from = yearFrom ? parseInt(yearFrom, 10) : null;
+    const to = yearTo ? parseInt(yearTo, 10) : null;
 
     if (layer === "all" || layer === "facts") {
       for (const p of persons) {
         const by = extractYear(p.birthDate);
         if (by) {
           result.push({
-            id: `birth-${p.id}`,
-            label: p.primaryName,
-            sublabel: "Naissance",
-            date: dateLabel(p.birthDate),
-            sortKey: by,
-            type: "person_birth",
-            entityType: "person",
-            entityId: p.id,
-            color: Colors.success,
-            icon: "ellipse",
+            id: `birth-${p.id}`, label: p.primaryName, sublabel: "Naissance",
+            date: dateLabel(p.birthDate), sortKey: by, type: "person_birth",
+            entityType: "person", entityId: p.id, color: Colors.success, icon: "ellipse",
           });
         }
         const dy = extractYear(p.deathDate);
         if (dy) {
           result.push({
-            id: `death-${p.id}`,
-            label: p.primaryName,
-            sublabel: "Décès",
-            date: dateLabel(p.deathDate),
-            sortKey: dy,
-            type: "person_death",
-            entityType: "person",
-            entityId: p.id,
-            color: Colors.inkMuted,
-            icon: "ellipse",
+            id: `death-${p.id}`, label: p.primaryName, sublabel: "Décès",
+            date: dateLabel(p.deathDate), sortKey: dy, type: "person_death",
+            entityType: "person", entityId: p.id, color: Colors.inkMuted, icon: "ellipse",
           });
         }
       }
@@ -99,16 +91,9 @@ export default function TimelineScreen() {
         const ey = extractYear(e.dateStart);
         if (ey) {
           result.push({
-            id: `event-${e.id}`,
-            label: e.title,
-            sublabel: e.eventType,
-            date: dateLabel(e.dateStart),
-            sortKey: ey,
-            type: "event",
-            entityType: "event",
-            entityId: e.id,
-            color: Colors.event.icon,
-            icon: "calendar",
+            id: `event-${e.id}`, label: e.title, sublabel: e.eventType,
+            date: dateLabel(e.dateStart), sortKey: ey, type: "event",
+            entityType: "event", entityId: e.id, color: Colors.event.icon, icon: "calendar",
           });
         }
       }
@@ -119,14 +104,9 @@ export default function TimelineScreen() {
         const sy = extractYear(s.createdOrPublishedAt);
         if (sy) {
           result.push({
-            id: `source-${s.id}`,
-            label: s.title,
-            sublabel: s.sourceType,
-            date: dateLabel(s.createdOrPublishedAt),
-            sortKey: sy,
-            type: "source",
-            color: Colors.accent,
-            icon: "document-text",
+            id: `source-${s.id}`, label: s.title, sublabel: s.sourceType,
+            date: dateLabel(s.createdOrPublishedAt), sortKey: sy, type: "source",
+            sourceId: s.id, color: Colors.accent, icon: "document-text",
           });
         }
       }
@@ -137,44 +117,81 @@ export default function TimelineScreen() {
         const ty = extractYear(t.recordedAt);
         if (ty) {
           result.push({
-            id: `testimony-${t.id}`,
-            label: t.title,
-            sublabel: `Témoin : ${t.speaker}`,
-            date: dateLabel(t.recordedAt),
-            sortKey: ty,
-            type: "testimony",
-            color: Colors.group.icon,
-            icon: "mic",
+            id: `testimony-${t.id}`, label: t.title, sublabel: `Témoin : ${t.speaker}`,
+            date: dateLabel(t.recordedAt), sortKey: ty, type: "testimony",
+            color: Colors.group.icon, icon: "mic",
           });
         }
       }
     }
 
     result.sort((a, b) => a.sortKey - b.sortKey);
+
+    if (from || to) {
+      return result.filter((item) => {
+        if (from && item.sortKey < from) return false;
+        if (to && item.sortKey > to) return false;
+        return true;
+      });
+    }
     return result;
-  }, [persons, events, sources, oralTestimonies, layer]);
+  }, [persons, events, sources, oralTestimonies, layer, yearFrom, yearTo]);
+
+  const yearRange = items.length > 0
+    ? `${items[0].sortKey} — ${items[items.length - 1].sortKey}`
+    : "";
 
   return (
     <View style={styles.container}>
       {/* Layer filter */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterBar}
-        contentContainerStyle={styles.filterContent}
-      >
-        {LAYERS.map((l) => (
-          <Pressable
-            key={l.key}
-            style={[styles.filterPill, layer === l.key && styles.filterPillActive]}
-            onPress={() => setLayer(l.key)}
-          >
-            <Text style={[styles.filterText, layer === l.key && styles.filterTextActive]}>
-              {l.label}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
+      <View style={styles.filterBar}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterContent}
+        >
+          {LAYERS.map((l) => (
+            <Pressable
+              key={l.key}
+              style={[styles.filterPill, layer === l.key && styles.filterPillActive]}
+              onPress={() => setLayer(l.key)}
+            >
+              <Text style={[styles.filterText, layer === l.key && styles.filterTextActive]}>
+                {l.label}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+
+        {/* Period filter */}
+        <View style={styles.periodRow}>
+          <TextInput
+            style={styles.periodInput}
+            value={yearFrom}
+            onChangeText={setYearFrom}
+            placeholder="De"
+            placeholderTextColor={Colors.inkMuted}
+            keyboardType="numeric"
+            maxLength={4}
+          />
+          <Text style={styles.periodDash}>—</Text>
+          <TextInput
+            style={styles.periodInput}
+            value={yearTo}
+            onChangeText={setYearTo}
+            placeholder="À"
+            placeholderTextColor={Colors.inkMuted}
+            keyboardType="numeric"
+            maxLength={4}
+          />
+          {(yearFrom || yearTo) && (
+            <Pressable onPress={() => { setYearFrom(""); setYearTo(""); }}>
+              <Ionicons name="close-circle" size={18} color={Colors.inkMuted} />
+            </Pressable>
+          )}
+          <Text style={styles.periodCount}>{items.length} éléments</Text>
+        </View>
+      </View>
 
       {/* Timeline */}
       <ScrollView style={styles.timeline} contentContainerStyle={styles.timelineContent}>
@@ -183,13 +200,12 @@ export default function TimelineScreen() {
             <Ionicons name="time-outline" size={36} color={Colors.borderStrong} />
             <Text style={styles.emptyTitle}>Chronologie vide</Text>
             <Text style={styles.emptyHint}>
-              Les entités avec des dates apparaîtront ici
+              {yearFrom || yearTo ? "Aucun élément dans cette période" : "Les entités avec des dates apparaîtront ici"}
             </Text>
           </View>
         ) : (
           items.map((item, i) => {
-            const showYear =
-              i === 0 || items[i - 1].sortKey !== item.sortKey;
+            const showYear = i === 0 || items[i - 1].sortKey !== item.sortKey;
 
             return (
               <View key={item.id}>
@@ -207,33 +223,25 @@ export default function TimelineScreen() {
                   onPress={() => {
                     if (item.entityType && item.entityId) {
                       router.push(`/entity/${item.entityType}/${item.entityId}` as never);
-                    } else if (item.type === "source") {
-                      router.push(`/source/${item.id.replace("source-", "")}` as never);
+                    } else if (item.sourceId) {
+                      router.push(`/source/${item.sourceId}` as never);
                     }
                   }}
                 >
-                  {/* Timeline line */}
                   <View style={styles.lineCol}>
                     <View style={styles.lineTop} />
                     <View style={[styles.dot, { backgroundColor: item.color }]} />
                     <View style={[styles.lineBottom, i === items.length - 1 && { opacity: 0 }]} />
                   </View>
 
-                  {/* Content */}
                   <View style={styles.itemCard}>
                     <View style={styles.itemHeader}>
-                      {item.entityType && (
-                        <EntityBadge type={item.entityType} size="sm" />
-                      )}
-                      {!item.entityType && (
-                        <Ionicons name={item.icon} size={14} color={item.color} />
-                      )}
+                      {item.entityType && <EntityBadge type={item.entityType} size="sm" />}
+                      {!item.entityType && <Ionicons name={item.icon} size={14} color={item.color} />}
                       <Text style={styles.itemDate}>{item.date}</Text>
                     </View>
                     <Text style={styles.itemLabel} numberOfLines={2}>{item.label}</Text>
-                    {item.sublabel && (
-                      <Text style={styles.itemSublabel}>{item.sublabel}</Text>
-                    )}
+                    {item.sublabel && <Text style={styles.itemSublabel}>{item.sublabel}</Text>}
                   </View>
                 </Pressable>
               </View>
@@ -252,11 +260,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
-    flexGrow: 0,
   },
   filterContent: {
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xs,
     gap: Spacing.sm,
   },
   filterPill: {
@@ -268,6 +276,26 @@ const styles = StyleSheet.create({
   filterPillActive: { backgroundColor: Colors.accentLight },
   filterText: { fontSize: FontSize.sm, color: Colors.inkMuted, fontWeight: "500" },
   filterTextActive: { color: Colors.accent, fontWeight: "600" },
+
+  periodRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+  },
+  periodInput: {
+    width: 52,
+    backgroundColor: Colors.surfaceSunken,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs + 2,
+    fontSize: FontSize.sm,
+    color: Colors.ink,
+    textAlign: "center",
+  },
+  periodDash: { fontSize: FontSize.sm, color: Colors.inkMuted },
+  periodCount: { fontSize: FontSize.xs, color: Colors.inkMuted, marginLeft: "auto" },
 
   timeline: { flex: 1 },
   timelineContent: { padding: Spacing.lg, paddingBottom: Spacing.xxxl },
@@ -291,35 +319,13 @@ const styles = StyleSheet.create({
     color: "white",
     letterSpacing: 0.5,
   },
-  yearLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: Colors.border,
-  },
+  yearLine: { flex: 1, height: 1, backgroundColor: Colors.border },
 
-  itemRow: {
-    flexDirection: "row",
-    gap: Spacing.md,
-  },
-  lineCol: {
-    width: 20,
-    alignItems: "center",
-  },
-  lineTop: {
-    width: 2,
-    height: Spacing.sm,
-    backgroundColor: Colors.border,
-  },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  lineBottom: {
-    width: 2,
-    flex: 1,
-    backgroundColor: Colors.border,
-  },
+  itemRow: { flexDirection: "row", gap: Spacing.md },
+  lineCol: { width: 20, alignItems: "center" },
+  lineTop: { width: 2, height: Spacing.sm, backgroundColor: Colors.border },
+  dot: { width: 10, height: 10, borderRadius: 5 },
+  lineBottom: { width: 2, flex: 1, backgroundColor: Colors.border },
 
   itemCard: {
     flex: 1,
@@ -335,35 +341,11 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     marginBottom: Spacing.xs,
   },
-  itemDate: {
-    fontSize: FontSize.xs,
-    color: Colors.inkMuted,
-    fontWeight: "500",
-  },
-  itemLabel: {
-    fontSize: FontSize.sm,
-    color: Colors.ink,
-    fontWeight: "500",
-  },
-  itemSublabel: {
-    fontSize: FontSize.xs,
-    color: Colors.inkMuted,
-    marginTop: 2,
-  },
+  itemDate: { fontSize: FontSize.xs, color: Colors.inkMuted, fontWeight: "500" },
+  itemLabel: { fontSize: FontSize.sm, color: Colors.ink, fontWeight: "500" },
+  itemSublabel: { fontSize: FontSize.xs, color: Colors.inkMuted, marginTop: 2 },
 
-  emptyState: {
-    alignItems: "center",
-    gap: Spacing.sm,
-    paddingVertical: Spacing.xxxl,
-  },
-  emptyTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: "600",
-    color: Colors.inkSecondary,
-  },
-  emptyHint: {
-    fontSize: FontSize.sm,
-    color: Colors.inkMuted,
-    textAlign: "center",
-  },
+  emptyState: { alignItems: "center", gap: Spacing.sm, paddingVertical: Spacing.xxxl },
+  emptyTitle: { fontSize: FontSize.lg, fontWeight: "600", color: Colors.inkSecondary },
+  emptyHint: { fontSize: FontSize.sm, color: Colors.inkMuted, textAlign: "center" },
 });
