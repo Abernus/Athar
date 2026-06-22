@@ -22,7 +22,7 @@ export default function AddContradictionScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const { editId } = useLocalSearchParams<{ editId?: string }>();
-  const { addContradiction, contradictions } = useResearchStore();
+  const { addContradiction, updateContradiction, contradictions } = useResearchStore();
 
   const existing = editId ? contradictions.find((c) => c.id === editId) : undefined;
   const isEdit = !!existing;
@@ -49,9 +49,15 @@ export default function AddContradictionScreen() {
     if (!title.trim()) { Alert.alert("Titre requis"); return; }
     if (saving) return;
     setSaving(true);
-    // No updateContradiction yet — just create for now
     if (isEdit) {
-      Alert.alert("Modification enregistrée");
+      const result = await updateContradiction(editId!, {
+        title: title.trim(),
+        description: description.trim(),
+        status: status as "open" | "resolved" | "acknowledged",
+        resolutionNote: resolutionNote.trim(),
+        tags: tags.split(",").map((s) => s.trim()).filter(Boolean),
+      });
+      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
       router.back();
       return;
     }
