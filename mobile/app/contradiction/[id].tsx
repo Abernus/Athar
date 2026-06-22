@@ -29,9 +29,11 @@ export default function ContradictionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
   const router = useRouter();
-  const { contradictions, deleteContradiction } = useResearchStore();
+  const { contradictions, deleteContradiction, sources, getEntityDisplayName } = useResearchStore();
 
   const contradiction = contradictions.find((c) => c.id === id);
+  const sourceA = contradiction?.sourceAId ? sources.find((s) => s.id === contradiction.sourceAId) : null;
+  const sourceB = contradiction?.sourceBId ? sources.find((s) => s.id === contradiction.sourceBId) : null;
 
   useEffect(() => {
     if (contradiction) navigation.setOptions({ title: contradiction.title });
@@ -100,6 +102,49 @@ export default function ContradictionDetailScreen() {
           </View>
         )}
       </Card>
+
+      {/* Linked sources */}
+      {(sourceA || sourceB) && (
+        <>
+          <View style={styles.sectionRow}>
+            <View style={styles.sectionBar} />
+            <Text style={styles.sectionTitleText}>Sources en contradiction</Text>
+          </View>
+          <View style={styles.sourcesCompare}>
+            {sourceA && (
+              <Pressable
+                style={styles.sourceCard}
+                onPress={() => router.push(`/source/${sourceA.id}` as never)}
+              >
+                <View style={[styles.sourceIndicator, { backgroundColor: "#3B82F6" }]} />
+                <View style={styles.sourceContent}>
+                  <Text style={styles.sourceLabel}>Source A</Text>
+                  <Text style={styles.sourceTitle} numberOfLines={2}>{sourceA.title}</Text>
+                  <Text style={styles.sourceMeta}>{sourceA.sourceType}</Text>
+                </View>
+              </Pressable>
+            )}
+            {sourceA && sourceB && (
+              <View style={styles.vsIndicator}>
+                <Ionicons name="swap-horizontal" size={16} color={Colors.warning} />
+              </View>
+            )}
+            {sourceB && (
+              <Pressable
+                style={styles.sourceCard}
+                onPress={() => router.push(`/source/${sourceB.id}` as never)}
+              >
+                <View style={[styles.sourceIndicator, { backgroundColor: Colors.danger }]} />
+                <View style={styles.sourceContent}>
+                  <Text style={styles.sourceLabel}>Source B</Text>
+                  <Text style={styles.sourceTitle} numberOfLines={2}>{sourceB.title}</Text>
+                  <Text style={styles.sourceMeta}>{sourceB.sourceType}</Text>
+                </View>
+              </Pressable>
+            )}
+          </View>
+        </>
+      )}
 
       <View style={styles.actionRow}>
         <Pressable
@@ -175,6 +220,25 @@ const styles = StyleSheet.create({
   tags: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.xs, marginTop: Spacing.lg },
   tag: { backgroundColor: Colors.accentLight, borderRadius: Radius.full, paddingHorizontal: Spacing.sm + 2, paddingVertical: 4 },
   tagText: { fontSize: FontSize.xs, color: Colors.accent, fontWeight: "500" },
+
+  sectionRow: { flexDirection: "row", alignItems: "center", gap: Spacing.sm, marginTop: Spacing.lg, marginBottom: Spacing.xs },
+  sectionBar: { width: 3, height: 14, borderRadius: 2, backgroundColor: Colors.warning },
+  sectionTitleText: { fontSize: FontSize.sm, fontWeight: "600", color: Colors.inkSecondary, letterSpacing: 0.3 },
+
+  sourcesCompare: { gap: Spacing.sm },
+  sourceCard: {
+    flexDirection: "row",
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    overflow: "hidden",
+    ...Shadow.sm,
+  },
+  sourceIndicator: { width: 4, alignSelf: "stretch" },
+  sourceContent: { flex: 1, padding: Spacing.md },
+  sourceLabel: { fontSize: FontSize.xs, color: Colors.inkMuted, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: "600" },
+  sourceTitle: { fontSize: FontSize.sm, color: Colors.ink, fontWeight: "500", marginTop: 2 },
+  sourceMeta: { fontSize: FontSize.xs, color: Colors.inkMuted, marginTop: 2 },
+  vsIndicator: { alignItems: "center", paddingVertical: 2 },
 
   actionRow: { flexDirection: "row", gap: Spacing.sm, marginTop: Spacing.lg },
   actionBtn: {
