@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TextInput, SectionList, Pressable, StyleSheet } from "react-native";
+import { View, Text, TextInput, SectionList, ScrollView, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
@@ -22,7 +22,7 @@ export default function SearchScreen() {
   const [query, setQuery] = useState("");
   const {
     searchAll, sources, projects, hypotheses, contradictions,
-    entityAliases, getAllEntities,
+    entityAliases, getAllEntities, persons, groups, places, events,
   } = useResearchStore();
 
   function getResults(): { title: string; data: ResultItem[] }[] {
@@ -151,15 +151,33 @@ export default function SearchScreen() {
       </View>
 
       {query.length === 0 && (
-        <View style={styles.emptyState}>
-          <View style={styles.emptyIcon}>
-            <Ionicons name="search" size={32} color={Colors.borderStrong} />
+        <ScrollView contentContainerStyle={styles.idleContent}>
+          <View style={styles.emptyState}>
+            <View style={styles.emptyIcon}>
+              <Ionicons name="search" size={32} color={Colors.borderStrong} />
+            </View>
+            <Text style={styles.emptyTitle}>Rechercher</Text>
+            <Text style={styles.emptyHint}>
+              Entités, sources, dossiers, hypothèses, contradictions
+            </Text>
           </View>
-          <Text style={styles.emptyTitle}>Rechercher</Text>
-          <Text style={styles.emptyHint}>
-            Entités, sources, dossiers, hypothèses, contradictions
-          </Text>
-        </View>
+
+          {/* Quick counts */}
+          <View style={styles.quickStats}>
+            {[
+              { label: "Personnes", count: persons.length, icon: "person" as const, color: Colors.person.icon },
+              { label: "Sources", count: sources.length, icon: "document-text" as const, color: Colors.accent },
+              { label: "Lieux", count: places.length, icon: "location" as const, color: Colors.place.icon },
+              { label: "Dossiers", count: projects.length, icon: "folder" as const, color: Colors.event.icon },
+            ].map((s) => (
+              <View key={s.label} style={styles.quickStat}>
+                <Ionicons name={s.icon} size={14} color={s.color} />
+                <Text style={styles.quickStatCount}>{s.count}</Text>
+                <Text style={styles.quickStatLabel}>{s.label}</Text>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       )}
 
       {query.length > 0 && query.length < 2 && (
@@ -282,12 +300,31 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg + Spacing.lg,
   },
 
-  emptyState: {
+  idleContent: { paddingBottom: Spacing.xxxl },
+  quickStats: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    marginTop: Spacing.lg,
+  },
+  quickStat: {
     flex: 1,
+    alignItems: "center",
+    gap: 2,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    paddingVertical: Spacing.md,
+    ...Shadow.sm,
+  },
+  quickStatCount: { fontSize: FontSize.lg, fontWeight: "700", color: Colors.ink },
+  quickStatLabel: { fontSize: 9, color: Colors.inkMuted },
+
+  emptyState: {
     alignItems: "center",
     justifyContent: "center",
     gap: Spacing.sm,
-    paddingBottom: Spacing.xxxl,
+    paddingTop: Spacing.xxxl,
+    paddingBottom: Spacing.lg,
   },
   emptyIcon: {
     width: 64,
