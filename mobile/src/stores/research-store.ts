@@ -510,6 +510,10 @@ interface ResearchState {
   getEntitiesInSource: (sourceId: string) => AnyEntity[];
   getSecondDegreeConnections: (type: EntityType, id: string) => { entity: AnyEntity; via: string }[];
   getResearchGaps: () => { entitiesWithoutSources: AnyEntity[]; hypothesesUnverified: Hypothesis[]; sourcesLowReliability: Source[]; entitiesIsolated: AnyEntity[] };
+  detectDuplicates: () => { a: AnyEntity; b: AnyEntity; reason: string }[];
+
+  // Missing updates
+  updateContradiction: (id: string, data: Partial<Omit<Contradiction, "id" | "createdAt" | "updatedAt">>) => Promise<Contradiction | null>;
 }
 
 export const useResearchStore = create<ResearchState>((set, get) => ({
@@ -1490,5 +1494,61 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
       sourcesLowReliability: s.sources.filter((src) => src.reliabilityLevel === "low" || src.reliabilityLevel === "unknown"),
       entitiesIsolated: allEntities.filter((e) => !entityIdsWithRelations.has(e.id)),
     };
+  },
+
+  detectDuplicates: () => {
+    const s = get();
+    const all: AnyEntity[] = [...s.persons, ...s.groups, ...s.places, ...s.events];
+    const results: { a: AnyEntity; b: AnyEntity; reason: string }[] = [];
+    const seen = new Set<string>();
+
+    for (let i = 0; i < all.length; i++) {
+      for (let j = i + 1; j < all.length; j++) {
+        const a = all[i];
+        const b = all[j];
+        if (a.entityType !== b.entityType) continue;
+        const key = `${a.id}-${b.id}`;
+        if (seen.has(key)) continue;
+
+        const nameA = getEntityName(a).toLowerCase().trim();
+        const nameB = getEntityName(b).toLowerCase().trim();
+
+        if (nameA === nameB) {
+          seen.add(key);
+          results.push({ a, b, reason: "Nom identique" });
+        } else if (nameA.length > 3 && nameB.length > 3 && (nameA.includes(nameB) || nameB.includes(nameA))) {
+          seen.add(key);
+          results.push({ a, b, reason: "Nom similaire" });
+        }
+
+        for (const al of s.entityAliases.filter((x) => x.entityType === a.entityType && x.entityId === a.id)) {
+          if (al.alias.toLowerCase().trim() === nameB && !seen.has(key)) {
+            seen.add(key);
+            results.push({ a, b, reason: `Alias "${al.alias}" correspond` });
+          }
+        }
+        for (const al of s.entityAliases.filter((x) => x.entityType === b.entityType && x.entityId === b.id)) {
+          if (al.alias.toLowerCase().trim() === nameA && !seen.has(key)) {
+            seen.add(key);
+            results.push({ a, b, reason: `Alias "${al.alias}" correspond` });
+          }
+        }
+      }
+    }
+    return results;
+  },
+
+  updateContradiction: async (id, data) => {
+    const row: Record<string, any> = {};
+    if (data.title !== undefined) row.title = data.title;
+    if (data.description !== undefined) row.description = data.description;
+    if (data.status !== undefined) row.status = data.status;
+    if (data.resolutionNote !== undefined) row.resolution_note = data.resolutionNote;
+    if (data.tags !== undefined) row.tags = data.tags;
+    const { data: rows, error } = await supabase.from("contradictions").update(row).eq("id", id).select().single();
+    if (error || !rows) { console.error("updateContradiction:", error); return null; }
+    const c = rowToContradiction(rows);
+    set((s) => ({ contradictions: s.contradictions.map((x) => (x.id === id ? c : x)) }));
+    return c;
   },
 }));

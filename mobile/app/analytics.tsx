@@ -18,11 +18,15 @@ export default function AnalyticsScreen() {
   const {
     persons, groups, places, events, sources, hypotheses,
     relationships, excerpts, contradictions, evidenceChains,
-    witnesses, entityAliases, getResearchGaps,
+    witnesses, entityAliases, getResearchGaps, detectDuplicates,
   } = useResearchStore();
 
   const gaps = useMemo(() => getResearchGaps(), [
     persons, groups, places, events, sources, hypotheses, relationships, excerpts,
+  ]);
+
+  const duplicates = useMemo(() => detectDuplicates(), [
+    persons, groups, places, events, entityAliases,
   ]);
 
   const totalEntities = persons.length + groups.length + places.length + events.length;
@@ -129,6 +133,32 @@ export default function AnalyticsScreen() {
           <Text style={styles.gapHint}>Fiabilité basse/inconnue</Text>
         </Pressable>
       </View>
+
+      {/* Duplicates */}
+      {duplicates.length > 0 && (
+        <>
+          <Text style={styles.sectionTitle}>Doublons potentiels</Text>
+          <View style={styles.card}>
+            {duplicates.slice(0, 8).map(({ a, b, reason }, i) => (
+              <View key={`${a.id}-${b.id}`} style={[styles.dupRow, i < Math.min(duplicates.length, 8) - 1 && { borderBottomWidth: 1, borderBottomColor: Colors.border }]}>
+                <View style={styles.dupEntities}>
+                  <Pressable onPress={() => router.push(`/entity/${a.entityType}/${a.id}` as never)}>
+                    <Text style={styles.dupName}>{getEntityName(a)}</Text>
+                  </Pressable>
+                  <Ionicons name="swap-horizontal" size={14} color={Colors.inkMuted} />
+                  <Pressable onPress={() => router.push(`/entity/${b.entityType}/${b.id}` as never)}>
+                    <Text style={styles.dupName}>{getEntityName(b)}</Text>
+                  </Pressable>
+                </View>
+                <Text style={styles.dupReason}>{reason}</Text>
+              </View>
+            ))}
+            {duplicates.length > 8 && (
+              <Text style={styles.dupMore}>+{duplicates.length - 8} autres doublons potentiels</Text>
+            )}
+          </View>
+        </>
+      )}
 
       {/* Coverage stats */}
       <Text style={styles.sectionTitle}>Couverture</Text>
@@ -279,4 +309,10 @@ const styles = StyleSheet.create({
   coverLabel: { flex: 1, fontSize: FontSize.sm, color: Colors.ink },
   coverValue: { fontSize: FontSize.base, fontWeight: "700", color: Colors.ink },
   coverAliases: { fontSize: FontSize.xs, color: Colors.inkMuted, width: 70, textAlign: "right" },
+
+  dupRow: { paddingVertical: Spacing.md },
+  dupEntities: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
+  dupName: { fontSize: FontSize.sm, color: Colors.accent, fontWeight: "600" },
+  dupReason: { fontSize: FontSize.xs, color: Colors.inkMuted, marginTop: 2 },
+  dupMore: { fontSize: FontSize.xs, color: Colors.inkMuted, textAlign: "center", marginTop: Spacing.sm },
 });
