@@ -504,6 +504,12 @@ interface ResearchState {
 
   // Search
   searchAll: (query: string) => AnyEntity[];
+
+  // Analytics
+  getSourcesForEntity: (type: EntityType, id: string) => Source[];
+  getEntitiesInSource: (sourceId: string) => AnyEntity[];
+  getSecondDegreeConnections: (type: EntityType, id: string) => { entity: AnyEntity; via: string }[];
+  getResearchGaps: () => { entitiesWithoutSources: AnyEntity[]; hypothesesUnverified: Hypothesis[]; sourcesLowReliability: Source[]; entitiesIsolated: AnyEntity[] };
 }
 
 export const useResearchStore = create<ResearchState>((set, get) => ({
@@ -1401,5 +1407,88 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
         results.push(ev);
     }
     return results;
+  },
+
+  getSourcesForEntity: (type, id) => {
+    const s = get();
+    const linkedExcerptSourceIds = new Set(
+      s.excerpts
+        .filter((e) => e.linkedEntityType === type && e.linkedEntityId === id)
+        .map((e) => e.sourceId)
+    );
+    return s.sources.filter((src) => linkedExcerptSourceIds.has(src.id));
+  },
+
+  getEntitiesInSource: (sourceId) => {
+    const s = get();
+    const entities: AnyEntity[] = [];
+    const seen = new Set<string>();
+    for (const exc of s.excerpts.filter((e) => e.sourceId === sourceId)) {
+      if (exc.linkedEntityType && exc.linkedEntityId && !seen.has(exc.linkedEntityId)) {
+        seen.add(exc.linkedEntityId);
+        const entity = s.persons.find((p) => p.id === exc.linkedEntityId) ??
+          s.groups.find((g) => g.id === exc.linkedEntityId) ??
+          s.places.find((p) => p.id === exc.linkedEntityId) ??
+          s.events.find((e) => e.id === exc.linkedEntityId);
+        if (entity) entities.push(entity);
+      }
+    }
+    return entities;
+  },
+
+  getSecondDegreeConnections: (type, id) => {
+    const s = get();
+    const directIds = new Set<string>();
+    const results: { entity: AnyEntity; via: string }[] = [];
+
+    for (const r of s.relationships) {
+      if (r.sourceEntityType === type && r.sourceEntityId === id) directIds.add(r.targetEntityId);
+      if (r.targetEntityType === type && r.targetEntityId === id) directIds.add(r.sourceEntityId);
+    }
+
+    const seen = new Set<string>([id]);
+    for (const directId of directIds) {
+      seen.add(directId);
+      const viaEntity = s.persons.find((p) => p.id === directId) ??
+        s.groups.find((g) => g.id === directId) ??
+        s.places.find((p) => p.id === directId) ??
+        s.events.find((e) => e.id === directId);
+      const viaName = viaEntity ? getEntityName(viaEntity) : "?";
+
+      for (const r2 of s.relationships) {
+        let secondId: string | null = null;
+        if (r2.sourceEntityId === directId && !seen.has(r2.targetEntityId)) secondId = r2.targetEntityId;
+        if (r2.targetEntityId === directId && !seen.has(r2.sourceEntityId)) secondId = r2.sourceEntityId;
+        if (secondId) {
+          seen.add(secondId);
+          const entity = s.persons.find((p) => p.id === secondId) ??
+            s.groups.find((g) => g.id === secondId) ??
+            s.places.find((p) => p.id === secondId) ??
+            s.events.find((e) => e.id === secondId);
+          if (entity) results.push({ entity, via: viaName });
+        }
+      }
+    }
+    return results;
+  },
+
+  getResearchGaps: () => {
+    const s = get();
+    const allEntities = [...s.persons, ...s.groups, ...s.places, ...s.events];
+    const entityIdsWithExcerpts = new Set(
+      s.excerpts.filter((e) => e.linkedEntityId).map((e) => e.linkedEntityId!)
+    );
+    const entityIdsWithRelations = new Set<string>();
+    for (const r of s.relationships) {
+      entityIdsWithRelations.add(r.sourceEntityId);
+      entityIdsWithRelations.add(r.targetEntityId);
+    }
+
+    return {
+      entitiesWithoutSources: allEntities.filter((e) => !entityIdsWithExcerpts.has(e.id)),
+      hypothesesUnverified: s.hypotheses.filter((h) => h.status === "draft" || h.status === "open"),
+      sourcesLowReliability: s.sources.filter((src) => src.reliabilityLevel === "low" || src.reliabilityLevel === "unknown"),
+      entitiesIsolated: allEntities.filter((e) => !entityIdsWithRelations.has(e.id)),
+    };
   },
 }));

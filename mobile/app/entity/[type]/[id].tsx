@@ -29,6 +29,7 @@ export default function EntityDetailScreen() {
     getEntityById, getRelationshipsFor, getEntityDisplayName,
     deleteEntity, getAliasesFor, addEntityAlias, deleteAlias,
     deleteRelationship, excerpts, sources, fetchAll, loading,
+    getSourcesForEntity, getSecondDegreeConnections,
   } = useResearchStore();
 
   const entityType = type as EntityType;
@@ -328,6 +329,66 @@ export default function EntityDetailScreen() {
           </View>
         </>
       )}
+
+      {/* Sources mentioning this entity */}
+      {(() => {
+        const entitySources = getSourcesForEntity(entityType, id);
+        if (entitySources.length === 0) return null;
+        return (
+          <>
+            <View style={styles.sectionRow}>
+              <View style={styles.sectionBar} />
+              <Text style={styles.sectionTitle}>Sources ({entitySources.length})</Text>
+            </View>
+            <View style={styles.relCard}>
+              {entitySources.map((src, i) => (
+                <Pressable
+                  key={src.id}
+                  style={[styles.relRow, i < entitySources.length - 1 && styles.relBorder]}
+                  onPress={() => router.push(`/source/${src.id}` as never)}
+                >
+                  <Ionicons name="document-text" size={16} color={Colors.accent} />
+                  <View style={styles.relText}>
+                    <Text style={styles.relName} numberOfLines={1}>{src.title}</Text>
+                    <Text style={styles.relType}>{src.sourceType}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={14} color={Colors.borderStrong} />
+                </Pressable>
+              ))}
+            </View>
+          </>
+        );
+      })()}
+
+      {/* Second-degree connections */}
+      {(() => {
+        const secondDeg = getSecondDegreeConnections(entityType, id);
+        if (secondDeg.length === 0) return null;
+        return (
+          <>
+            <View style={styles.sectionRow}>
+              <View style={styles.sectionBar} />
+              <Text style={styles.sectionTitle}>Connexions indirectes ({secondDeg.length})</Text>
+            </View>
+            <View style={styles.relCard}>
+              {secondDeg.slice(0, 10).map(({ entity: e2, via }, i) => (
+                <Pressable
+                  key={e2.id}
+                  style={[styles.relRow, i < Math.min(secondDeg.length, 10) - 1 && styles.relBorder]}
+                  onPress={() => router.push(`/entity/${e2.entityType}/${e2.id}` as never)}
+                >
+                  <EntityBadge type={e2.entityType} size="sm" />
+                  <View style={styles.relText}>
+                    <Text style={styles.relName} numberOfLines={1}>{getEntityName(e2)}</Text>
+                    <Text style={styles.relType}>via {via}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={14} color={Colors.borderStrong} />
+                </Pressable>
+              ))}
+            </View>
+          </>
+        );
+      })()}
 
       {/* Notes */}
       {entity.notes ? (
