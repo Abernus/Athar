@@ -390,6 +390,57 @@ export default function EntityDetailScreen() {
         );
       })()}
 
+      {/* Mini timeline */}
+      {entity.entityType === "person" && (entity.birthDate || entity.deathDate) && (
+        <>
+          <View style={styles.sectionRow}>
+            <View style={styles.sectionBar} />
+            <Text style={styles.sectionTitle}>Chronologie</Text>
+          </View>
+          <View style={styles.relCard}>
+            {entity.birthDate && (
+              <View style={[styles.timelineItem, entity.deathDate && styles.relBorder]}>
+                <View style={[styles.timelineDot, { backgroundColor: Colors.success }]} />
+                <View style={styles.relText}>
+                  <Text style={styles.relName}>{formatHistoricalDate(entity.birthDate)}</Text>
+                  <Text style={styles.relType}>Naissance</Text>
+                </View>
+              </View>
+            )}
+            {(() => {
+              const relatedEvents = useResearchStore.getState().events.filter((ev) =>
+                relationships.some((r) =>
+                  (r.sourceEntityId === ev.id || r.targetEntityId === ev.id) &&
+                  (r.sourceEntityId === id || r.targetEntityId === id)
+                ) && ev.dateStart
+              );
+              return relatedEvents.map((ev, i) => (
+                <Pressable
+                  key={ev.id}
+                  style={[styles.timelineItem, (entity.deathDate || i < relatedEvents.length - 1) && styles.relBorder]}
+                  onPress={() => router.push(`/entity/event/${ev.id}` as never)}
+                >
+                  <View style={[styles.timelineDot, { backgroundColor: Colors.event.icon }]} />
+                  <View style={styles.relText}>
+                    <Text style={styles.relName}>{formatHistoricalDate(ev.dateStart!)}</Text>
+                    <Text style={styles.relType}>{ev.title}</Text>
+                  </View>
+                </Pressable>
+              ));
+            })()}
+            {entity.deathDate && (
+              <View style={styles.timelineItem}>
+                <View style={[styles.timelineDot, { backgroundColor: Colors.inkMuted }]} />
+                <View style={styles.relText}>
+                  <Text style={styles.relName}>{formatHistoricalDate(entity.deathDate)}</Text>
+                  <Text style={styles.relType}>Décès</Text>
+                </View>
+              </View>
+            )}
+          </View>
+        </>
+      )}
+
       {/* Notes */}
       {entity.notes ? (
         <>
@@ -656,6 +707,19 @@ const styles = StyleSheet.create({
     color: Colors.accent,
     fontWeight: "600",
   },
+  timelineItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    padding: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+  },
+  timelineDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+
   networkBtn: {
     flexDirection: "row",
     alignItems: "center",
