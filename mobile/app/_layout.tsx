@@ -99,6 +99,10 @@ export default function RootLayout() {
           name="network"
           options={{ title: "Réseau" }}
         />
+        <Stack.Screen
+          name="analytics"
+          options={{ title: "Analyse" }}
+        />
         <Stack.Screen name="entity/[type]/[id]" options={{ title: "" }} />
         <Stack.Screen name="hypothesis/[id]" options={{ title: "" }} />
         <Stack.Screen name="contradiction/[id]" options={{ title: "" }} />
