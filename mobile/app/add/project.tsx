@@ -11,6 +11,7 @@ import {
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
+import { TagInput } from "@/components/TagInput";
 import type { ProjectStatus } from "@/types";
 
 const STATUSES: { key: ProjectStatus; label: string }[] = [
@@ -120,7 +121,7 @@ export default function AddProjectScreen() {
         <TextInput style={[styles.input, styles.multiline]} value={notes} onChangeText={setNotes} placeholder="Notes internes..." placeholderTextColor={Colors.inkMuted} multiline numberOfLines={3} textAlignVertical="top" />
 
         <Text style={styles.label}>Tags</Text>
-        <TextInput style={styles.input} value={tags} onChangeText={setTags} placeholder="migration, algérie, guerre" placeholderTextColor={Colors.inkMuted} />
+        <TagInput value={tags} onChangeText={setTags} placeholder="migration, algérie, guerre" />
       </View>
 
       <Pressable style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]} onPress={save}>
