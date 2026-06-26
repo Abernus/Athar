@@ -103,6 +103,7 @@ export default function RootLayout() {
           name="analytics"
           options={{ title: "Analyse" }}
         />
+        <Stack.Screen name="tag/[tag]" options={{ title: "" }} />
         <Stack.Screen name="entity/[type]/[id]" options={{ title: "" }} />
         <Stack.Screen name="hypothesis/[id]" options={{ title: "" }} />
         <Stack.Screen name="contradiction/[id]" options={{ title: "" }} />
