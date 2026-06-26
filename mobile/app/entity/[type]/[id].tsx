@@ -183,9 +183,13 @@ export default function EntityDetailScreen() {
         {entity.tags.length > 0 && (
           <View style={styles.tags}>
             {entity.tags.map((tag) => (
-              <View key={tag} style={styles.tag}>
+              <Pressable
+                key={tag}
+                style={styles.tag}
+                onPress={() => router.push(`/tag/${encodeURIComponent(tag)}` as never)}
+              >
                 <Text style={styles.tagText}>{tag}</Text>
-              </View>
+              </Pressable>
             ))}
           </View>
         )}
