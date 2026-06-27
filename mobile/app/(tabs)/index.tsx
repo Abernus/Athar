@@ -37,6 +37,7 @@ export default function HomeScreen() {
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
 
   return (
+    <View style={{ flex: 1 }}>
     <ScrollView
       style={styles.scroll}
       contentContainerStyle={[styles.content, { paddingTop: insets.top }]}
@@ -240,6 +241,15 @@ export default function HomeScreen() {
         </>
       )}
     </ScrollView>
+
+    {/* Floating quick note button */}
+    <Pressable
+      style={({ pressed }) => [styles.fab, pressed && { opacity: 0.85, transform: [{ scale: 0.95 }] }]}
+      onPress={() => router.push("/add/note" as never)}
+    >
+      <Ionicons name="create" size={22} color="white" />
+    </Pressable>
+    </View>
   );
 }
 
@@ -457,6 +467,19 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.border,
     marginHorizontal: Spacing.lg,
   },
+  fab: {
+    position: "absolute",
+    bottom: Spacing.xl,
+    right: Spacing.xl,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.accent,
+    alignItems: "center",
+    justifyContent: "center",
+    ...Shadow.lg,
+  },
+
   activityRow: {
     flexDirection: "row",
     alignItems: "center",
