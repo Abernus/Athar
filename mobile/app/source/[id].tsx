@@ -215,6 +215,15 @@ export default function SourceDetailScreen() {
                 <Text style={styles.excerptText}>
                   {exc.selectedText || exc.excerptSummary}
                 </Text>
+                {(() => {
+                  const wordCount = (exc.selectedText || "").split(/\s+/).filter(Boolean).length;
+                  if (wordCount === 0) return null;
+                  return (
+                    <Text style={styles.excerptMeta}>
+                      {wordCount} mot{wordCount > 1 ? "s" : ""}
+                    </Text>
+                  );
+                })()}
                 {exc.notes ? (
                   <Text style={styles.excerptNote}>{exc.notes}</Text>
                 ) : null}
@@ -342,6 +351,7 @@ const styles = StyleSheet.create({
   classificationLabel: { fontSize: FontSize.xs, color: Colors.inkMuted, fontWeight: "600", textTransform: "uppercase" },
   excerptLoc: { fontSize: FontSize.xs, color: Colors.inkMuted, marginLeft: "auto" },
   excerptText: { fontSize: FontSize.sm, color: Colors.ink, lineHeight: 20 },
+  excerptMeta: { fontSize: 10, color: Colors.inkMuted, marginTop: Spacing.xs, fontWeight: "500" },
   excerptNote: { fontSize: FontSize.xs, color: Colors.inkMuted, fontStyle: "italic", marginTop: Spacing.xs },
 
   emptyText: { fontSize: FontSize.sm, color: Colors.inkMuted, textAlign: "center" },
