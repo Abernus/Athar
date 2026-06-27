@@ -111,7 +111,7 @@ export default function HomeScreen() {
           { icon: "analytics-outline" as const, label: "Analyse", route: "/analytics", color: "#DC2626" },
           { icon: "compass-outline" as const, label: "Explorer", route: "/(tabs)/browse", color: "#7C3AED" },
           { icon: "git-network-outline" as const, label: "Réseau", route: "/network", color: "#DB2777" },
-          { icon: "map-outline" as const, label: "Lieux", route: "/(tabs)/map", color: Colors.place.icon },
+          { icon: "pricetags-outline" as const, label: "Tags", route: "/tags", color: Colors.accent },
         ].map((a) => (
           <Pressable
             key={a.route}
