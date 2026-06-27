@@ -174,6 +174,22 @@ export default function SourceDetailScreen() {
       {/* Excerpts */}
       <SectionHeader title={`Extraits (${sourceExcerpts.length})`} />
 
+      {sourceExcerpts.length > 0 && (
+        <View style={styles.classifBreakdown}>
+          {Object.entries(CLASSIFICATION_LABELS).map(([key, cls]) => {
+            const count = sourceExcerpts.filter((e) => e.classification === key).length;
+            if (count === 0) return null;
+            return (
+              <View key={key} style={styles.classifChip}>
+                <View style={[styles.classifChipDot, { backgroundColor: cls.color }]} />
+                <Text style={[styles.classifChipText, { color: cls.color }]}>{cls.label}</Text>
+                <Text style={styles.classifChipCount}>{count}</Text>
+              </View>
+            );
+          })}
+        </View>
+      )}
+
       {sourceExcerpts.length > 0 ? (
         <View style={styles.listCard}>
           {sourceExcerpts.map((exc, i) => {
@@ -196,7 +212,7 @@ export default function SourceDetailScreen() {
                     <Text style={styles.excerptLoc}>{exc.pageOrLocation}</Text>
                   ) : null}
                 </View>
-                <Text style={styles.excerptText} numberOfLines={4}>
+                <Text style={styles.excerptText}>
                   {exc.selectedText || exc.excerptSummary}
                 </Text>
                 {exc.notes ? (
@@ -306,6 +322,21 @@ const styles = StyleSheet.create({
   mentionRow: { flexDirection: "row", alignItems: "center", gap: Spacing.md, padding: Spacing.lg },
   excerptRow: { padding: Spacing.lg },
   excerptBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
+  classifBreakdown: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.xs, marginBottom: Spacing.sm },
+  classifChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.sm + 2,
+    paddingVertical: 3,
+    ...Shadow.sm,
+  },
+  classifChipDot: { width: 6, height: 6, borderRadius: 3 },
+  classifChipText: { fontSize: FontSize.xs, fontWeight: "600" },
+  classifChipCount: { fontSize: FontSize.xs, color: Colors.inkMuted, fontWeight: "700" },
+
   excerptHeader: { flexDirection: "row", alignItems: "center", gap: Spacing.sm, marginBottom: Spacing.sm },
   classificationDot: { width: 8, height: 8, borderRadius: 4 },
   classificationLabel: { fontSize: FontSize.xs, color: Colors.inkMuted, fontWeight: "600", textTransform: "uppercase" },
