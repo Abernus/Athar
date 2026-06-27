@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
   RefreshControl,
+  Share,
 } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -487,13 +488,28 @@ export default function EntityDetailScreen() {
         </Pressable>
       </View>
 
-      <Pressable
-        style={styles.networkBtn}
-        onPress={() => router.push(`/network?focusId=${id}` as never)}
-      >
-        <Ionicons name="git-network-outline" size={16} color={Colors.accent} />
-        <Text style={styles.addRelBtnText}>Voir le réseau</Text>
-      </Pressable>
+      <View style={{ flexDirection: "row", gap: Spacing.sm, marginTop: Spacing.sm }}>
+        <Pressable
+          style={[styles.networkBtn, { flex: 1, marginTop: 0 }]}
+          onPress={() => router.push(`/network?focusId=${id}` as never)}
+        >
+          <Ionicons name="git-network-outline" size={16} color={Colors.accent} />
+          <Text style={styles.addRelBtnText}>Réseau</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.networkBtn, { flex: 1, marginTop: 0 }]}
+          onPress={() => {
+            const desc = ("summary" in entity ? entity.summary : "description" in entity ? entity.description : "") || "";
+            Share.share({
+              message: `Athar — ${getEntityName(entity)}\n\n${desc}`.trim(),
+              title: getEntityName(entity),
+            });
+          }}
+        >
+          <Ionicons name="paper-plane-outline" size={16} color={Colors.accent} />
+          <Text style={styles.addRelBtnText}>Partager</Text>
+        </Pressable>
+      </View>
 
       {/* Delete */}
       <Pressable

@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Alert,
   RefreshControl,
+  Share,
 } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useEffect } from "react";
@@ -213,14 +214,28 @@ export default function SourceDetailScreen() {
         </Card>
       )}
 
-      {/* Edit source button */}
-      <Pressable
-        style={styles.addExcerptBtn}
-        onPress={() => router.push(`/add/source?editId=${id}` as never)}
-      >
-        <Ionicons name="create-outline" size={18} color={Colors.accent} />
-        <Text style={styles.addExcerptText}>Modifier cette source</Text>
-      </Pressable>
+      {/* Edit + Share */}
+      <View style={{ flexDirection: "row", gap: Spacing.sm }}>
+        <Pressable
+          style={[styles.addExcerptBtn, { flex: 1 }]}
+          onPress={() => router.push(`/add/source?editId=${id}` as never)}
+        >
+          <Ionicons name="create-outline" size={18} color={Colors.accent} />
+          <Text style={styles.addExcerptText}>Modifier</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.addExcerptBtn, { flex: 1 }]}
+          onPress={() =>
+            Share.share({
+              message: `Athar — ${source.title}\n\n${source.authorName ? `Auteur : ${source.authorName}\n` : ""}${source.summary || ""}`.trim(),
+              title: source.title,
+            })
+          }
+        >
+          <Ionicons name="paper-plane-outline" size={18} color={Colors.accent} />
+          <Text style={styles.addExcerptText}>Partager</Text>
+        </Pressable>
+      </View>
 
       {/* Add excerpt button */}
       <Pressable
