@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Alert,
   RefreshControl,
+  Share,
 } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useEffect } from "react";
@@ -130,6 +131,43 @@ export default function ProjectDetailScreen() {
         </View>
       </View>
 
+      {/* Progress checklist */}
+      {(() => {
+        const checks = [
+          { label: "Question de recherche", done: !!project.researchQuestion },
+          { label: "Période définie", done: !!project.periodStart },
+          { label: "Au moins 1 source", done: sources.length > 0 },
+          { label: "Au moins 1 hypothèse", done: hypotheses.length > 0 },
+          { label: "Au moins 1 note", done: projectNotes.length > 0 },
+          { label: "Au moins 1 extrait", done: useResearchStore.getState().excerpts.some((e) => sources.some((s) => s.id === e.sourceId)) },
+        ];
+        const done = checks.filter((c) => c.done).length;
+        const pct = Math.round((done / checks.length) * 100);
+        return (
+          <View style={styles.progressCard}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressLabel}>Avancement</Text>
+              <Text style={styles.progressPct}>{pct}%</Text>
+            </View>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: `${pct}%` }]} />
+            </View>
+            <View style={styles.checklist}>
+              {checks.map((c) => (
+                <View key={c.label} style={styles.checkItem}>
+                  <Ionicons
+                    name={c.done ? "checkmark-circle" : "ellipse-outline"}
+                    size={16}
+                    color={c.done ? Colors.success : Colors.borderStrong}
+                  />
+                  <Text style={[styles.checkLabel, c.done && styles.checkLabelDone]}>{c.label}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        );
+      })()}
+
       {/* Quick actions */}
       <View style={styles.actionsRow}>
         <Pressable
@@ -162,14 +200,28 @@ export default function ProjectDetailScreen() {
         </Pressable>
       </View>
 
-      {/* Export */}
-      <Pressable
-        style={styles.exportBtn}
-        onPress={() => router.push(`/export/project?id=${id}` as never)}
-      >
-        <Ionicons name="share-outline" size={18} color={Colors.accent} />
-        <Text style={styles.exportBtnText}>Exporter ce dossier</Text>
-      </Pressable>
+      {/* Share + Export */}
+      <View style={styles.shareRow}>
+        <Pressable
+          style={[styles.exportBtn, { flex: 1 }]}
+          onPress={() =>
+            Share.share({
+              message: `Athar — ${project.title}\n\n${project.researchQuestion || ""}\n\n${project.summary || ""}`.trim(),
+              title: project.title,
+            })
+          }
+        >
+          <Ionicons name="paper-plane-outline" size={18} color={Colors.accent} />
+          <Text style={styles.exportBtnText}>Partager</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.exportBtn, { flex: 1 }]}
+          onPress={() => router.push(`/export/project?id=${id}` as never)}
+        >
+          <Ionicons name="document-outline" size={18} color={Colors.accent} />
+          <Text style={styles.exportBtnText}>Exporter</Text>
+        </Pressable>
+      </View>
 
       {/* Sources */}
       {sources.length > 0 && (
@@ -324,6 +376,23 @@ const styles = StyleSheet.create({
   tag: { backgroundColor: Colors.accentLight, borderRadius: Radius.full, paddingHorizontal: Spacing.sm + 2, paddingVertical: 4 },
   tagText: { fontSize: FontSize.xs, color: Colors.accent, fontWeight: "500" },
 
+  progressCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    marginTop: Spacing.sm,
+    ...Shadow.sm,
+  },
+  progressHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  progressLabel: { fontSize: FontSize.xs, color: Colors.inkMuted, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: "600" },
+  progressPct: { fontSize: FontSize.base, fontWeight: "700", color: Colors.accent },
+  progressBar: { height: 6, backgroundColor: Colors.surfaceSunken, borderRadius: 3, marginTop: Spacing.xs, marginBottom: Spacing.md, overflow: "hidden" },
+  progressFill: { height: 6, backgroundColor: Colors.accent, borderRadius: 3 },
+  checklist: { gap: 6 },
+  checkItem: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
+  checkLabel: { fontSize: FontSize.xs, color: Colors.inkSecondary },
+  checkLabelDone: { color: Colors.inkMuted, textDecorationLine: "line-through" },
+
   statsRow: {
     flexDirection: "row",
     gap: Spacing.sm,
@@ -340,6 +409,7 @@ const styles = StyleSheet.create({
   statCount: { fontSize: FontSize.lg, fontWeight: "700", color: Colors.ink },
   statLabel: { fontSize: 10, color: Colors.inkMuted },
 
+  shareRow: { flexDirection: "row", gap: Spacing.sm, marginTop: Spacing.sm },
   exportBtn: {
     flexDirection: "row",
     alignItems: "center",
