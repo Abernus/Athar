@@ -198,6 +198,11 @@ export default function SourceDetailScreen() {
               <Pressable
                 key={exc.id}
                 style={[styles.excerptRow, i < sourceExcerpts.length - 1 && styles.excerptBorder]}
+                onPress={() =>
+                  Share.share({
+                    message: `"${exc.selectedText || exc.excerptSummary}"\n\n— ${source.title}${exc.pageOrLocation ? `, ${exc.pageOrLocation}` : ""}${source.authorName ? ` (${source.authorName})` : ""}`,
+                  })
+                }
                 onLongPress={() =>
                   Alert.alert("Supprimer cet extrait ?", (exc.selectedText || exc.excerptSummary).slice(0, 80), [
                     { text: "Annuler", style: "cancel" },
