@@ -106,10 +106,22 @@ export default function NetworkScreen() {
   const [filter, setFilter] = useState<EntityType | "all">("all");
   const [selectedNode, setSelectedNode] = useState<string | null>(focusId ?? null);
   const [showLegend, setShowLegend] = useState(true);
+  const [focusMode, setFocusMode] = useState(!!focusId);
 
   const allEntities = getAllEntities();
-  const filteredEntities =
+  const typeFiltered =
     filter === "all" ? allEntities : allEntities.filter((e) => e.entityType === filter);
+
+  const filteredEntities = focusMode && selectedNode
+    ? (() => {
+        const connectedIds = new Set<string>([selectedNode]);
+        for (const r of relationships) {
+          if (r.sourceEntityId === selectedNode) connectedIds.add(r.targetEntityId);
+          if (r.targetEntityId === selectedNode) connectedIds.add(r.sourceEntityId);
+        }
+        return typeFiltered.filter((e) => connectedIds.has(e.id));
+      })()
+    : typeFiltered;
 
   const typeCounts: Record<string, number> = { all: allEntities.length, person: 0, group: 0, place: 0, event: 0 };
   for (const e of allEntities) typeCounts[e.entityType]++;
@@ -395,6 +407,23 @@ export default function NetworkScreen() {
           {nodes.length} nœuds · {edges.length} liens
         </Text>
       </View>
+
+      {/* Focus toggle */}
+      {selectedNode && (
+        <Pressable
+          style={[styles.focusBtn, focusMode && styles.focusBtnActive]}
+          onPress={() => setFocusMode(!focusMode)}
+        >
+          <Ionicons
+            name={focusMode ? "eye" : "eye-outline"}
+            size={14}
+            color={focusMode ? "white" : Colors.accent}
+          />
+          <Text style={[styles.focusBtnText, focusMode && { color: "white" }]}>
+            {focusMode ? "Focus actif" : "Focus"}
+          </Text>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -539,6 +568,22 @@ const styles = StyleSheet.create({
   },
   emptyTitle: { fontSize: FontSize.lg, fontWeight: "600", color: Colors.inkSecondary },
   emptyHint: { fontSize: FontSize.sm, color: Colors.inkMuted, textAlign: "center", maxWidth: 260 },
+
+  focusBtn: {
+    position: "absolute",
+    top: 52,
+    left: Spacing.lg,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(255,255,255,0.95)",
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.sm + 2,
+    paddingVertical: 4,
+    ...Shadow.sm,
+  },
+  focusBtnActive: { backgroundColor: Colors.accent },
+  focusBtnText: { fontSize: FontSize.xs, color: Colors.accent, fontWeight: "600" },
 
   statsBar: {
     position: "absolute",
