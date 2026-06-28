@@ -1,29 +1,105 @@
 // Athar (أثر) — design tokens
-// Dark editorial palette: warm ink & amber, evoking lamplit archives at night.
+// Two palettes: a warm parchment "light" and a lamplit "dark", both ink & amber.
+// The active palette is resolved once at launch from the OS appearance, so every
+// screen (which reads these tokens) themes consistently without per-screen work.
 
-export const Colors = {
-  // Text — warm parchment on dark
+import { Appearance } from "react-native";
+
+type Palette = {
+  ink: string;
+  inkSecondary: string;
+  inkMuted: string;
+  surface: string;
+  surfaceRaised: string;
+  surfaceSunken: string;
+  surfaceWarm: string;
+  border: string;
+  borderStrong: string;
+  accent: string;
+  accentDark: string;
+  accentLight: string;
+  accentMedium: string;
+  danger: string;
+  dangerLight: string;
+  success: string;
+  successLight: string;
+  warning: string;
+  warningLight: string;
+  person: { bg: string; text: string; icon: string };
+  group: { bg: string; text: string; icon: string };
+  place: { bg: string; text: string; icon: string };
+  event: { bg: string; text: string; icon: string };
+  confirmed: { bg: string; text: string; border: string };
+  probable: { bg: string; text: string; border: string };
+  uncertain: { bg: string; text: string; border: string };
+  contested: { bg: string; text: string; border: string };
+  abandoned: { bg: string; text: string; border: string };
+  overlay: string;
+  shimmer: string;
+  onAccent: string;
+};
+
+// Warm parchment — manuscripts in daylight.
+export const LightColors: Palette = {
+  ink: "#1C1917",
+  inkSecondary: "#44403C",
+  inkMuted: "#A8A29E",
+
+  surface: "#FFFFFF",
+  surfaceRaised: "#FAFAF9",
+  surfaceSunken: "#F5F5F4",
+  surfaceWarm: "#FEF7ED",
+
+  border: "#E7E5E4",
+  borderStrong: "#D6D3D1",
+
+  accent: "#B45309",
+  accentDark: "#92400E",
+  accentLight: "#FFFBEB",
+  accentMedium: "#FDE68A",
+
+  danger: "#DC2626",
+  dangerLight: "#FEF2F2",
+  success: "#059669",
+  successLight: "#ECFDF5",
+  warning: "#D97706",
+  warningLight: "#FFFBEB",
+
+  person: { bg: "#DBEAFE", text: "#1D4ED8", icon: "#3B82F6" },
+  group: { bg: "#EDE9FE", text: "#7C3AED", icon: "#8B5CF6" },
+  place: { bg: "#D1FAE5", text: "#059669", icon: "#10B981" },
+  event: { bg: "#FEF3C7", text: "#B45309", icon: "#F59E0B" },
+
+  confirmed: { bg: "#D1FAE5", text: "#065F46", border: "#A7F3D0" },
+  probable: { bg: "#DBEAFE", text: "#1E40AF", border: "#93C5FD" },
+  uncertain: { bg: "#FEF3C7", text: "#92400E", border: "#FCD34D" },
+  contested: { bg: "#FFEDD5", text: "#9A3412", border: "#FDBA74" },
+  abandoned: { bg: "#F5F5F4", text: "#57534E", border: "#D6D3D1" },
+
+  overlay: "rgba(28, 25, 23, 0.5)",
+  shimmer: "rgba(180, 83, 9, 0.06)",
+  onAccent: "#FFFFFF",
+};
+
+// Lamplit archives at night.
+export const DarkColors: Palette = {
   ink: "#F5EFE6",
   inkSecondary: "#C7BCAD",
   inkMuted: "#897F72",
 
-  // Surfaces — deep warm charcoal, layered for elevation
   surface: "#1E1A16",
   surfaceRaised: "#272019",
   surfaceSunken: "#14110D",
   surfaceWarm: "#2A2014",
 
-  // Borders — visible hairlines on dark
   border: "#322B23",
   borderStrong: "#453C31",
 
-  // Accent — luminous amber
   accent: "#F59E0B",
   accentDark: "#D97706",
   accentLight: "#2A2010",
   accentMedium: "#B45309",
 
-  // Status — brightened for dark
   danger: "#F87171",
   dangerLight: "#2A1714",
   success: "#34D399",
@@ -31,26 +107,28 @@ export const Colors = {
   warning: "#FBBF24",
   warningLight: "#2A2010",
 
-  // Entity type colors — vivid chips on dark
   person: { bg: "#15233D", text: "#93C5FD", icon: "#60A5FA" },
   group: { bg: "#241A3D", text: "#C4B5FD", icon: "#A78BFA" },
   place: { bg: "#0F2E24", text: "#6EE7B7", icon: "#34D399" },
   event: { bg: "#2E2410", text: "#FCD34D", icon: "#FBBF24" },
 
-  // Confidence
   confirmed: { bg: "#102A20", text: "#6EE7B7", border: "#1C4A38" },
   probable: { bg: "#15233D", text: "#93C5FD", border: "#1E3A5F" },
   uncertain: { bg: "#2A2010", text: "#FCD34D", border: "#4A3A14" },
   contested: { bg: "#2E1C10", text: "#FDBA74", border: "#4A301A" },
   abandoned: { bg: "#201C18", text: "#897F72", border: "#322B23" },
 
-  // Overlays
   overlay: "rgba(8, 6, 4, 0.7)",
   shimmer: "rgba(245, 158, 11, 0.08)",
-
-  // Pure values (button fills, etc.)
   onAccent: "#1A1206",
 };
+
+// Resolve once at module load from the OS appearance.
+export const colorScheme: "light" | "dark" =
+  Appearance.getColorScheme() === "light" ? "light" : "dark";
+
+export const Colors: Palette =
+  colorScheme === "light" ? LightColors : DarkColors;
 
 export const Spacing = {
   xxs: 2,
@@ -92,35 +170,19 @@ export const FontWeight = {
   heavy: "800" as const,
 };
 
-// On dark surfaces shadows read faintly — we lean on layered surface lightness
-// and hairline borders for separation, with shadows adding subtle depth.
-export const Shadow = {
-  sm: {
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  md: {
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  lg: {
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.45,
-    shadowRadius: 24,
-    elevation: 10,
-  },
-  glow: {
-    shadowColor: "#F59E0B",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.45,
-    shadowRadius: 16,
-    elevation: 6,
-  },
+// Light leans on soft ambient shadow; dark leans on depth + hairline borders.
+const LightShadow = {
+  sm: { shadowColor: "#1C1917", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3, elevation: 1 },
+  md: { shadowColor: "#1C1917", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 10, elevation: 3 },
+  lg: { shadowColor: "#1C1917", shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.12, shadowRadius: 20, elevation: 6 },
+  glow: { shadowColor: "#B45309", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 4 },
 };
+
+const DarkShadow = {
+  sm: { shadowColor: "#000000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 2 },
+  md: { shadowColor: "#000000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 5 },
+  lg: { shadowColor: "#000000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.45, shadowRadius: 24, elevation: 10 },
+  glow: { shadowColor: "#F59E0B", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.45, shadowRadius: 16, elevation: 6 },
+};
+
+export const Shadow = colorScheme === "light" ? LightShadow : DarkShadow;
