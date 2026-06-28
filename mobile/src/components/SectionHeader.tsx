@@ -1,9 +1,15 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, StyleProp, ViewStyle } from "react-native";
 import { Colors, FontSize, Spacing } from "@/lib/theme";
 
-export function SectionHeader({ title }: { title: string }) {
+export function SectionHeader({
+  title,
+  style,
+}: {
+  title: string;
+  style?: StyleProp<ViewStyle>;
+}) {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       <View style={styles.bar} />
       <Text style={styles.text}>{title}</Text>
     </View>
@@ -20,14 +26,15 @@ const styles = StyleSheet.create({
   },
   bar: {
     width: 3,
-    height: 14,
+    height: 13,
     borderRadius: 2,
     backgroundColor: Colors.accent,
   },
   text: {
-    fontSize: FontSize.sm,
-    fontWeight: "600",
-    color: Colors.inkSecondary,
-    letterSpacing: 0.3,
+    fontSize: FontSize.xs,
+    fontWeight: "700",
+    color: Colors.inkMuted,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
   },
 });

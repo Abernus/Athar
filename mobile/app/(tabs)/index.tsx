@@ -12,8 +12,10 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
-import { EntityRow } from "@/components/EntityRow";
 import { SectionHeader } from "@/components/SectionHeader";
+import { PressableScale } from "@/components/PressableScale";
+import { FadeInView } from "@/components/Motion";
+import { haptic } from "@/lib/haptics";
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -47,10 +49,12 @@ export default function HomeScreen() {
     >
       {/* Hero header */}
       <View style={styles.hero}>
+        <Text style={styles.heroWatermark} pointerEvents="none">أثر</Text>
         <View style={styles.heroTop}>
-          <View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.heroKicker}>L'ATELIER D'ENQUÊTE HISTORIQUE</Text>
             <Text style={styles.heroTitle}>Athar</Text>
-            <Text style={styles.heroSub}>L'atelier d'enquête historique</Text>
+            <View style={styles.heroRule} />
           </View>
           <View style={styles.heroBadge}>
             <Text style={styles.heroArabic}>أثر</Text>
@@ -82,70 +86,74 @@ export default function HomeScreen() {
       </View>
 
       {/* Quick actions */}
-      <View style={styles.actionsRow}>
-        <Pressable
-          style={({ pressed }) => [styles.actionCard, styles.actionPrimary, pressed && styles.actionPressed]}
+      <FadeInView delay={60} style={styles.actionsRow}>
+        <PressableScale
+          style={[styles.actionCard, styles.actionPrimary]}
+          haptics="medium"
           onPress={() => router.push("/add/project" as never)}
         >
-          <Ionicons name="folder-open" size={24} color="white" />
+          <Ionicons name="folder-open" size={24} color={Colors.onAccent} />
           <Text style={styles.actionPrimaryText}>Nouveau dossier</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.actionCard, pressed && styles.actionPressed]}
+        </PressableScale>
+        <PressableScale
+          style={styles.actionCard}
           onPress={() => router.push("/add/source" as never)}
         >
           <Ionicons name="document-text-outline" size={22} color={Colors.accent} />
           <Text style={styles.actionText}>Source</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.actionCard, pressed && styles.actionPressed]}
+        </PressableScale>
+        <PressableScale
+          style={styles.actionCard}
           onPress={() => router.push("/add/person" as never)}
         >
           <Ionicons name="person-add-outline" size={22} color={Colors.person.icon} />
           <Text style={styles.actionText}>Personne</Text>
-        </Pressable>
-      </View>
+        </PressableScale>
+      </FadeInView>
 
       {/* Secondary actions */}
-      <View style={styles.secondaryRow}>
+      <FadeInView delay={120} style={styles.secondaryRow}>
         {[
-          { icon: "analytics-outline" as const, label: "Analyse", route: "/analytics", color: "#DC2626" },
-          { icon: "compass-outline" as const, label: "Explorer", route: "/(tabs)/browse", color: "#7C3AED" },
-          { icon: "git-network-outline" as const, label: "Réseau", route: "/network", color: "#DB2777" },
+          { icon: "analytics-outline" as const, label: "Analyse", route: "/analytics", color: Colors.danger },
+          { icon: "compass-outline" as const, label: "Explorer", route: "/(tabs)/browse", color: Colors.group.icon },
+          { icon: "git-network-outline" as const, label: "Réseau", route: "/network", color: "#F472B6" },
           { icon: "pricetags-outline" as const, label: "Tags", route: "/tags", color: Colors.accent },
         ].map((a) => (
-          <Pressable
+          <PressableScale
             key={a.route}
-            style={({ pressed }) => [styles.secondaryBtn, pressed && { opacity: 0.6 }]}
+            style={styles.secondaryBtn}
+            haptics="selection"
             onPress={() => router.push(a.route as never)}
           >
-            <View style={[styles.secondaryIcon, { backgroundColor: `${a.color}14` }]}>
+            <View style={[styles.secondaryIcon, { backgroundColor: `${a.color}22` }]}>
               <Ionicons name={a.icon} size={18} color={a.color} />
             </View>
             <Text style={styles.secondaryLabel}>{a.label}</Text>
-          </Pressable>
+          </PressableScale>
         ))}
-      </View>
+      </FadeInView>
 
       {/* Detailed stats */}
-      <View style={styles.statsGrid}>
+      <FadeInView delay={180} style={styles.statsGrid}>
         {[
           { label: "Personnes", count: persons.length, icon: "person" as const, color: Colors.person },
           { label: "Lieux", count: places.length, icon: "location" as const, color: Colors.place },
           { label: "Événements", count: events.length, icon: "calendar" as const, color: Colors.event },
           { label: "Groupes", count: groups.length, icon: "people" as const, color: Colors.group },
-          { label: "Hypothèses", count: hypotheses.length, icon: "bulb" as const, color: { bg: "#FEF3C7", icon: "#D97706" } },
-          { label: "Contradictions", count: contradictions.length, icon: "git-compare-outline" as const, color: { bg: "#FEE2E2", icon: "#DC2626" } },
-          { label: "Archives", count: archiveItems.length, icon: "camera" as const, color: { bg: "#FCE7F3", icon: "#DB2777" } },
-          { label: "Extraits", count: useResearchStore.getState().excerpts.length, icon: "reader" as const, color: { bg: "#EDE9FE", icon: "#7C3AED" } },
+          { label: "Hypothèses", count: hypotheses.length, icon: "bulb" as const, color: { bg: "", icon: Colors.warning } },
+          { label: "Contradictions", count: contradictions.length, icon: "git-compare-outline" as const, color: { bg: "", icon: Colors.danger } },
+          { label: "Archives", count: archiveItems.length, icon: "camera" as const, color: { bg: "", icon: "#F472B6" } },
+          { label: "Extraits", count: useResearchStore.getState().excerpts.length, icon: "reader" as const, color: { bg: "", icon: Colors.group.icon } },
         ].map((s) => (
           <View key={s.label} style={styles.statMini}>
-            <Ionicons name={s.icon as any} size={14} color={s.color.icon} />
+            <View style={[styles.statMiniIcon, { backgroundColor: `${s.color.icon}22` }]}>
+              <Ionicons name={s.icon as any} size={14} color={s.color.icon} />
+            </View>
             <Text style={styles.statMiniCount}>{s.count}</Text>
             <Text style={styles.statMiniLabel}>{s.label}</Text>
           </View>
         ))}
-      </View>
+      </FadeInView>
 
       {!initialized ? (
         <ActivityIndicator color={Colors.accent} style={{ marginTop: Spacing.xxl }} />
@@ -164,11 +172,11 @@ export default function HomeScreen() {
           {/* Recent projects */}
           {recentProjects.length > 0 && (
             <>
-              <SectionHeader title="Dossiers récents" />
+              <SectionHeader title="Dossiers récents" style={{ paddingHorizontal: Spacing.lg }} />
               {recentProjects.map((p) => (
-                <Pressable
+                <PressableScale
                   key={p.id}
-                  style={({ pressed }) => [styles.projectCard, pressed && { opacity: 0.7 }]}
+                  style={styles.projectCard}
                   onPress={() => router.push(`/project/${p.id}` as never)}
                 >
                   <View style={styles.projectCardLeft} />
@@ -182,7 +190,7 @@ export default function HomeScreen() {
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={Colors.borderStrong} />
-                </Pressable>
+                </PressableScale>
               ))}
             </>
           )}
@@ -190,13 +198,13 @@ export default function HomeScreen() {
           {/* Recent sources */}
           {recentSources.length > 0 && (
             <>
-              <SectionHeader title="Sources récentes" />
+              <SectionHeader title="Sources récentes" style={{ paddingHorizontal: Spacing.lg }} />
               <View style={styles.listCard}>
                 {recentSources.map((s, i) => (
                   <Pressable
                     key={s.id}
-                    style={[styles.compactRow, i < recentSources.length - 1 && styles.compactBorder]}
-                    onPress={() => router.push(`/source/${s.id}` as never)}
+                    style={({ pressed }) => [styles.compactRow, i < recentSources.length - 1 && styles.compactBorder, pressed && styles.rowPressed]}
+                    onPress={() => { haptic.selection(); router.push(`/source/${s.id}` as never); }}
                   >
                     <View style={[styles.compactIcon, { backgroundColor: "#DBEAFE" }]}>
                       <Ionicons name="document-text" size={14} color="#2563EB" />
@@ -215,13 +223,13 @@ export default function HomeScreen() {
           {/* Recent entities */}
           {recentActivity.length > 0 && (
             <>
-              <SectionHeader title="Activité récente" />
+              <SectionHeader title="Activité récente" style={{ paddingHorizontal: Spacing.lg }} />
               <View style={styles.listCard}>
                 {recentActivity.map((item, i) => (
                   <Pressable
                     key={`${item.type}-${item.id}`}
-                    style={[styles.activityRow, i < recentActivity.length - 1 && styles.activityBorder]}
-                    onPress={() => router.push(item.route as never)}
+                    style={({ pressed }) => [styles.activityRow, i < recentActivity.length - 1 && styles.activityBorder, pressed && styles.rowPressed]}
+                    onPress={() => { haptic.selection(); router.push(item.route as never); }}
                   >
                     <View style={[styles.activityIcon, { backgroundColor: `${item.color}18` }]}>
                       <Ionicons name={item.icon} size={14} color={item.color} />
@@ -243,12 +251,14 @@ export default function HomeScreen() {
     </ScrollView>
 
     {/* Floating quick note button */}
-    <Pressable
-      style={({ pressed }) => [styles.fab, pressed && { opacity: 0.85, transform: [{ scale: 0.95 }] }]}
+    <PressableScale
+      style={styles.fab}
+      haptics="medium"
+      scaleTo={0.9}
       onPress={() => router.push("/add/note" as never)}
     >
-      <Ionicons name="create" size={22} color="white" />
-    </Pressable>
+      <Ionicons name="create" size={22} color={Colors.onAccent} />
+    </PressableScale>
     </View>
   );
 }
@@ -259,25 +269,51 @@ const styles = StyleSheet.create({
 
   // Hero
   hero: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.surfaceWarm,
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.lg,
+    paddingTop: Spacing.xl,
     paddingBottom: Spacing.xl,
     borderBottomLeftRadius: Radius.xxl,
     borderBottomRightRadius: Radius.xxl,
+    borderBottomWidth: 1,
+    borderColor: Colors.border,
+    overflow: "hidden",
     ...Shadow.md,
+  },
+  heroWatermark: {
+    position: "absolute",
+    right: -24,
+    top: -28,
+    fontSize: 180,
+    fontWeight: "800",
+    color: Colors.accent,
+    opacity: 0.05,
   },
   heroTop: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: Spacing.xl,
+  },
+  heroKicker: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: Colors.accent,
+    letterSpacing: 2,
+    marginBottom: Spacing.xs,
   },
   heroTitle: {
     fontSize: FontSize.hero,
     fontWeight: "800",
     color: Colors.ink,
-    letterSpacing: -1,
+    letterSpacing: -1.5,
+  },
+  heroRule: {
+    width: 44,
+    height: 3,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.accent,
+    marginTop: Spacing.md,
   },
   heroSub: {
     fontSize: FontSize.sm,
@@ -290,6 +326,8 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: Radius.lg,
     backgroundColor: Colors.accentLight,
+    borderWidth: 1,
+    borderColor: Colors.accent,
     alignItems: "center",
     justifyContent: "center",
     ...Shadow.glow,
@@ -341,17 +379,20 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     alignItems: "center",
     gap: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
     ...Shadow.sm,
   },
   actionPrimary: {
     backgroundColor: Colors.accent,
+    borderColor: Colors.accent,
     flex: 1.5,
     ...Shadow.glow,
   },
   actionPressed: { opacity: 0.7, transform: [{ scale: 0.97 }] },
   actionPrimaryText: {
     fontSize: FontSize.xs,
-    color: "white",
+    color: Colors.onAccent,
     fontWeight: "700",
   },
   actionText: {
@@ -399,11 +440,21 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     flexDirection: "column",
     alignItems: "center",
-    gap: 2,
+    gap: 3,
     backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
-    paddingVertical: Spacing.sm + 2,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingVertical: Spacing.md,
     ...Shadow.sm,
+  },
+  statMiniIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: Radius.sm,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 1,
   },
   statMiniCount: {
     fontSize: FontSize.base,
@@ -425,6 +476,8 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.sm,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: Colors.border,
     ...Shadow.sm,
   },
   projectCardLeft: {
@@ -460,6 +513,8 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
     marginHorizontal: Spacing.lg,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: Colors.border,
     ...Shadow.sm,
   },
   divider: {
@@ -480,6 +535,7 @@ const styles = StyleSheet.create({
     ...Shadow.lg,
   },
 
+  rowPressed: { backgroundColor: Colors.surfaceRaised },
   activityRow: {
     flexDirection: "row",
     alignItems: "center",

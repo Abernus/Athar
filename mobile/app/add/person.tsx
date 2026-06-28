@@ -3,8 +3,6 @@ import {
   ScrollView,
   View,
   Text,
-  TextInput,
-  Pressable,
   StyleSheet,
   Alert,
 } from "react-native";
@@ -12,6 +10,9 @@ import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
 import { TagInput } from "@/components/TagInput";
+import { Field } from "@/components/Field";
+import { PressableScale } from "@/components/PressableScale";
+import { haptic } from "@/lib/haptics";
 
 export default function AddPersonScreen() {
   const router = useRouter();
@@ -46,10 +47,12 @@ export default function AddPersonScreen() {
 
   async function save() {
     if (!name.trim()) {
+      haptic.warning();
       Alert.alert("Nom requis", "Saisissez au moins le nom principal.");
       return;
     }
     if (saving) return;
+    haptic.success();
     setSaving(true);
     const parsed = {
       primaryName: name.trim(),
@@ -79,86 +82,75 @@ export default function AddPersonScreen() {
       keyboardShouldPersistTaps="handled"
     >
       <View style={styles.card}>
-        <Text style={styles.label}>Nom principal *</Text>
-        <TextInput
-          style={styles.input}
+        <Field
+          label="Nom principal"
+          required
+          icon="person-outline"
           value={name}
           onChangeText={setName}
           placeholder="Prénom et nom"
-          placeholderTextColor={Colors.inkMuted}
           autoFocus={!isEdit}
+          containerStyle={{ marginTop: 0 }}
         />
 
-        <Text style={styles.label}>Variantes de nom</Text>
-        <TextInput
-          style={styles.input}
+        <Field
+          label="Variantes de nom"
+          icon="text-outline"
           value={alternates}
           onChangeText={setAlternates}
           placeholder="Séparées par des virgules"
-          placeholderTextColor={Colors.inkMuted}
         />
 
         <View style={styles.row}>
-          <View style={styles.half}>
-            <Text style={styles.label}>Naissance</Text>
-            <TextInput
-              style={styles.input}
-              value={birthYear}
-              onChangeText={setBirthYear}
-              placeholder="ex. 1898"
-              placeholderTextColor={Colors.inkMuted}
-              keyboardType="numeric"
-            />
-          </View>
-          <View style={styles.half}>
-            <Text style={styles.label}>Décès</Text>
-            <TextInput
-              style={styles.input}
-              value={deathYear}
-              onChangeText={setDeathYear}
-              placeholder="ex. 1971"
-              placeholderTextColor={Colors.inkMuted}
-              keyboardType="numeric"
-            />
-          </View>
+          <Field
+            label="Naissance"
+            icon="calendar-outline"
+            value={birthYear}
+            onChangeText={setBirthYear}
+            placeholder="ex. 1898"
+            keyboardType="numeric"
+            containerStyle={styles.half}
+          />
+          <Field
+            label="Décès"
+            icon="calendar-outline"
+            value={deathYear}
+            onChangeText={setDeathYear}
+            placeholder="ex. 1971"
+            keyboardType="numeric"
+            containerStyle={styles.half}
+          />
         </View>
 
-        <Text style={styles.label}>Résumé</Text>
-        <TextInput
-          style={[styles.input, styles.multiline]}
+        <Field
+          label="Résumé"
           value={summary}
           onChangeText={setSummary}
           placeholder="Courte description..."
-          placeholderTextColor={Colors.inkMuted}
           multiline
-          numberOfLines={3}
-          textAlignVertical="top"
         />
 
-        <Text style={styles.label}>Notes</Text>
-        <TextInput
-          style={[styles.input, styles.multiline]}
+        <Field
+          label="Notes"
           value={notes}
           onChangeText={setNotes}
           placeholder="Notes libres..."
-          placeholderTextColor={Colors.inkMuted}
           multiline
-          numberOfLines={3}
-          textAlignVertical="top"
         />
 
         <Text style={styles.label}>Tags</Text>
         <TagInput value={tags} onChangeText={setTags} placeholder="migration, kabylie, ouvrier" />
       </View>
 
-      <Pressable
-        style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]}
+      <PressableScale
+        style={styles.saveBtn}
+        haptics="none"
         onPress={save}
       >
         <Text style={styles.saveBtnText}>
           {saving ? "Enregistrement..." : isEdit ? "Enregistrer" : "Créer la personne"}
         </Text>
-      </Pressable>
+      </PressableScale>
     </ScrollView>
   );
 }
@@ -170,25 +162,19 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
     padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
     ...Shadow.sm,
   },
   label: {
     fontSize: FontSize.sm,
     fontWeight: "600",
     color: Colors.inkSecondary,
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.sm,
     marginTop: Spacing.lg,
+    letterSpacing: 0.2,
   },
-  input: {
-    backgroundColor: Colors.surfaceSunken,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm + 2,
-    fontSize: FontSize.base,
-    color: Colors.ink,
-  },
-  multiline: { minHeight: 80, paddingTop: Spacing.sm + 2 },
-  row: { flexDirection: "row", gap: Spacing.sm },
+  row: { flexDirection: "row", gap: Spacing.md },
   half: { flex: 1 },
   saveBtn: {
     backgroundColor: Colors.accent,
@@ -196,8 +182,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     alignItems: "center",
     marginTop: Spacing.xl,
-    ...Shadow.md,
+    ...Shadow.glow,
   },
-  saveBtnPressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
-  saveBtnText: { color: "white", fontSize: FontSize.base, fontWeight: "600" },
+  saveBtnText: { color: Colors.onAccent, fontSize: FontSize.base, fontWeight: "700" },
 });
