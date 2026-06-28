@@ -9,6 +9,18 @@
     "newArchEnabled": true,
     "scheme": "athar",
     "platforms": ["ios", "android"],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/0fb08245-0fbf-48ec-881a-1b720e687e03",
+      "fallbackToCacheTimeout": 0
+    },
+    "extra": {
+      "eas": {
+        "projectId": "0fb08245-0fbf-48ec-881a-1b720e687e03"
+      }
+    },
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
