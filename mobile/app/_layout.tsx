@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { Colors } from "@/lib/theme";
+import { Colors, colorScheme } from "@/lib/theme";
 import { useResearchStore } from "@/stores/research-store";
 
 export default function RootLayout() {
@@ -13,7 +13,7 @@ export default function RootLayout() {
 
   return (
     <>
-      <StatusBar style="light" />
+      <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: Colors.surface },
