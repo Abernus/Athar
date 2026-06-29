@@ -9,11 +9,13 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 import { getEntityName } from "@/types";
 import { CONFIDENCE_LABELS } from "@/lib/constants";
 
 export default function AnalyticsScreen() {
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const {
     persons, groups, places, events, sources, hypotheses,
@@ -225,7 +227,7 @@ export default function AnalyticsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.surfaceSunken },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xxxl },
 

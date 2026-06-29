@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from "react-native";
 import { Colors, FontSize, Radius, Spacing } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { CONFIDENCE_LABELS } from "@/lib/constants";
 import type { ConfidenceLevel } from "@/types";
 
@@ -7,19 +8,9 @@ interface Props {
   level: ConfidenceLevel;
 }
 
-const PILL_COLORS: Record<
-  ConfidenceLevel,
-  { bg: string; text: string; border: string }
-> = {
-  confirmed: Colors.confirmed,
-  probable: Colors.probable,
-  uncertain: Colors.uncertain,
-  contested: Colors.contested,
-  abandoned: Colors.abandoned,
-};
-
 export function ConfidencePill({ level }: Props) {
-  const c = PILL_COLORS[level];
+  const styles = useThemedStyles(makeStyles);
+  const c = Colors[level];
   return (
     <View style={[styles.pill, { backgroundColor: c.bg, borderColor: c.border }]}>
       <Text style={[styles.label, { color: c.text }]}>
@@ -29,7 +20,7 @@ export function ConfidencePill({ level }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   pill: {
     borderWidth: 1,
     borderRadius: Radius.full,

@@ -13,6 +13,7 @@ import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 import { formatHistoricalDate } from "@/lib/utils";
 import { getEntityName } from "@/types";
@@ -24,6 +25,7 @@ import {
 } from "@/lib/constants";
 
 export default function ExportProjectScreen() {
+  const styles = useThemedStyles(makeStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const {
@@ -296,7 +298,7 @@ ${b.abstract ? `<p class="meta">${b.abstract}</p>` : ""}
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.surfaceSunken },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xxxl, gap: Spacing.sm },
   notFound: { flex: 1, alignItems: "center", justifyContent: "center" },

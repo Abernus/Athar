@@ -1,11 +1,14 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { Colors, colorScheme } from "@/lib/theme";
+import { Colors } from "@/lib/theme";
+import { useThemeStore } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 
 export default function RootLayout() {
   const fetchAll = useResearchStore((s) => s.fetchAll);
+  // Subscribe so headers + status bar re-render when the theme toggles.
+  const scheme = useThemeStore((s) => s.scheme);
 
   useEffect(() => {
     fetchAll();
@@ -13,7 +16,7 @@ export default function RootLayout() {
 
   return (
     <>
-      <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: Colors.surface },

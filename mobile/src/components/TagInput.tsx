@@ -2,6 +2,7 @@ import { useState } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function TagInput({ value, onChangeText, placeholder }: Props) {
+  const styles = useThemedStyles(makeStyles);
   const [focused, setFocused] = useState(false);
   const {
     persons, groups, places, events, sources, hypotheses,
@@ -70,7 +72,7 @@ export function TagInput({ value, onChangeText, placeholder }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   input: {
     backgroundColor: Colors.surfaceSunken,
     borderRadius: Radius.md,

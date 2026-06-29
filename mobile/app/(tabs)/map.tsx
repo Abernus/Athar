@@ -11,11 +11,13 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 import { PLACE_TYPE_LABELS } from "@/lib/constants";
 import type { Place } from "@/types";
 
 function PlaceCard({ place, onPress }: { place: Place; onPress: () => void }) {
+  const styles = useThemedStyles(makeStyles);
   const hasCoords = place.coordinates?.lat && place.coordinates?.lng;
 
   return (
@@ -70,6 +72,7 @@ function PlaceCard({ place, onPress }: { place: Place; onPress: () => void }) {
 }
 
 export default function MapScreen() {
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const { places, events, fetchAll, loading } = useResearchStore();
 
@@ -123,7 +126,7 @@ export default function MapScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.surfaceSunken },
   list: { padding: Spacing.lg, gap: Spacing.sm },
 

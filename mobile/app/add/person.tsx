@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 import { TagInput } from "@/components/TagInput";
 import { Field } from "@/components/Field";
@@ -15,6 +16,7 @@ import { PressableScale } from "@/components/PressableScale";
 import { haptic } from "@/lib/haptics";
 
 export default function AddPersonScreen() {
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const navigation = useNavigation();
   const { editId } = useLocalSearchParams<{ editId?: string }>();
@@ -155,7 +157,7 @@ export default function AddPersonScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.surfaceSunken },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xxxl },
   card: {

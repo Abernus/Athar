@@ -10,6 +10,7 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 import { getEntityName } from "@/types";
 import { RELATIONSHIP_TYPE_LABELS, CONFIDENCE_LABELS, ENTITY_TYPE_LABELS } from "@/lib/constants";
@@ -100,6 +101,7 @@ function layoutNodes(entities: AnyEntity[], relationships: Relationship[]): Grap
 }
 
 export default function NetworkScreen() {
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const { focusId } = useLocalSearchParams<{ focusId?: string }>();
   const { getAllEntities, relationships, getEntityDisplayName } = useResearchStore();
@@ -428,7 +430,7 @@ export default function NetworkScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FAFAF9" },
 
   filterBar: {

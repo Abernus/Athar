@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Pressable, StyleSheet, SectionList } from "reac
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 import { EntityRow } from "@/components/EntityRow";
 import { getEntityName } from "@/types";
@@ -19,6 +20,7 @@ const TABS: { key: BrowseTab; label: string; icon: keyof typeof Ionicons.glyphMa
 ];
 
 export default function BrowseScreen() {
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const {
     persons, groups, places, events, sources, projects,
@@ -279,6 +281,7 @@ export default function BrowseScreen() {
 }
 
 function EmptyState({ message }: { message: string }) {
+  const styles = useThemedStyles(makeStyles);
   return (
     <View style={styles.emptyState}>
       <Ionicons name="compass-outline" size={32} color={Colors.borderStrong} />
@@ -288,7 +291,7 @@ function EmptyState({ message }: { message: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.surfaceSunken },
   tabBar: {
     backgroundColor: Colors.surface,

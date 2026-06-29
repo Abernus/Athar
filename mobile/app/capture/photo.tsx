@@ -13,6 +13,7 @@ import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { useResearchStore } from "@/stores/research-store";
 import { EntityPicker } from "@/components/EntityPicker";
@@ -21,6 +22,7 @@ import type { EntityType } from "@/types";
 type Step = "shoot" | "review";
 
 export default function PhotoCaptureScreen() {
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
@@ -201,7 +203,7 @@ export default function PhotoCaptureScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   camera: { flex: 1, backgroundColor: "#000" },
   cameraControls: {
     position: "absolute",

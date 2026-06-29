@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 import { EntityPicker } from "@/components/EntityPicker";
 import { RELATIONSHIP_TYPE_LABELS, CONFIDENCE_LABELS } from "@/lib/constants";
@@ -41,6 +42,7 @@ const CONF_LEVELS: ConfidenceLevel[] = [
 ];
 
 export default function AddRelationshipScreen() {
+  const styles = useThemedStyles(makeStyles);
   const { fromType, fromId } = useLocalSearchParams<{
     fromType?: string;
     fromId?: string;
@@ -197,7 +199,7 @@ export default function AddRelationshipScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.surfaceSunken },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xxxl, gap: Spacing.sm },
   card: {

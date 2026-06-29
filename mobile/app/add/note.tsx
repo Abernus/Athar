@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 import type { NoteType } from "@/types";
 
@@ -22,6 +23,7 @@ const NOTE_TYPES: { key: NoteType; label: string; icon: string }[] = [
 ];
 
 export default function AddNoteScreen() {
+  const styles = useThemedStyles(makeStyles);
   const { projectId } = useLocalSearchParams<{ projectId?: string }>();
   const router = useRouter();
   const { addResearchNote } = useResearchStore();
@@ -85,7 +87,7 @@ export default function AddNoteScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.surfaceSunken },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xxxl },
   card: { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, ...Shadow.sm },

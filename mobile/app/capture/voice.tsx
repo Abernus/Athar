@@ -11,6 +11,7 @@ import {
 import { Audio } from "expo-av";
 import { useRouter } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { useResearchStore } from "@/stores/research-store";
 import { EntityPicker } from "@/components/EntityPicker";
@@ -25,6 +26,7 @@ function formatSeconds(s: number): string {
 }
 
 export default function VoiceScreen() {
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const [state, setState] = useState<RecordingState>("idle");
   const [duration, setDuration] = useState(0);
@@ -255,7 +257,7 @@ export default function VoiceScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.surfaceSunken },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xxxl },
 

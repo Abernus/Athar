@@ -10,6 +10,7 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 import { EntityBadge } from "@/components/EntityBadge";
 import { getEntityName } from "@/types";
@@ -57,6 +58,7 @@ function dateLabel(date?: HistoricalDate): string {
 }
 
 export default function TimelineScreen() {
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const { persons, events, sources, oralTestimonies } = useResearchStore();
   const [layer, setLayer] = useState<Layer>("all");
@@ -253,7 +255,7 @@ export default function TimelineScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.surfaceSunken },
 
   filterBar: {

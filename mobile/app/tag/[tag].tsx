@@ -10,12 +10,14 @@ import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 import { EntityBadge } from "@/components/EntityBadge";
 import { getEntityName } from "@/types";
 import { SectionHeader } from "@/components/SectionHeader";
 
 export default function TagDetailScreen() {
+  const styles = useThemedStyles(makeStyles);
   const { tag } = useLocalSearchParams<{ tag: string }>();
   const navigation = useNavigation();
   const router = useRouter();
@@ -194,7 +196,7 @@ export default function TagDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.surfaceSunken },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xxxl },
 

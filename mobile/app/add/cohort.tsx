@@ -3,9 +3,11 @@ import { ScrollView, View, Text, TextInput, Pressable, StyleSheet, Alert } from 
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 
 export default function AddCohortScreen() {
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const { addCohort } = useResearchStore();
   const [title, setTitle] = useState("");
@@ -55,7 +57,7 @@ export default function AddCohortScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.surfaceSunken },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xxxl },
   infoCard: {
