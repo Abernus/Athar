@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 import type { GroupType } from "@/types";
 import { GROUP_TYPE_LABELS } from "@/lib/constants";
@@ -20,6 +21,7 @@ const GROUP_TYPES: GroupType[] = [
 ];
 
 export default function AddGroupScreen() {
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const navigation = useNavigation();
   const { editId } = useLocalSearchParams<{ editId?: string }>();
@@ -100,7 +102,7 @@ export default function AddGroupScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.surfaceSunken },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xxxl },
   card: { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, ...Shadow.sm },

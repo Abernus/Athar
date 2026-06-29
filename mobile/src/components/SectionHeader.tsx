@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, StyleProp, ViewStyle } from "react-native";
 import { Colors, FontSize, Spacing } from "@/lib/theme";
 
+import { useThemedStyles } from "@/lib/useTheme";
 export function SectionHeader({
   title,
   style,
@@ -8,6 +9,7 @@ export function SectionHeader({
   title: string;
   style?: StyleProp<ViewStyle>;
 }) {
+  const styles = useThemedStyles(makeStyles);
   return (
     <View style={[styles.container, style]}>
       <View style={styles.bar} />
@@ -16,7 +18,7 @@ export function SectionHeader({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",

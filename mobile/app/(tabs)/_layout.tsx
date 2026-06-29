@@ -1,9 +1,12 @@
 import { Tabs } from "expo-router";
 import { View } from "react-native";
 import { Colors, FontSize, Shadow } from "@/lib/theme";
+import { useThemeStore } from "@/lib/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function TabsLayout() {
+  // Subscribe so the tab bar re-renders when the theme toggles.
+  useThemeStore((s) => s.scheme);
   return (
     <Tabs
       screenOptions={{

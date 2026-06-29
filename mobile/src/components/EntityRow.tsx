@@ -1,6 +1,7 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { EntityBadge } from "./EntityBadge";
 import { getEntityName } from "@/types";
 import type { AnyEntity } from "@/types";
@@ -32,6 +33,7 @@ function getSubtitle(entity: AnyEntity): string {
 }
 
 export function EntityRow({ entity, onPress }: Props) {
+  const styles = useThemedStyles(makeStyles);
   return (
     <Pressable
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
@@ -51,7 +53,7 @@ export function EntityRow({ entity, onPress }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",

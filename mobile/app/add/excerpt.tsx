@@ -11,6 +11,7 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 import { EntityPicker } from "@/components/EntityPicker";
 import type { EntityType } from "@/types";
@@ -26,6 +27,7 @@ const CLASSIFICATIONS: { key: Classification; label: string; color: string }[] =
 ];
 
 export default function AddExcerptScreen() {
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const { sourceId } = useLocalSearchParams<{ sourceId: string }>();
   const { addExcerpt } = useResearchStore();
@@ -159,7 +161,7 @@ export default function AddExcerptScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.surfaceSunken },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xxxl, gap: Spacing.sm },
   card: { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, ...Shadow.sm },

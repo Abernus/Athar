@@ -3,6 +3,7 @@ import { View, Text, TextInput, SectionList, ScrollView, Pressable, StyleSheet }
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 import { EntityRow } from "@/components/EntityRow";
 import { getEntityName } from "@/types";
@@ -18,6 +19,7 @@ type ResultItem = {
 };
 
 export default function SearchScreen() {
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const [query, setQuery] = useState("");
   const {
@@ -229,7 +231,7 @@ export default function SearchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.surfaceSunken },
   inputWrap: {
     padding: Spacing.lg,

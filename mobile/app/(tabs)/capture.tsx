@@ -1,6 +1,7 @@
 import { View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 
 const CAPTURE_OPTIONS = [
@@ -139,6 +140,7 @@ const TERRAIN_OPTIONS = [
 ];
 
 export default function CaptureTab() {
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
 
   return (
@@ -258,7 +260,7 @@ export default function CaptureTab() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.surfaceSunken },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xxxl, gap: Spacing.sm },
 

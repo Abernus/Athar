@@ -10,9 +10,11 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 
 export default function TagsScreen() {
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const [query, setQuery] = useState("");
   const {
@@ -102,7 +104,7 @@ export default function TagsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.surfaceSunken },
 
   searchBar: {

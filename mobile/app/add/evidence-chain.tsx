@@ -3,6 +3,7 @@ import { ScrollView, View, Text, TextInput, Pressable, StyleSheet, Alert } from 
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 import type { ClaimStatus } from "@/types";
 
@@ -15,6 +16,7 @@ const STATUSES: { key: ClaimStatus; label: string; color: string }[] = [
 ];
 
 export default function AddEvidenceChainScreen() {
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const { addEvidenceChain } = useResearchStore();
   const [title, setTitle] = useState("");
@@ -79,7 +81,7 @@ export default function AddEvidenceChainScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.surfaceSunken },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xxxl },
   infoCard: {

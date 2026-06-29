@@ -11,6 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius } from "@/lib/theme";
 
+import { useThemedStyles } from "@/lib/useTheme";
 interface Props extends TextInputProps {
   label?: string;
   icon?: keyof typeof Ionicons.glyphMap;
@@ -35,6 +36,7 @@ export function Field({
   onBlur,
   ...rest
 }: Props) {
+  const styles = useThemedStyles(makeStyles);
   const [focused, setFocused] = useState(false);
 
   return (
@@ -82,7 +84,7 @@ export function Field({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   wrap: { marginTop: Spacing.lg },
   label: {
     fontSize: FontSize.sm,

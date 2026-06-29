@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 import { TagInput } from "@/components/TagInput";
 import type { ProjectStatus } from "@/types";
@@ -22,6 +23,7 @@ const STATUSES: { key: ProjectStatus; label: string }[] = [
 ];
 
 export default function AddProjectScreen() {
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const navigation = useNavigation();
   const { editId } = useLocalSearchParams<{ editId?: string }>();
@@ -131,7 +133,7 @@ export default function AddProjectScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.surfaceSunken },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xxxl },
   card: { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, ...Shadow.sm },

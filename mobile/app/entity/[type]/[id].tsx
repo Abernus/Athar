@@ -13,6 +13,7 @@ import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 import { Card } from "@/components/Card";
 import { EntityBadge } from "@/components/EntityBadge";
@@ -23,6 +24,7 @@ import { getEntityName } from "@/types";
 import type { EntityType } from "@/types";
 
 export default function EntityDetailScreen() {
+  const styles = useThemedStyles(makeStyles);
   const { type, id } = useLocalSearchParams<{ type: string; id: string }>();
   const navigation = useNavigation();
   const router = useRouter();
@@ -539,7 +541,7 @@ export default function EntityDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.surfaceSunken },
   content: {
     padding: Spacing.lg,

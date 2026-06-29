@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles, useTheme } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 import { SectionHeader } from "@/components/SectionHeader";
 import { PressableScale } from "@/components/PressableScale";
@@ -18,6 +19,8 @@ import { FadeInView } from "@/components/Motion";
 import { haptic } from "@/lib/haptics";
 
 export default function HomeScreen() {
+  const styles = useThemedStyles(makeStyles);
+  const { scheme, toggle } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const {
@@ -56,8 +59,22 @@ export default function HomeScreen() {
             <Text style={styles.heroTitle}>Athar</Text>
             <View style={styles.heroRule} />
           </View>
-          <View style={styles.heroBadge}>
-            <Text style={styles.heroArabic}>أثر</Text>
+          <View style={styles.heroRight}>
+            <PressableScale
+              style={styles.themeToggle}
+              haptics="medium"
+              scaleTo={0.88}
+              onPress={toggle}
+            >
+              <Ionicons
+                name={scheme === "dark" ? "sunny" : "moon"}
+                size={20}
+                color={Colors.accent}
+              />
+            </PressableScale>
+            <View style={styles.heroBadge}>
+              <Text style={styles.heroArabic}>أثر</Text>
+            </View>
           </View>
         </View>
 
@@ -263,7 +280,7 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.surfaceSunken },
   content: { paddingBottom: Spacing.xxxl },
 
@@ -320,6 +337,21 @@ const styles = StyleSheet.create({
     color: Colors.inkMuted,
     marginTop: 2,
     letterSpacing: 0.3,
+  },
+  heroRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  themeToggle: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: "center",
+    justifyContent: "center",
   },
   heroBadge: {
     width: 52,

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, StyleSheet } from "react-native";
 import { Colors, FontSize, Spacing, Radius } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { useResearchStore } from "@/stores/research-store";
 import { EntityBadge } from "./EntityBadge";
@@ -29,6 +30,7 @@ export function EntityPicker({
   excludeId,
   label,
 }: Props) {
+  const styles = useThemedStyles(makeStyles);
   const [filterType, setFilterType] = useState<EntityType>(selectedType);
   const [search, setSearch] = useState("");
   const { persons, groups, places, events, getEntityDisplayName } = useResearchStore();
@@ -147,7 +149,7 @@ export function EntityPicker({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   container: { gap: Spacing.sm },
   label: {
     fontSize: FontSize.sm,

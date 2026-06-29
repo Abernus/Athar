@@ -3,6 +3,7 @@ import { View, Text, FlatList, Pressable, StyleSheet, RefreshControl, ScrollView
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSize, Spacing, Radius, Shadow } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import { useResearchStore } from "@/stores/research-store";
 import type { ResearchProject, ProjectStatus } from "@/types";
 
@@ -22,6 +23,7 @@ const FILTER_OPTIONS: { key: ProjectStatus | "all"; label: string }[] = [
 ];
 
 function ProjectCard({ project, onPress }: { project: ResearchProject; onPress: () => void }) {
+  const styles = useThemedStyles(makeStyles);
   const st = STATUS_LABELS[project.status] ?? STATUS_LABELS.active;
   return (
     <Pressable style={({ pressed }) => [styles.card, pressed && styles.cardPressed]} onPress={onPress}>
@@ -61,6 +63,7 @@ function ProjectCard({ project, onPress }: { project: ResearchProject; onPress: 
 }
 
 export default function ProjectsScreen() {
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const { projects, fetchAll, loading } = useResearchStore();
   const [filter, setFilter] = useState<ProjectStatus | "all">("all");
@@ -152,7 +155,7 @@ export default function ProjectsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.surfaceSunken },
   list: { padding: Spacing.lg, gap: Spacing.sm },
 

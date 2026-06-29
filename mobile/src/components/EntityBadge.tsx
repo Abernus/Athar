@@ -1,6 +1,7 @@
 import { View, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, Radius } from "@/lib/theme";
+import { useThemedStyles } from "@/lib/useTheme";
 import type { EntityType } from "@/types";
 
 const ENTITY_ICONS: Record<EntityType, keyof typeof Ionicons.glyphMap> = {
@@ -10,22 +11,17 @@ const ENTITY_ICONS: Record<EntityType, keyof typeof Ionicons.glyphMap> = {
   event: "calendar",
 };
 
-const ENTITY_COLORS: Record<EntityType, { bg: string; icon: string }> = {
-  person: { bg: Colors.person.bg, icon: Colors.person.icon },
-  group: { bg: Colors.group.bg, icon: Colors.group.icon },
-  place: { bg: Colors.place.bg, icon: Colors.place.icon },
-  event: { bg: Colors.event.bg, icon: Colors.event.icon },
-};
-
 interface Props {
   type: EntityType;
   size?: "sm" | "md" | "lg";
 }
 
 export function EntityBadge({ type, size = "sm" }: Props) {
+  const styles = useThemedStyles(makeStyles);
   const dim = size === "sm" ? 28 : size === "md" ? 36 : 44;
   const iconSize = size === "sm" ? 14 : size === "md" ? 18 : 22;
-  const { bg, icon } = ENTITY_COLORS[type];
+  // Read live so the badge re-themes on light/dark toggle.
+  const { bg, icon } = Colors[type];
   return (
     <View
       style={[
@@ -43,6 +39,6 @@ export function EntityBadge({ type, size = "sm" }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   badge: { alignItems: "center", justifyContent: "center" },
 });
