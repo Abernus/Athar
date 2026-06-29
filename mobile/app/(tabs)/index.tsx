@@ -16,6 +16,7 @@ import { useResearchStore } from "@/stores/research-store";
 import { SectionHeader } from "@/components/SectionHeader";
 import { PressableScale } from "@/components/PressableScale";
 import { FadeInView } from "@/components/Motion";
+import { ConnectionBanner } from "@/components/ConnectionBanner";
 import { haptic } from "@/lib/haptics";
 
 export default function HomeScreen() {
@@ -26,7 +27,7 @@ export default function HomeScreen() {
   const {
     persons, groups, places, events, archiveItems, sources,
     projects, hypotheses, contradictions, relationships,
-    getAllEntities, fetchAll, loading, initialized,
+    getAllEntities, fetchAll, loading, initialized, loadError,
   } = useResearchStore();
   const recent = getAllEntities().slice(0, 5);
   const recentSources = sources.slice(0, 3);
@@ -101,6 +102,8 @@ export default function HomeScreen() {
           </View>
         </View>
       </View>
+
+      <ConnectionBanner />
 
       {/* Quick actions */}
       <FadeInView delay={60} style={styles.actionsRow}>
@@ -177,11 +180,19 @@ export default function HomeScreen() {
       ) : isEmpty ? (
         <View style={styles.emptyState}>
           <View style={styles.emptyIcon}>
-            <Ionicons name="compass-outline" size={36} color={Colors.borderStrong} />
+            <Ionicons
+              name={loadError ? "cloud-offline-outline" : "compass-outline"}
+              size={36}
+              color={loadError ? Colors.warning : Colors.borderStrong}
+            />
           </View>
-          <Text style={styles.emptyTitle}>Commencez votre recherche</Text>
+          <Text style={styles.emptyTitle}>
+            {loadError ? "Données indisponibles" : "Commencez votre recherche"}
+          </Text>
           <Text style={styles.emptyHint}>
-            Créez un dossier, ajoutez des sources et des entités pour démarrer votre enquête
+            {loadError
+              ? "Impossible de joindre le serveur. Tes données ne sont pas perdues — réessaie depuis la bannière ci-dessus."
+              : "Créez un dossier, ajoutez des sources et des entités pour démarrer votre enquête"}
           </Text>
         </View>
       ) : (
