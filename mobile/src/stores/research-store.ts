@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { File, Paths } from "expo-file-system";
 import { supabase } from "@/lib/supabase";
 import type {
   Person,
@@ -435,6 +436,7 @@ interface ResearchState {
   // Loading
   loading: boolean;
   initialized: boolean;
+  loadError: boolean;
 
   // Init — fetch all data from Supabase
   fetchAll: () => Promise<void>;
@@ -516,6 +518,69 @@ interface ResearchState {
   updateContradiction: (id: string, data: Partial<Omit<Contradiction, "id" | "createdAt" | "updatedAt">>) => Promise<Contradiction | null>;
 }
 
+// ── Table specs: single source of truth for fetch order, state keys, mappers ─
+type TableSpec = { table: string; key: string; map: (r: any) => any; orderCol?: string; asc?: boolean };
+const TABLE_SPECS: TableSpec[] = [
+  { table: "persons", key: "persons", map: rowToPerson },
+  { table: "groups", key: "groups", map: rowToGroup },
+  { table: "places", key: "places", map: rowToPlace },
+  { table: "events", key: "events", map: rowToEvent },
+  { table: "relationships", key: "relationships", map: rowToRelationship },
+  { table: "archive_items", key: "archiveItems", map: rowToArchiveItem },
+  { table: "oral_testimonies", key: "oralTestimonies", map: rowToOralTestimony },
+  { table: "research_projects", key: "projects", map: rowToProject },
+  { table: "sources", key: "sources", map: rowToSource },
+  { table: "source_excerpts", key: "excerpts", map: rowToExcerpt },
+  { table: "research_notes", key: "researchNotes", map: rowToNote },
+  { table: "hypotheses", key: "hypotheses", map: rowToHypothesis },
+  { table: "contradictions", key: "contradictions", map: rowToContradiction },
+  { table: "entity_aliases", key: "entityAliases", map: rowToAlias },
+  { table: "bibliography_entries", key: "bibliography", map: rowToBibEntry },
+  { table: "witnesses", key: "witnesses", map: rowToWitness },
+  { table: "interview_sessions", key: "interviewSessions", map: rowToInterviewSession },
+  { table: "field_missions", key: "fieldMissions", map: rowToFieldMission },
+  { table: "corpus_documents", key: "corpusDocuments", map: rowToCorpusDoc },
+  { table: "evidence_chains", key: "evidenceChains", map: rowToEvidenceChain },
+  { table: "evidence_chain_links", key: "chainLinks", map: rowToChainLink, orderCol: "position", asc: true },
+  { table: "prosopography_cohorts", key: "cohorts", map: rowToCohort },
+  { table: "prosopography_entries", key: "prosEntries", map: rowToProsEntry },
+  { table: "entity_suggestions", key: "entitySuggestions", map: rowToSuggestion },
+  { table: "publications", key: "publications", map: rowToPublication },
+];
+
+// ── Local cache (survives Supabase outages so the app never looks "wiped") ───
+let cacheFile: File | null = null;
+try {
+  cacheFile = new File(Paths.document, "athar-cache.json");
+} catch {
+  cacheFile = null;
+}
+
+function writeCacheRaw(rawByKey: Record<string, any[]>) {
+  try {
+    cacheFile?.write(JSON.stringify(rawByKey));
+  } catch {}
+}
+
+function readCacheRaw(): Record<string, any[]> | null {
+  try {
+    if (cacheFile && cacheFile.exists) {
+      const parsed = JSON.parse(cacheFile.textSync());
+      if (parsed && typeof parsed === "object") return parsed;
+    }
+  } catch {}
+  return null;
+}
+
+/** Map an object of raw row arrays (keyed by state key) into mapped state. */
+function mapRawToState(rawByKey: Record<string, any[]>): Record<string, any[]> {
+  const out: Record<string, any[]> = {};
+  for (const spec of TABLE_SPECS) {
+    out[spec.key] = (rawByKey[spec.key] ?? []).map(spec.map);
+  }
+  return out;
+}
+
 export const useResearchStore = create<ResearchState>((set, get) => ({
   persons: [],
   groups: [],
@@ -544,66 +609,56 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
   publications: [],
   loading: false,
   initialized: false,
+  loadError: false,
 
   fetchAll: async () => {
     set({ loading: true });
-    const [persons, groups, places, events, relationships, archiveItems, oralTestimonies, projects, sources, excerpts, researchNotes, hypotheses, contradictions, entityAliases, bibliography, witnesses, interviewSessions, fieldMissions, corpusDocuments, evidenceChains, chainLinks, cohorts, prosEntries, entitySuggestions, publications] =
-      await Promise.all([
-        supabase.from("persons").select("*").order("created_at", { ascending: false }),
-        supabase.from("groups").select("*").order("created_at", { ascending: false }),
-        supabase.from("places").select("*").order("created_at", { ascending: false }),
-        supabase.from("events").select("*").order("created_at", { ascending: false }),
-        supabase.from("relationships").select("*").order("created_at", { ascending: false }),
-        supabase.from("archive_items").select("*").order("created_at", { ascending: false }),
-        supabase.from("oral_testimonies").select("*").order("created_at", { ascending: false }),
-        supabase.from("research_projects").select("*").order("created_at", { ascending: false }),
-        supabase.from("sources").select("*").order("created_at", { ascending: false }),
-        supabase.from("source_excerpts").select("*").order("created_at", { ascending: false }),
-        supabase.from("research_notes").select("*").order("created_at", { ascending: false }),
-        supabase.from("hypotheses").select("*").order("created_at", { ascending: false }),
-        supabase.from("contradictions").select("*").order("created_at", { ascending: false }),
-        supabase.from("entity_aliases").select("*").order("created_at", { ascending: false }),
-        supabase.from("bibliography_entries").select("*").order("created_at", { ascending: false }),
-        supabase.from("witnesses").select("*").order("created_at", { ascending: false }),
-        supabase.from("interview_sessions").select("*").order("created_at", { ascending: false }),
-        supabase.from("field_missions").select("*").order("created_at", { ascending: false }),
-        supabase.from("corpus_documents").select("*").order("created_at", { ascending: false }),
-        supabase.from("evidence_chains").select("*").order("created_at", { ascending: false }),
-        supabase.from("evidence_chain_links").select("*").order("position", { ascending: true }),
-        supabase.from("prosopography_cohorts").select("*").order("created_at", { ascending: false }),
-        supabase.from("prosopography_entries").select("*").order("created_at", { ascending: false }),
-        supabase.from("entity_suggestions").select("*").order("created_at", { ascending: false }),
-        supabase.from("publications").select("*").order("created_at", { ascending: false }),
-      ]);
+
+    const results = await Promise.all(
+      TABLE_SPECS.map((s) =>
+        supabase
+          .from(s.table)
+          .select("*")
+          .order(s.orderCol ?? "created_at", { ascending: s.asc ?? false })
+      )
+    );
+
+    const anyError = results.some((r) => r.error);
+
+    if (!anyError) {
+      // Success: refresh state and persist a local cache.
+      const rawByKey: Record<string, any[]> = {};
+      TABLE_SPECS.forEach((s, i) => {
+        rawByKey[s.key] = results[i].data ?? [];
+      });
+      writeCacheRaw(rawByKey);
+      set({
+        ...(mapRawToState(rawByKey) as Partial<ResearchState>),
+        loading: false,
+        initialized: true,
+        loadError: false,
+      } as Partial<ResearchState>);
+      return;
+    }
+
+    // Failure (e.g. Supabase paused / offline). Never wipe what we have.
+    const firstError = results.find((r) => r.error)?.error;
+    console.error("fetchAll: Supabase unreachable —", firstError);
+
+    if (get().initialized) {
+      // Keep the data already in memory; just flag the error.
+      set({ loading: false, loadError: true });
+      return;
+    }
+
+    // Cold start while unreachable: fall back to the on-disk cache if present.
+    const cached = readCacheRaw();
     set({
-      persons: (persons.data ?? []).map(rowToPerson),
-      groups: (groups.data ?? []).map(rowToGroup),
-      places: (places.data ?? []).map(rowToPlace),
-      events: (events.data ?? []).map(rowToEvent),
-      relationships: (relationships.data ?? []).map(rowToRelationship),
-      archiveItems: (archiveItems.data ?? []).map(rowToArchiveItem),
-      oralTestimonies: (oralTestimonies.data ?? []).map(rowToOralTestimony),
-      projects: (projects.data ?? []).map(rowToProject),
-      sources: (sources.data ?? []).map(rowToSource),
-      excerpts: (excerpts.data ?? []).map(rowToExcerpt),
-      researchNotes: (researchNotes.data ?? []).map(rowToNote),
-      hypotheses: (hypotheses.data ?? []).map(rowToHypothesis),
-      contradictions: (contradictions.data ?? []).map(rowToContradiction),
-      entityAliases: (entityAliases.data ?? []).map(rowToAlias),
-      bibliography: (bibliography.data ?? []).map(rowToBibEntry),
-      witnesses: (witnesses.data ?? []).map(rowToWitness),
-      interviewSessions: (interviewSessions.data ?? []).map(rowToInterviewSession),
-      fieldMissions: (fieldMissions.data ?? []).map(rowToFieldMission),
-      corpusDocuments: (corpusDocuments.data ?? []).map(rowToCorpusDoc),
-      evidenceChains: (evidenceChains.data ?? []).map(rowToEvidenceChain),
-      chainLinks: (chainLinks.data ?? []).map(rowToChainLink),
-      cohorts: (cohorts.data ?? []).map(rowToCohort),
-      prosEntries: (prosEntries.data ?? []).map(rowToProsEntry),
-      entitySuggestions: (entitySuggestions.data ?? []).map(rowToSuggestion),
-      publications: (publications.data ?? []).map(rowToPublication),
+      ...(cached ? (mapRawToState(cached) as Partial<ResearchState>) : {}),
       loading: false,
       initialized: true,
-    });
+      loadError: true,
+    } as Partial<ResearchState>);
   },
 
   getPersonById: (id) => get().persons.find((p) => p.id === id),

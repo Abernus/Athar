@@ -68,11 +68,11 @@ export default function AddPersonScreen() {
 
     if (isEdit) {
       const result = await updatePerson(editId!, parsed);
-      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      if (!result) { setSaving(false); Alert.alert("Enregistrement impossible", "Le serveur est injoignable. Vérifie ta connexion et réessaie — rien n'est perdu."); return; }
       router.back();
     } else {
       const result = await addPerson(parsed);
-      if (!result) { setSaving(false); Alert.alert("Erreur", "Impossible de sauvegarder."); return; }
+      if (!result) { setSaving(false); Alert.alert("Enregistrement impossible", "Le serveur est injoignable. Vérifie ta connexion et réessaie — rien n'est perdu."); return; }
       router.replace(`/entity/person/${result.id}` as never);
     }
   }
